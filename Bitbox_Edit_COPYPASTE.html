@@ -144,6 +144,7 @@
             font-weight: 600;
             color: #4a9eff;
             margin-bottom: 4px;
+            pointer-events: none;
         }
 
         .pad.active .pad-number {
@@ -158,6 +159,7 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             max-width: 90%;
+            pointer-events: none;
         }
 
         .pad.active .pad-label {
@@ -172,6 +174,7 @@
             height: 8px;
             border-radius: 50%;
             background: #5eff5e;
+            pointer-events: none;
         }
 
         .pad.empty .pad-status {
@@ -692,11 +695,11 @@
             console.log('PAD PUSHER: Initializing...');
             try {
                 createEmptyPreset();
-                console.log('PAD PUSHER: Preset created');
+                // console.log('PAD PUSHER: Preset created');
                 createPadGrid();
-                console.log('PAD PUSHER: Pad grid created');
+                // console.log('PAD PUSHER: Pad grid created');
                 setupEventListeners();
-                console.log('PAD PUSHER: Event listeners setup');
+                // console.log('PAD PUSHER: Event listeners setup');
                 setStatus('Ready');
                 console.log('PAD PUSHER: Ready!');
             } catch (error) {
@@ -709,6 +712,8 @@
             const grid = document.getElementById('padGrid');
             grid.innerHTML = '';
 
+            console.log('Creating pad grid...');
+
             for (let row = 3; row >= 0; row--) {
                 for (let col = 0; col < 4; col++) {
                     const padNum = (row * 4) + col + 1;
@@ -717,7 +722,9 @@
                     pad.dataset.row = row;
                     pad.dataset.col = col;
                     pad.dataset.padnum = padNum;
-                    pad.draggable = true;
+                    // pad.draggable = true;
+
+                    pad.setAttribute('draggable', 'true');
 
                     if (currentMode === 'micro' && row > 1) {
                         pad.classList.add('disabled');
@@ -733,19 +740,39 @@
                     grid.appendChild(pad);
                 }
             }
+            
+            console.log('Pad grid created');
         }
 
         function setupPadEvents(pad) {
             pad.addEventListener('click', (e) => handlePadClick(e, pad));
             pad.addEventListener('dblclick', () => openEditModal(pad));
             pad.addEventListener('contextmenu', (e) => showContextMenu(e, pad));
-            pad.addEventListener('dragstart', (e) => handleDragStart(e, pad));
-            pad.addEventListener('dragover', (e) => handleDragOver(e, pad));
-            pad.addEventListener('drop', (e) => handleDrop(e, pad));
+            // pad.addEventListener('dragstart', (e) => handleDragStart(e, pad));
+            // pad.addEventListener('dragover', (e) => handleDragOver(e, pad));
+            // pad.addEventListener('drop', (e) => handleDrop(e, pad));
+
+            
+            pad.addEventListener('dragstart', (e) => {
+                console.log('DRAGSTART on pad:', pad.dataset.padnum);
+                handleDragStart(e, pad);
+            });
+            
+            pad.addEventListener('dragover', (e) => {
+                handleDragOver(e, pad);
+            });
+            
+            pad.addEventListener('drop', (e) => {
+                console.log('DROP on pad:', pad.dataset.padnum);
+                handleDrop(e, pad);
+            });
+            
             pad.addEventListener('dragend', () => {
+                console.log('DRAGEND');
                 pad.classList.remove('dragging');
                 document.querySelectorAll('.pad.drag-over').forEach(p => p.classList.remove('drag-over'));
             });
+            
             pad.addEventListener('dragleave', () => pad.classList.remove('drag-over'));
         }
 
@@ -795,19 +822,22 @@
 
         function handleDragOver(e, pad) {
             e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'move';
             if (draggedPad && draggedPad !== pad) {
-                e.dataTransfer.dropEffect = 'move';
                 pad.classList.add('drag-over');
             }
         }
 
         function handleDrop(e, pad) {
             e.preventDefault();
+            e.stopPropagation();
             pad.classList.remove('drag-over');
 
             if (e.dataTransfer.files.length > 0) {
                 handleFileDropOnPad(e.dataTransfer.files[0], pad);
             } else if (draggedPad && draggedPad !== pad) {
+                console.log('Swapping pads:', draggedPad.dataset.padnum, 'with', pad.dataset.padnum);
                 swapPads(draggedPad, pad);
             }
 
@@ -817,29 +847,34 @@
             }
         }
 
-        function swapPads(pad1, pad2) {
-            
+       function swapPads(pad1, pad2) {
             const row1 = parseInt(pad1.dataset.row);
             const col1 = parseInt(pad1.dataset.col);
             const row2 = parseInt(pad2.dataset.row);
             const col2 = parseInt(pad2.dataset.col);
 
+            // Swap the data
             const temp = presetData.pads[row1][col1];
             presetData.pads[row1][col1] = presetData.pads[row2][col2];
             presetData.pads[row2][col2] = temp;
 
-            // Update asset references
+            // Update asset references with proper type conversion
             assetCells.forEach(asset => {
-                if (asset.params.asssrcrow == row1 && asset.params.asssrccol == col1) {
-                    asset.params.asssrcrow = row2;
-                    asset.params.asssrccol = col2;
-                } else if (asset.params.asssrcrow == row2 && asset.params.asssrccol == col2) {
-                    asset.params.asssrcrow = row1;
-                    asset.params.asssrccol = col1;
+                const assetRow = parseInt(asset.params.asssrcrow);
+                const assetCol = parseInt(asset.params.asssrccol);
+                
+                if (assetRow === row1 && assetCol === col1) {
+                    asset.params.asssrcrow = String(row2);
+                    asset.params.asssrccol = String(col2);
+                } else if (assetRow === row2 && assetCol === col2) {
+                    asset.params.asssrcrow = String(row1);
+                    asset.params.asssrccol = String(col1);
                 }
             });
 
+            // Force visual update by recreating the pad display
             updatePadDisplay();
+            
             setStatus(`Swapped Pad ${pad1.dataset.padnum} with Pad ${pad2.dataset.padnum}`, 'success');
         }
 
