@@ -16,5 +16,5 @@ TO-DO:
 
 04-Next to a slider, the parameter values should also be input by test, keyboard input. For fast and accurate exact values.
 
-**If you make any code changes, please only send the JavaScript-function or part of the code that was changed. Do not send the whole code, as that is way too expensive (token wise).**
+**If you make any code changes, please __only__ send the JavaScript-function or part of the code that was changed. __Do not__ send the whole code, as that is way too expensive (token wise).**
 
