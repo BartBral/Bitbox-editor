@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: #1a1a1a;
@@ -18,14 +20,16 @@
             padding: 20px;
             color: #e0e0e0;
         }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
             background: #2a2a2a;
             border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -34,11 +38,13 @@
             padding-bottom: 15px;
             border-bottom: 1px solid #404040;
         }
+
         h1 {
             font-size: 1.8em;
             color: #4a9eff;
             font-weight: 600;
         }
+
         .mode-toggle {
             display: flex;
             gap: 5px;
@@ -46,6 +52,7 @@
             padding: 3px;
             border-radius: 6px;
         }
+
         .mode-btn {
             padding: 6px 16px;
             border: none;
@@ -56,26 +63,31 @@
             font-weight: 500;
             color: #888;
         }
+
         .mode-btn.active {
             background: #4a9eff;
             color: white;
         }
+
         .main-content {
             display: grid;
             grid-template-columns: 1fr 300px;
             gap: 20px;
         }
+
         .pad-area {
             background: #1a1a1a;
             border-radius: 8px;
             padding: 20px;
         }
+
         .pad-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             margin-bottom: 20px;
         }
+
         .pad {
             aspect-ratio: 1;
             border: 2px solid #404040;
@@ -90,44 +102,54 @@
             position: relative;
             user-select: none;
         }
+
         .pad:hover {
             border-color: #4a9eff;
             background: #333;
         }
+
         .pad.selected {
             background: #1a3a5a;
             border-color: #4a9eff;
             box-shadow: 0 0 15px rgba(74, 158, 255, 0.3);
         }
+
         .pad.active {
             background: #2a4a2a;
             border-color: #5eff5e;
         }
+
         .pad.active.selected {
             background: #1a5a3a;
             border-color: #5eff5e;
             box-shadow: 0 0 15px rgba(94, 255, 94, 0.3);
         }
+
         .pad.disabled {
             opacity: 0.3;
         }
+
         .pad.drag-over {
             background: #4a4a2a;
             border-color: #ffea5e;
             border-style: dashed;
         }
+
         .pad.dragging {
             opacity: 0.5;
         }
+
         .pad-number {
             font-size: 1.2em;
             font-weight: 600;
             color: #4a9eff;
             margin-bottom: 4px;
         }
+
         .pad.active .pad-number {
             color: #5eff5e;
         }
+
         .pad-label {
             font-size: 0.75em;
             color: #888;
@@ -137,9 +159,11 @@
             white-space: nowrap;
             max-width: 90%;
         }
+
         .pad.active .pad-label {
             color: #5eff5e;
         }
+
         .pad-status {
             position: absolute;
             top: 6px;
@@ -149,30 +173,36 @@
             border-radius: 50%;
             background: #5eff5e;
         }
+
         .pad.empty .pad-status {
             background: #404040;
         }
+
         .sidebar {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
+
         .panel {
             background: #1a1a1a;
             border-radius: 8px;
             padding: 15px;
         }
+
         .panel h3 {
             color: #4a9eff;
             margin-bottom: 12px;
             font-size: 1em;
             font-weight: 600;
         }
+
         .controls {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
+
         .btn {
             padding: 10px 16px;
             border: 1px solid #404040;
@@ -185,25 +215,31 @@
             color: #e0e0e0;
             text-align: left;
         }
+
         .btn:hover {
             background: #333;
             border-color: #4a9eff;
         }
+
         .btn:disabled {
             opacity: 0.3;
             cursor: not-allowed;
         }
+
         .btn-primary {
             background: #4a9eff;
             border-color: #4a9eff;
             color: white;
         }
+
         .btn-primary:hover {
             background: #3a8eef;
         }
+
         input[type="file"] {
             display: none;
         }
+
         .status-bar {
             background: #1a1a1a;
             padding: 8px 15px;
@@ -212,24 +248,29 @@
             color: #888;
             min-height: 32px;
         }
+
         .status-bar.success {
             color: #5eff5e;
         }
+
         .status-bar.error {
             color: #ff5e5e;
         }
+
         .info-panel {
             font-size: 0.85em;
             line-height: 1.6;
         }
+
         .info-panel p {
             margin-bottom: 8px;
             color: #888;
         }
+
         .info-panel strong {
             color: #4a9eff;
         }
-        
+
         /* Context Menu */
         .context-menu {
             position: fixed;
@@ -239,11 +280,13 @@
             padding: 4px;
             display: none;
             z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
         }
+
         .context-menu.show {
             display: block;
         }
+
         .context-item {
             padding: 8px 16px;
             cursor: pointer;
@@ -251,14 +294,16 @@
             font-size: 0.9em;
             transition: background 0.15s;
         }
+
         .context-item:hover {
             background: #333;
         }
+
         .context-item.disabled {
             opacity: 0.3;
             cursor: not-allowed;
         }
-        
+
         /* Modal */
         .modal {
             display: none;
@@ -267,14 +312,16 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.8);
             z-index: 2000;
             align-items: center;
             justify-content: center;
         }
+
         .modal.show {
             display: flex;
         }
+
         .modal-content {
             background: #2a2a2a;
             border-radius: 8px;
@@ -283,8 +330,9 @@
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -293,10 +341,12 @@
             padding-bottom: 12px;
             border-bottom: 1px solid #404040;
         }
+
         .modal-header h2 {
             color: #4a9eff;
             font-size: 1.4em;
         }
+
         .close-btn {
             width: 32px;
             height: 32px;
@@ -308,38 +358,46 @@
             transition: all 0.2s;
             color: #888;
         }
+
         .close-btn:hover {
             background: #ff5e5e;
             color: white;
         }
+
         .param-section {
             margin-bottom: 20px;
         }
+
         .param-section h3 {
             color: #4a9eff;
             margin-bottom: 12px;
             font-size: 1em;
         }
+
         .param-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
+
         .param {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
+
         .param-label {
             font-weight: 500;
             color: #888;
             font-size: 0.85em;
         }
+
         .param-control {
             display: flex;
             align-items: center;
             gap: 10px;
         }
+
         .slider {
             flex: 1;
             height: 4px;
@@ -348,6 +406,7 @@
             outline: none;
             -webkit-appearance: none;
         }
+
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 16px;
@@ -356,6 +415,7 @@
             background: #4a9eff;
             cursor: pointer;
         }
+
         .param-value {
             min-width: 75px;
             text-align: right;
@@ -363,6 +423,7 @@
             color: #4a9eff;
             font-size: 0.9em;
         }
+
         .select {
             padding: 8px;
             border: 1px solid #404040;
@@ -372,6 +433,7 @@
             font-size: 0.9em;
             cursor: pointer;
         }
+
         .envelope-viz {
             width: 100%;
             height: 120px;
@@ -381,6 +443,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -394,7 +457,8 @@
         <div class="main-content">
             <div class="pad-area">
                 <div class="pad-grid" id="padGrid"></div>
-                <div class="status-bar" id="statusBar">Ready. Click to select, double-click to edit, right-click for options.</div>
+                <div class="status-bar" id="statusBar">Ready. Click to select, double-click to edit, right-click for
+                    options.</div>
             </div>
 
             <div class="sidebar">
@@ -577,6 +641,53 @@
         let currentEditingPad = null;
         let assetCells = []; // Store asset references
 
+        function createEmptyPadData() {
+            return {
+                filename: '',
+                type: 'samtempl',
+                params: {
+                    gaindb: '0', pitch: '0', panpos: '0',
+                    samtrigtype: '0', loopmode: '0', loopmodes: '0',
+                    midimode: '0', reverse: '0', cellmode: '0',
+                    envattack: '0', envdecay: '0', envsus: '1000', envrel: '200',
+                    samstart: '0', samlen: '0', loopstart: '0', loopend: '0',
+                    quantsize: '3', synctype: '5', actslice: '1',
+                    outputbus: '0', polymode: '0', polymodeslice: '0',
+                    slicestepmode: '0', chokegrp: '0', dualfilcutoff: '0',
+                    res: '500', rootnote: '0', beatcount: '0',
+                    fx1send: '0', fx2send: '0', multisammode: '0',
+                    interpqual: '0', playthru: '0', slicerquantsize: '13',
+                    slicersync: '0', padnote: '0', loopfadeamt: '0',
+                    lfowave: '0', lforate: '100', lfoamount: '1000',
+                    lfokeytrig: '0', lfobeatsync: '0', lforatebeatsync: '0',
+                    grainsizeperc: '300', grainscat: '0', grainpanrnd: '0',
+                    graindensity: '600', slicemode: '0', legatomode: '0',
+                    gainssrcwin: '0', grainreadspeed: '1000',
+                    recpresetlen: '0', recquant: '3', recinput: '0',
+                    recusethres: '0', recthresh: '-20000', recmonoutbus: '0',
+                    deftemplate: '1'
+                },
+                modsources: []
+            };
+        }
+
+        function createEmptyPreset() {
+            presetData = {
+                version: '2',
+                pads: {},
+                tempo: '120'
+            };
+
+            assetCells = [];
+
+            for (let row = 0; row < 4; row++) {
+                presetData.pads[row] = {};
+                for (let col = 0; col < 4; col++) {
+                    presetData.pads[row][col] = createEmptyPadData();
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             console.log('PAD PUSHER: Initializing...');
             try {
@@ -597,7 +708,7 @@
         function createPadGrid() {
             const grid = document.getElementById('padGrid');
             grid.innerHTML = '';
-            
+
             for (let row = 3; row >= 0; row--) {
                 for (let col = 0; col < 4; col++) {
                     const padNum = (row * 4) + col + 1;
@@ -607,17 +718,17 @@
                     pad.dataset.col = col;
                     pad.dataset.padnum = padNum;
                     pad.draggable = true;
-                    
+
                     if (currentMode === 'micro' && row > 1) {
                         pad.classList.add('disabled');
                     }
-                    
+
                     pad.innerHTML = `
                         <span class="pad-number">${padNum}</span>
                         <span class="pad-label">Empty</span>
                         <span class="pad-status"></span>
                     `;
-                    
+
                     setupPadEvents(pad);
                     grid.appendChild(pad);
                 }
@@ -693,13 +804,13 @@
         function handleDrop(e, pad) {
             e.preventDefault();
             pad.classList.remove('drag-over');
-            
+
             if (e.dataTransfer.files.length > 0) {
                 handleFileDropOnPad(e.dataTransfer.files[0], pad);
             } else if (draggedPad && draggedPad !== pad) {
                 swapPads(draggedPad, pad);
             }
-            
+
             if (draggedPad) {
                 draggedPad.classList.remove('dragging');
                 draggedPad = null;
@@ -707,6 +818,7 @@
         }
 
         function swapPads(pad1, pad2) {
+            
             const row1 = parseInt(pad1.dataset.row);
             const col1 = parseInt(pad1.dataset.col);
             const row2 = parseInt(pad2.dataset.row);
@@ -745,14 +857,14 @@
             }
         }
 
-async function loadPadFromJSON(file, targetPad) {
+        async function loadPadFromJSON(file, targetPad) {
             try {
                 const text = await file.text();
                 const padData = JSON.parse(text);
-                
+
                 const row = parseInt(targetPad.dataset.row);
                 const col = parseInt(targetPad.dataset.col);
-                
+
                 if (padData.data) {
                     presetData.pads[row][col] = JSON.parse(JSON.stringify(padData.data));
                     updatePadDisplay();
@@ -825,13 +937,13 @@ async function loadPadFromJSON(file, targetPad) {
 
         function showContextMenu(e, pad) {
             e.preventDefault();
-            
+
             // Don't deselect if right-clicking on already selected pad
             if (!pad.classList.contains('selected')) {
                 clearPadSelection();
                 selectPad(pad);
             }
-            
+
             const menu = document.getElementById('contextMenu');
             menu.style.left = e.pageX + 'px';
             menu.style.top = e.pageY + 'px';
@@ -866,13 +978,13 @@ async function loadPadFromJSON(file, targetPad) {
         }
 
         function setupParameterListeners() {
-            const params = ['gaindb', 'pitch', 'panpos', 'dualfilcutoff', 'res', 
-                           'envattack', 'envdecay', 'envsus', 'envrel'];
-            
+            const params = ['gaindb', 'pitch', 'panpos', 'dualfilcutoff', 'res',
+                'envattack', 'envdecay', 'envsus', 'envrel'];
+
             params.forEach(param => {
                 const slider = document.getElementById(param);
                 const display = document.getElementById(param + '-val');
-                
+
                 if (slider && display) {
                     // Slider input
                     slider.addEventListener('input', () => {
@@ -930,11 +1042,10 @@ async function loadPadFromJSON(file, targetPad) {
             const val = parseFloat(text);
             if (isNaN(val)) return null;
 
-            switch(param) {
+            switch (param) {
                 case 'gaindb':
-                    return Math.round(( val * 1000) + 0.0001); // test
                 case 'pitch':
-                    return Math.round( val * 1000); 
+                    return Math.round(val * 1000);
                 case 'panpos':
                 case 'dualfilcutoff':
                 case 'res':
@@ -955,20 +1066,20 @@ async function loadPadFromJSON(file, targetPad) {
             const val = parseFloat(value);
             let text = '';
 
-            switch(param) {
+            switch (param) {
                 case 'gaindb':
-                    text = (val >= 0 ? '+' : '') + (val/1000).toFixed(1) + ' dB';
+                    text = (val >= 0 ? '+' : '') + (val / 1000).toFixed(1) + ' dB';
                     break;
                 case 'pitch':
-                    text = (val >= 0 ? '+' : '') + (val/1000).toFixed(2) + ' st';
+                    text = (val >= 0 ? '+' : '') + (val / 1000).toFixed(2) + ' st';
                     break;
                 case 'panpos':
                     if (val === 0) text = 'Center';
-                    else if (val < 0) text = 'L ' + Math.abs(val/10).toFixed(1) + '%';
-                    else text = 'R ' + (val/10).toFixed(1) + '%';
+                    else if (val < 0) text = 'L ' + Math.abs(val / 10).toFixed(1) + '%';
+                    else text = 'R ' + (val / 10).toFixed(1) + '%';
                     break;
                 default:
-                    text = (val/10).toFixed(1) + '%';
+                    text = (val / 10).toFixed(1) + '%';
             }
             display.textContent = text;
         }
@@ -1019,7 +1130,7 @@ async function loadPadFromJSON(file, targetPad) {
             if (!padData) return;
 
             currentEditingPad = pad;
-            document.getElementById('modalTitle').textContent = 
+            document.getElementById('modalTitle').textContent =
                 `Pad ${pad.dataset.padnum} - ${padData.filename || 'Empty'}`;
 
             loadParamsToModal(padData);
@@ -1035,15 +1146,15 @@ async function loadPadFromJSON(file, targetPad) {
 
         function loadParamsToModal(padData) {
             const params = padData.params;
-            
+
             ['gaindb', 'pitch', 'panpos', 'dualfilcutoff', 'res',
-             'envattack', 'envdecay', 'envsus', 'envrel'].forEach(param => {
-                const slider = document.getElementById(param);
-                if (slider && params[param] !== undefined) {
-                    slider.value = params[param];
-                    updateParamDisplay(param, params[param]);
-                }
-            });
+                'envattack', 'envdecay', 'envsus', 'envrel'].forEach(param => {
+                    const slider = document.getElementById(param);
+                    if (slider && params[param] !== undefined) {
+                        slider.value = params[param];
+                        updateParamDisplay(param, params[param]);
+                    }
+                });
 
             ['cellmode', 'loopmodes', 'samtrigtype', 'polymode'].forEach(param => {
                 const select = document.getElementById(param);
@@ -1053,72 +1164,72 @@ async function loadPadFromJSON(file, targetPad) {
             });
         }
 
-        function createEmptyPadData() {
-            return {
-                filename: '',
-                type: 'samtempl',
-                params: {
-                    gaindb: '0', pitch: '0', panpos: '0',
-                    samtrigtype: '0', loopmode: '0', loopmodes: '0',
-                    midimode: '0', reverse: '0', cellmode: '0',
-                    envattack: '0', envdecay: '0', envsus: '1000', envrel: '200',
-                    samstart: '0', samlen: '0', loopstart: '0', loopend: '0',
-                    quantsize: '3', synctype: '5', actslice: '1',
-                    outputbus: '0', polymode: '0', polymodeslice: '0',
-                    slicestepmode: '0', chokegrp: '0', dualfilcutoff: '0',
-                    res: '500', rootnote: '0', beatcount: '0',
-                    fx1send: '0', fx2send: '0', multisammode: '0',
-                    interpqual: '0', playthru: '0', slicerquantsize: '13',
-                    slicersync: '0', padnote: '0', loopfadeamt: '0',
-                    lfowave: '0', lforate: '100', lfoamount: '1000',
-                    lfokeytrig: '0', lfobeatsync: '0', lforatebeatsync: '0',
-                    grainsizeperc: '300', grainscat: '0', grainpanrnd: '0',
-                    graindensity: '600', slicemode: '0', legatomode: '0',
-                    gainssrcwin: '0', grainreadspeed: '1000',
-                    recpresetlen: '0', recquant: '3', recinput: '0',
-                    recusethres: '0', recthresh: '-20000', recmonoutbus: '0',
-                    deftemplate: '1'
-                },
-                modsources: []
-            };
-        }
+        // function createEmptyPadData() {
+        //     return {
+        //         filename: '',
+        //         type: 'samtempl',
+        //         params: {
+        //             gaindb: '0', pitch: '0', panpos: '0',
+        //             samtrigtype: '0', loopmode: '0', loopmodes: '0',
+        //             midimode: '0', reverse: '0', cellmode: '0',
+        //             envattack: '0', envdecay: '0', envsus: '1000', envrel: '200',
+        //             samstart: '0', samlen: '0', loopstart: '0', loopend: '0',
+        //             quantsize: '3', synctype: '5', actslice: '1',
+        //             outputbus: '0', polymode: '0', polymodeslice: '0',
+        //             slicestepmode: '0', chokegrp: '0', dualfilcutoff: '0',
+        //             res: '500', rootnote: '0', beatcount: '0',
+        //             fx1send: '0', fx2send: '0', multisammode: '0',
+        //             interpqual: '0', playthru: '0', slicerquantsize: '13',
+        //             slicersync: '0', padnote: '0', loopfadeamt: '0',
+        //             lfowave: '0', lforate: '100', lfoamount: '1000',
+        //             lfokeytrig: '0', lfobeatsync: '0', lforatebeatsync: '0',
+        //             grainsizeperc: '300', grainscat: '0', grainpanrnd: '0',
+        //             graindensity: '600', slicemode: '0', legatomode: '0',
+        //             gainssrcwin: '0', grainreadspeed: '1000',
+        //             recpresetlen: '0', recquant: '3', recinput: '0',
+        //             recusethres: '0', recthresh: '-20000', recmonoutbus: '0',
+        //             deftemplate: '1'
+        //         },
+        //         modsources: []
+        //     };
+        // }
 
-        function createEmptyPreset() {
-            presetData = {
-                version: '2',
-                pads: {},
-                tempo: '120'
-            };
+        // function createEmptyPreset() {
+        //     presetData = {
+        //         version: '2',
+        //         pads: {},
+        //         tempo: '120'
+        //     };
 
-            assetCells = [];
+        //     assetCells = [];
 
-            for (let row = 0; row < 4; row++) {
-                presetData.pads[row] = {};
-                for (let col = 0; col < 5; col++) {
-                    presetData.pads[row][col] = createEmptyPadData();
-                }
-            }
-        }
+        //     for (let row = 0; row < 4; row++) {
+        //         presetData.pads[row] = {};
+        //         for (let col = 0; col < 4; col++) {
+        //             presetData.pads[row][col] = createEmptyPadData();
+        //         }
+        //     }
+        // }
 
         async function loadPreset(file) {
             try {
                 const text = await file.text();
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(text, 'text/xml');
-                
+
                 presetData = { version: '2', pads: {}, tempo: '120' };
                 assetCells = [];
 
                 // Parse layer 0 cells (pads)
                 const cells = xmlDoc.querySelectorAll('cell[layer="0"]');
-                
+
                 cells.forEach(cell => {
                     const row = parseInt(cell.getAttribute('row'));
                     const col = parseInt(cell.getAttribute('column'));
-                    
+
                     if (isNaN(row) || isNaN(col)) return;
                     if (!presetData.pads[row]) presetData.pads[row] = {};
-                    
+
                     const padData = {
                         filename: cell.getAttribute('filename') || '',
                         type: cell.getAttribute('type'),
@@ -1170,7 +1281,7 @@ async function loadPadFromJSON(file, targetPad) {
                 // Fill missing pads
                 for (let row = 0; row < 4; row++) {
                     if (!presetData.pads[row]) presetData.pads[row] = {};
-                    for (let col = 0; col < 5; col++) {
+                    for (let col = 0; col < 4; col++) {
                         if (!presetData.pads[row][col]) {
                             presetData.pads[row][col] = createEmptyPadData();
                         }
@@ -1206,7 +1317,7 @@ async function loadPadFromJSON(file, targetPad) {
                 a.download = 'preset.xml';
                 a.click();
                 URL.revokeObjectURL(url);
-                
+
                 setStatus('Preset saved successfully', 'success');
             } catch (error) {
                 setStatus(`Error saving: ${error.message}`, 'error');
@@ -1219,7 +1330,7 @@ async function loadPadFromJSON(file, targetPad) {
 
             // Layer 0 - Pads
             for (let row = 0; row < 4; row++) {
-                for (let col = 0; col < 5; col++) {
+                for (let col = 0; col < 4; col++) {
                     const pad = data.pads[row]?.[col];
                     if (!pad) continue;
 
@@ -1284,7 +1395,7 @@ async function loadPadFromJSON(file, targetPad) {
                 const row = parseInt(pad.dataset.row);
                 const col = parseInt(pad.dataset.col);
                 const padData = presetData.pads[row][col];
-                
+
                 if (padData && padData.filename) {
                     exports.push({
                         padNumber: padNum,
@@ -1295,10 +1406,10 @@ async function loadPadFromJSON(file, targetPad) {
                 }
             });
 
-            // if (exports.length === 0) {
-            //     setStatus('Selected pads are empty', 'error');
-            //     return;
-            // }
+            if (exports.length === 0) {
+                setStatus('Selected pads are empty', 'error');
+                return;
+            }
 
             const json = JSON.stringify(exports.length === 1 ? exports[0] : exports, null, 2);
             const blob = new Blob([json], { type: 'application/json' });
@@ -1405,4 +1516,5 @@ async function loadPadFromJSON(file, targetPad) {
         }
     </script>
 </body>
+
 </html>
