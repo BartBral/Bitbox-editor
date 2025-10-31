@@ -14,9 +14,144 @@ TO-DO:
 
 03-Edit modal with all parameters, as not yet all parameters are implemented in the modal edit window. To accomplish this in a nice way, we need to add Tabs to our modal window; tabs should be called: Main, Env, Lfo, Pos, Gran, Config
 
-04-Next to a slider, the parameter values should also be input by test, keyboard input. For fast and accurate exact values.
+04-Next to a slider, the parameter values should also be input by text, keyboard input. For fast and accurate exact values. Maybe also go for circular "Pots" instead of slider for most of the values, as the actual value can placed within the pot, that will look tidy and if you double-click on the value, you can edit by keyboard input. Also using mouse-wheel if over value will edit it.
 
 **If you make any code changes, please __only__ send the JavaScript-function or part of the code that was changed. __Do not__ send the whole code, as that is way too expensive (token wise).**
 
+==========================================================
+
+Just some findings:
+
+```
+MODULATION:
+
+No Modulation = omit the <modsource/> on that slot
+
+Modulation Sources:
+src = "mod1"     
+src = "mod2"     
+src = "mod3"     
+src = "mod4"     
+src = "mod5"     
+src = "mod6"     
+src = "mod7"     
+src = "mod8"     
+src = "keytrig"  
+src = "velocity" 
+src = "lfo1"     
+src = "pitchbend"
+src = "modwheel"
+src = "midivol" 
+src = "midipan" 
+src = "midicc"  
+____________________________________
+____________________________________
+
+Modulation Destinations:
+
+In Sample-mode:
+Screen name:		xml name:				
+
+Main-window:
+	Level:   	dest="gaindb"       
+	Pitch:		dest="pitch"        
+	Filter: 		dest="dualfilcutoff"
+	Res:     	dest="res"             
+	Pan:     	dest="panpos"
+Env-window:
+	Attack:		dest="envattack" 
+	Decay:		dest="envdecay"  
+	Release:		dest="envrel"    
+Pos-window:
+	Start:		dest="samstart" 	
+	Length:		dest="samlen"   
+	Loop Start:	dest="loopstart"
+	Loop End:	dest="loopend"  
+LFO-window:
+	LFO Rate:	dest="lforate"  
+	LFO Depth:	dest="lfoamount"
+____________________________________
+
+In Multi-Sample-mode:
+Screen name:		xml name:
+
+Main-window:
+	Level:   	dest="gaindb"       
+	Pitch:		dest="pitch"        
+	Filter: 		dest="dualfilcutoff"
+	Res:     	dest="res"             
+	Pan:     	dest="panpos"
+Env-window:
+	Attack:		dest="envattack" 
+	Decay:		dest="envdecay"  
+	Release:		dest="envrel"    
+LFO-window:
+	LFO Rate:	dest="lforate"  
+	LFO Depth:	dest="lfoamount"
+____________________________________
+
+In Clip-mode:
+Screen name:		xml name:
+
+Main-window:
+	Level:   	dest="gaindb"       
+	Pitch:		dest="pitch"        
+	Filter: 		dest="dualfilcutoff"
+	Res:     	dest="res"             
+	Pan:     	dest="panpos"
+Env-window:
+	Attack:		dest="envattack" 
+	Decay:		dest="envdecay"  
+	Release:		dest="envrel"    
+LFO-window:
+	LFO Rate:	dest="lforate"  
+	LFO Depth:	dest="lfoamount"
+____________________________________
+
+In Slice-mode:
+Screen name:		xml name:
+
+Main-window:
+	Level:   	dest="gaindb"       
+	Pitch:		dest="pitch"        
+	Filter: 		dest="dualfilcutoff"
+	Res:     	dest="res"             
+	Pan:     	dest="panpos"
+Env-window:
+	Attack:		dest="envattack" 
+	Decay:		dest="envdecay"  
+	Release:		dest="envrel"    
+Pos-window:		
+	Slice:		dest="actslice"
+	Slice Seq:	dest="slicestepmode"  
+LFO-window:
+	LFO Rate:	dest="lforate"  
+	LFO Depth:	dest="lfoamount"
 
 
+____________________________________
+
+In Granular-mode:
+Screen name:		xml name:
+
+Main-window:
+	Level:   	dest="gaindb"       
+	Pitch:		dest="pitch"        
+	Filter: 		dest="dualfilcutoff"
+	Res:     	dest="res"             
+	Pan:     	dest="panpos"
+Env-window:
+	Attack:		dest="envattack" 
+	Decay:		dest="envdecay"  
+	Release:		dest="envrel"    
+Pos-window:
+	Start:		dest="samstart" 	
+	Length:		dest="samlen"   
+	Loop Start:	dest="loopstart"
+	Loop End:	dest="loopend"  
+LFO-window:
+	LFO Rate:	dest="lforate"  
+	LFO Depth:	dest="lfoamount"
+Gran-window:
+	Speed:		dest="grainreadspeed"
+```

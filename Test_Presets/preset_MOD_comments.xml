@@ -67,12 +67,28 @@
             <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
             <slices/>
         </cell>
-        <cell row="0" column="2" layer="0" filename="" type="samtempl">
-            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+
+        <!-- Slice-Mode example -->
+        <!-- The app does now render Slices in the preset broken.-->
+        <!-- As the <slices> and <slice pos="1000"/> is not saved. -->
+        <cell row="0" column="2" layer="0" filename="\Presets\minmaxSlice_mode\Finewine\FineWine_302.wav" type="sample">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="1" loopmodes="1" midimode="4" reverse="0" cellmode="2" envattack="0" envdecay="0" envsus="1000" envrel="200" samstart="0" samlen="18696" loopstart="857" loopend="18678" quantsize="8" synctype="6" actslice="1" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="4" chokegrp="0" dualfilcutoff="0" res="500" rootnote="92" beatcount="0" fx1send="569" fx2send="594" multisammode="0" interpqual="0" playthru="1" slicerquantsize="13" slicersync="0" padnote="0" loopfadeamt="0" lfowave="0" lforate="100" lfoamount="1000" lfokeytrig="0" lfobeatsync="0" lforatebeatsync="0" grainsizeperc="300" grainscat="0" grainpanrnd="0" graindensity="600" slicemode="0" legatomode="0" gainssrcwin="0" grainreadspeed="1001" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
             <modsource dest="gaindb" src="velocity" slot="0" amount="400"/>
             <modsource dest="gaindb" src="midivol" slot="2" amount="1000"/>
             <modsource dest="panpos" src="midipan" slot="2" amount="1000"/>
-            <slices/>
+            <modsource dest="slicestepmode" src="keytrig"   slot="0" amount="1000"/>
+            <modsource dest="actslice"      src="mod1"      slot="0" amount="955"/>
+
+            <!-- Define slice points for slicer mode -->
+            <slices>
+                <slice pos="1000"/> <!-- Slice points, in sample offset from 0 Sample -->
+                <slice pos="2031"/>
+                <slice pos="5077"/>
+                <slice pos="6115"/>
+                <slice pos="9431"/>
+                <slice pos="14545"/>
+            </slices>
+            
         </cell>
         <cell row="1" column="2" layer="0" filename="" type="samtempl">
             <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
