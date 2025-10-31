@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="PAD PUSHER - The essential preset editor for 1010music Bitbox Micro and mk2">
     <title>PAD PUSHER - Bitbox Preset Editor</title>
+    
+    <!-- <script src="https://unpkg.com/fflate@0.8.2/lib/browser.js"></script> -->
+    <script src="fflate.js" defer></script>
+
     <style>
         * {
             margin: 0;
@@ -733,15 +737,30 @@
             }
         }
 
+        let projectName = '';
+
+        function generateRandomHex() {
+            return Math.floor(Math.random() * 0x10000).toString(16).padStart(4, '0').toUpperCase();
+        }
+
+        function initializeProject() {
+            const name = prompt('Enter project name (leave blank for random):', '');
+            projectName = name.trim() || `Project_${generateRandomHex()}`;
+            updateProjectTitle();
+        }
+
+        function updateProjectTitle() {
+            document.querySelector('h1').textContent = `PAD PUSHER - ${projectName}`;
+        }
+
+        // Modify DOMContentLoaded:
         document.addEventListener('DOMContentLoaded', () => {
             console.log('PAD PUSHER: Initializing...');
             try {
                 createEmptyPreset();
-                // console.log('PAD PUSHER: Preset created');
                 createPadGrid();
-                // console.log('PAD PUSHER: Pad grid created');
                 setupEventListeners();
-                // console.log('PAD PUSHER: Event listeners setup');
+                initializeProject(); // ADD THIS
                 setStatus('Ready');
                 console.log('PAD PUSHER: Ready!');
             } catch (error) {
@@ -970,6 +989,7 @@
             document.getElementById('newPresetBtn').addEventListener('click', () => {
                 if (confirm('Create new preset? All current pads will be lost!')) {
                     createEmptyPreset();
+                    initializeProject(); // ADD THIS
                     updatePadDisplay();
                     setStatus('New preset created');
                 }
@@ -1336,6 +1356,7 @@
                 }
 
                 updatePadDisplay();
+                initializeProject();
                 setStatus(`Loaded: ${file.name} (${assetCells.length} multi-sample assets)`, 'success');
             } catch (error) {
                 setStatus(`Error loading: ${error.message}`, 'error');
@@ -1435,44 +1456,111 @@
             return xml;
         }
 
-        function exportSelectedPads() {
+        async function exportSelectedPads() {
             if (selectedPads.size === 0) {
                 setStatus('No pads selected', 'error');
                 return;
             }
-
-            const exports = [];
-            selectedPads.forEach(padNum => {
+        
+            const playmodeNames = {
+                '0': 'Sample',
+                '1': 'Clip',
+                '2': 'Slice',
+                '3': 'Granular'
+            };
+        
+            const files = {};
+        
+            for (const padNum of selectedPads) {
                 const pad = document.querySelector(`[data-padnum="${padNum}"]`);
                 const row = parseInt(pad.dataset.row);
                 const col = parseInt(pad.dataset.col);
                 const padData = presetData.pads[row][col];
-
-                if (padData && padData.filename) {
-                    exports.push({
-                        padNumber: padNum,
-                        row: row,
-                        col: col,
-                        data: padData
-                    });
+            
+                if (!padData) continue;
+            
+                // Get sample name
+                let sampleName = 'Empty';
+                if (padData.filename) {
+                    sampleName = padData.filename.split(/[/\\]/).pop().replace(/\.(wav|WAV)$/, '');
                 }
-            });
-
-            if (exports.length === 0) {
-                setStatus('Selected pads are empty', 'error');
+            
+                // Get playmode
+                const cellmode = padData.params.cellmode || '0';
+                const playmode = playmodeNames[cellmode] || 'Sample';
+            
+                // Check for multisample mode
+                const isMultisample = padData.params.multisammode === '1';
+                const finalPlaymode = isMultisample ? 'Multisample' : playmode;
+            
+                // Build filename
+                const filename = `${projectName}_${sampleName}_${finalPlaymode}_Pad${padNum.toString().padStart(2, '0')}.json`;
+            
+                // Build export data
+                const exportData = {
+                    padNumber: padNum,
+                    row: row,
+                    col: col,
+                    projectName: projectName,
+                    sampleName: sampleName,
+                    playmode: finalPlaymode,
+                    data: {
+                        filename: padData.filename,
+                        type: padData.type,
+                        params: padData.params,
+                        modsources: padData.modsources || [],
+                        slices: padData.slices || []
+                    }
+                };
+            
+                // Add asset references if multisample
+                if (isMultisample) {
+                    exportData.assetReferences = assetCells.filter(asset => 
+                        parseInt(asset.params.asssrcrow) === row && 
+                        parseInt(asset.params.asssrccol) === col
+                    );
+                }
+            
+                files[filename] = JSON.stringify(exportData, null, 2);
+            }
+        
+            // Single pad - download directly as JSON
+            if (selectedPads.size === 1) {
+                const filename = Object.keys(files)[0];
+                const content = files[filename];
+                const blob = new Blob([content], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                setStatus(`Exported 1 pad as JSON`, 'success');
                 return;
             }
-
-            const json = JSON.stringify(exports.length === 1 ? exports[0] : exports, null, 2);
-            const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `pad_export_${Date.now()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-
-            setStatus(`Exported ${exports.length} pad(s)`, 'success');
+        
+            // Multiple pads - create ZIP
+            try {
+                // Convert strings to Uint8Array for fflate
+                const filesForZip = {};
+                for (const [name, content] of Object.entries(files)) {
+                    filesForZip[name] = new TextEncoder().encode(content);
+                }
+            
+                const zipped = fflate.zipSync(filesForZip);
+                const blob = new Blob([zipped], { type: 'application/zip' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${projectName}_pads_export.zip`;
+                a.click();
+                URL.revokeObjectURL(url);
+            
+                setStatus(`Exported ${selectedPads.size} pads to ZIP`, 'success');
+            } catch (error) {
+                setStatus(`Error creating ZIP: ${error.message}`, 'error');
+                console.error(error);
+            }
         }
 
         function copySelectedPads() {
