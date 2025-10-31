@@ -193,9 +193,9 @@ In Reverb window:
 <!-- Max 9 Modulation sources for the Reverb effect -->
 Screen name:		xml name:
 
-Decay:		dest="decay"	
-Predelay:	dest="predelay"	
-Damping:		dest="damping"	
+Decay:			dest="decay"	
+Predelay:			dest="predelay"	
+Damping:			dest="damping"	
 
 ____________________________________
 ```
