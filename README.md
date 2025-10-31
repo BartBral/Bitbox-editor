@@ -53,80 +53,80 @@ In Sample-mode:
 Screen name:		xml name:				
 
 Main-window:
-	Level:   	dest="gaindb"       
-	Pitch:		dest="pitch"        
+	Level:   		dest="gaindb"       
+	Pitch:			dest="pitch"        
 	Filter: 		dest="dualfilcutoff"
-	Res:     	dest="res"             
-	Pan:     	dest="panpos"
+	Res:     		dest="res"             
+	Pan:     		dest="panpos"
 Env-window:
-	Attack:		dest="envattack" 
-	Decay:		dest="envdecay"  
+	Attack:			dest="envattack" 
+	Decay:			dest="envdecay"  
 	Release:		dest="envrel"    
 Pos-window:
-	Start:		dest="samstart" 	
-	Length:		dest="samlen"   
-	Loop Start:	dest="loopstart"
-	Loop End:	dest="loopend"  
+	Start:			dest="samstart" 	
+	Length:			dest="samlen"   
+	Loop Start:		dest="loopstart"
+	Loop End:		dest="loopend"  
 LFO-window:
-	LFO Rate:	dest="lforate"  
-	LFO Depth:	dest="lfoamount"
+	LFO Rate:		dest="lforate"  
+	LFO Depth:		dest="lfoamount"
 ____________________________________
 
 In Multi-Sample-mode:
 Screen name:		xml name:
 
 Main-window:
-	Level:   	dest="gaindb"       
-	Pitch:		dest="pitch"        
+	Level:   		dest="gaindb"       
+	Pitch:			dest="pitch"        
 	Filter: 		dest="dualfilcutoff"
-	Res:     	dest="res"             
-	Pan:     	dest="panpos"
+	Res:     		dest="res"             
+	Pan:     		dest="panpos"
 Env-window:
-	Attack:		dest="envattack" 
-	Decay:		dest="envdecay"  
+	Attack:			dest="envattack" 
+	Decay:			dest="envdecay"  
 	Release:		dest="envrel"    
 LFO-window:
-	LFO Rate:	dest="lforate"  
-	LFO Depth:	dest="lfoamount"
+	LFO Rate:		dest="lforate"  
+	LFO Depth:		dest="lfoamount"
 ____________________________________
 
 In Clip-mode:
 Screen name:		xml name:
 
 Main-window:
-	Level:   	dest="gaindb"       
-	Pitch:		dest="pitch"        
+	Level:   		dest="gaindb"       
+	Pitch:			dest="pitch"        
 	Filter: 		dest="dualfilcutoff"
-	Res:     	dest="res"             
-	Pan:     	dest="panpos"
+	Res:     		dest="res"             
+	Pan:     		dest="panpos"
 Env-window:
-	Attack:		dest="envattack" 
-	Decay:		dest="envdecay"  
+	Attack:			dest="envattack" 
+	Decay:			dest="envdecay"  
 	Release:		dest="envrel"    
 LFO-window:
-	LFO Rate:	dest="lforate"  
-	LFO Depth:	dest="lfoamount"
+	LFO Rate:		dest="lforate"  
+	LFO Depth:		dest="lfoamount"
 ____________________________________
 
 In Slice-mode:
 Screen name:		xml name:
 
 Main-window:
-	Level:   	dest="gaindb"       
-	Pitch:		dest="pitch"        
+	Level:   		dest="gaindb"       
+	Pitch:			dest="pitch"        
 	Filter: 		dest="dualfilcutoff"
-	Res:     	dest="res"             
-	Pan:     	dest="panpos"
+	Res:     		dest="res"             
+	Pan:     		dest="panpos"
 Env-window:
-	Attack:		dest="envattack" 
-	Decay:		dest="envdecay"  
+	Attack:			dest="envattack" 
+	Decay:			dest="envdecay"  
 	Release:		dest="envrel"    
 Pos-window:		
-	Slice:		dest="actslice"
-	Slice Seq:	dest="slicestepmode"  
+	Slice:			dest="actslice"
+	Slice Seq:		dest="slicestepmode"  
 LFO-window:
-	LFO Rate:	dest="lforate"  
-	LFO Depth:	dest="lfoamount"
+	LFO Rate:		dest="lforate"  
+	LFO Depth:		dest="lfoamount"
 
 
 ____________________________________
@@ -135,25 +135,25 @@ In Granular-mode:
 Screen name:		xml name:
 
 Main-window:
-	Level:   	dest="gaindb"       
-	Pitch:		dest="pitch"        
+	Level:   		dest="gaindb"       
+	Pitch:			dest="pitch"        
 	Filter: 		dest="dualfilcutoff"
-	Res:     	dest="res"             
-	Pan:     	dest="panpos"
+	Res:     		dest="res"             
+	Pan:     		dest="panpos"
 Env-window:
-	Attack:		dest="envattack" 
-	Decay:		dest="envdecay"  
+	Attack:			dest="envattack" 
+	Decay:			dest="envdecay"  
 	Release:		dest="envrel"    
 Pos-window:
-	Start:		dest="samstart" 	
-	Length:		dest="samlen"   
-	Loop Start:	dest="loopstart"
-	Loop End:	dest="loopend"  
+	Start:			dest="samstart" 	
+	Length:			dest="samlen"   
+	Loop Start:		dest="loopstart"
+	Loop End:		dest="loopend"  
 LFO-window:
-	LFO Rate:	dest="lforate"  
-	LFO Depth:	dest="lfoamount"
+	LFO Rate:		dest="lforate"  
+	LFO Depth:		dest="lfoamount"
 Gran-window:
-	Speed:		dest="grainreadspeed"
+	Speed:			dest="grainreadspeed"
 ```
 
 
@@ -184,16 +184,16 @@ In Delay window:
 <!-- Max 9 Modulation sources for the Delay effect -->
 Screen name:		xml name:
 
-Delay:			dest="delaymustime"
+Delay:				dest="delaymustime"
 Feedback			dest="feedback"     
-Cutoff:			dest="cutoff"        
+Cutoff:				dest="cutoff"        
 ____________________________________
 
 In Reverb window:
 <!-- Max 9 Modulation sources for the Reverb effect -->
 Screen name:		xml name:
 
-Decay:			dest="decay"	
+Decay:				dest="decay"	
 Predelay:			dest="predelay"	
 Damping:			dest="damping"	
 
