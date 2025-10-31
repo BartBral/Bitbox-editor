@@ -12,9 +12,11 @@ TO-DO:
 02-**New feature** Merge presets: When user has an preset open, and clicks merge preset; the following should happen: See what and how many Pads are unused. See how many pads are inside the file just selected to be merged with the one already in memory. If in-memory-pads + to-be-merged-pads > 16pads then ask the user, what pads should be imported from to-be-merged-preset; and checked on a checklist in a message window.
 
 
-03-Edit modal with all parameters, asot yet all parameters are implemented in the modal edit window.
+03-Edit modal with all parameters, as not yet all parameters are implemented in the modal edit window. To accomplish this in a nice way, we need to add Tabs to our modal window; tabs should be called: Main, Env, Lfo, Pos, Gran, Config
 
 04-Next to a slider, the parameter values should also be input by test, keyboard input. For fast and accurate exact values.
 
 **If you make any code changes, please __only__ send the JavaScript-function or part of the code that was changed. __Do not__ send the whole code, as that is way too expensive (token wise).**
+
+
 
