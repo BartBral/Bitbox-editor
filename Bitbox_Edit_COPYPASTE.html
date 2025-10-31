@@ -448,6 +448,42 @@
             border-radius: 6px;
             margin-top: 10px;
         }
+
+        .modal-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #404040;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: #4a9eff;
+        }
+
+        .tab-btn.active {
+            color: #4a9eff;
+            border-bottom-color: #4a9eff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 
@@ -519,122 +555,372 @@
                 <button class="close-btn" id="closeModal">×</button>
             </div>
 
-            <div class="param-section">
-                <h3>Main Parameters</h3>
-                <div class="param-grid">
-                    <div class="param">
-                        <label class="param-label">Level</label>
-                        <div class="param-control">
-                            <input type="range" class="slider" id="gaindb" min="-96000" max="12000" value="0">
-                            <span class="param-value" id="gaindb-val">0.0 dB</span>
+            <!-- Tabs -->
+            <div class="modal-tabs">
+                <button class="tab-btn active" data-tab="main">Main</button>
+                <button class="tab-btn" data-tab="env">Env</button>
+                <button class="tab-btn" data-tab="lfo">LFO</button>
+                <button class="tab-btn" data-tab="pos">Pos</button>
+                <button class="tab-btn" data-tab="gran">Gran</button>
+                <button class="tab-btn" data-tab="config">Config</button>
+            </div>
+
+            <!-- Main Tab -->
+            <div class="tab-content active" id="tab-main">
+                <div class="param-section">
+                    <h3>Main Parameters</h3>
+                    <div class="param-grid">
+                        <div class="param">
+                            <label class="param-label">Level</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="gaindb" min="-96000" max="12000" value="0">
+                                <span class="param-value" id="gaindb-val">0.0 dB</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="param">
-                        <label class="param-label">Pitch</label>
-                        <div class="param-control">
-                            <input type="range" class="slider" id="pitch" min="-24000" max="24000" value="0">
-                            <span class="param-value" id="pitch-val">0.00 st</span>
+                        <div class="param">
+                            <label class="param-label">Pitch</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="pitch" min="-24000" max="24000" value="0">
+                                <span class="param-value" id="pitch-val">0.00 st</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="param">
-                        <label class="param-label">Pan</label>
-                        <div class="param-control">
-                            <input type="range" class="slider" id="panpos" min="-1000" max="1000" value="0">
-                            <span class="param-value" id="panpos-val">Center</span>
+                        <div class="param">
+                            <label class="param-label">Pan</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="panpos" min="-1000" max="1000" value="0">
+                                <span class="param-value" id="panpos-val">Center</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="param">
-                        <label class="param-label">Filter</label>
-                        <div class="param-control">
-                            <input type="range" class="slider" id="dualfilcutoff" min="-1000" max="1000" value="0">
-                            <span class="param-value" id="dualfilcutoff-val">0.0%</span>
+                        <div class="param">
+                            <label class="param-label">Filter</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="dualfilcutoff" min="-1000" max="1000" value="0">
+                                <span class="param-value" id="dualfilcutoff-val">0.0%</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="param">
-                        <label class="param-label">Resonance</label>
-                        <div class="param-control">
-                            <input type="range" class="slider" id="res" min="0" max="1000" value="500">
-                            <span class="param-value" id="res-val">50.0%</span>
+                        <div class="param">
+                            <label class="param-label">Resonance</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="res" min="0" max="1000" value="500">
+                                <span class="param-value" id="res-val">50.0%</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="param-section">
-                <h3>Envelope</h3>
-                <canvas class="envelope-viz" id="envelopeCanvas"></canvas>
-                <div class="param-grid">
-                    <div class="param">
-                        <label class="param-label">Attack</label>
-                        <div class="param-control">
-                            <input type="range" class="slider" id="envattack" min="0" max="1000" value="0">
-                            <span class="param-value" id="envattack-val">0.0%</span>
+            <!-- Env Tab -->
+            <div class="tab-content" id="tab-env">
+                <div class="param-section">
+                    <h3>Envelope</h3>
+                    <canvas class="envelope-viz" id="envelopeCanvas"></canvas>
+                    <div class="param-grid">
+                        <div class="param">
+                            <label class="param-label">Attack</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="envattack" min="0" max="1000" value="0">
+                                <span class="param-value" id="envattack-val">0.0%</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="param">
-                        <label class="param-label">Decay</label>
-                        <div class="param-control">
-                            <input type="range" class="slider" id="envdecay" min="0" max="1000" value="0">
-                            <span class="param-value" id="envdecay-val">0.0%</span>
+                        <div class="param">
+                            <label class="param-label">Decay</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="envdecay" min="0" max="1000" value="0">
+                                <span class="param-value" id="envdecay-val">0.0%</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="param">
-                        <label class="param-label">Sustain</label>
-                        <div class="param-control">
-                            <input type="range" class="slider" id="envsus" min="0" max="1000" value="1000">
-                            <span class="param-value" id="envsus-val">100.0%</span>
+                        <div class="param">
+                            <label class="param-label">Sustain</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="envsus" min="0" max="1000" value="1000">
+                                <span class="param-value" id="envsus-val">100.0%</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="param">
-                        <label class="param-label">Release</label>
-                        <div class="param-control">
-                            <input type="range" class="slider" id="envrel" min="0" max="1000" value="200">
-                            <span class="param-value" id="envrel-val">20.0%</span>
+                        <div class="param">
+                            <label class="param-label">Release</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="envrel" min="0" max="1000" value="200">
+                                <span class="param-value" id="envrel-val">20.0%</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-        
+            <!-- LFO Tab -->
+            <div class="tab-content" id="tab-lfo">
+                <div class="param-section">
+                    <h3>LFO Parameters</h3>
+                    <div class="param-grid">
+                        <div class="param">
+                            <label class="param-label">LFO Wave</label>
+                            <select class="select" id="lfowave">
+                                <option value="0">Sine</option>
+                                <option value="1">Triangle</option>
+                                <option value="2">Saw Up</option>
+                                <option value="3">Saw Down</option>
+                                <option value="4">Square</option>
+                                <option value="5">Random</option>
+                                <option value="6">Sample & Hold</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">LFO Rate</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="lforate" min="0" max="1000" value="100">
+                                <span class="param-value" id="lforate-val">10.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">LFO Amount</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="lfoamount" min="0" max="1000" value="1000">
+                                <span class="param-value" id="lfoamount-val">100.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">LFO Key Trigger</label>
+                            <select class="select" id="lfokeytrig">
+                                <option value="0">Off</option>
+                                <option value="1">On</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">LFO Beat Sync</label>
+                            <select class="select" id="lfobeatsync">
+                                <option value="0">Off</option>
+                                <option value="1">On</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">LFO Rate Beat Sync</label>
+                            <select class="select" id="lforatebeatsync">
+                                <option value="0">Free</option>
+                                <option value="1">1/32</option>
+                                <option value="2">1/16T</option>
+                                <option value="3">1/16</option>
+                                <option value="4">1/8T</option>
+                                <option value="5">1/8</option>
+                                <option value="6">1/4T</option>
+                                <option value="7">1/4</option>
+                                <option value="8">1/2T</option>
+                                <option value="9">1/2</option>
+                                <option value="10">1 bar</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <div class="param-section">
-                <h3>Configuration</h3>
-                <div class="param-grid">
-                    <div class="param">
-                        <label class="param-label">Cell Mode</label>
-                        <select class="select" id="cellmode">
-                            <option value="0">Sample</option>
-                            <option value="1">Clip</option>
-                            <option value="2">Slicer</option>
-                            <option value="3">Granular</option>
-                        </select>
+            <!-- Pos Tab -->
+            <div class="tab-content" id="tab-pos">
+                <div class="param-section">
+                    <h3>Position & Loop</h3>
+                    <div class="param-grid">
+                        <div class="param">
+                            <label class="param-label">Sample Start</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="samstart" min="0" max="100000" value="0">
+                                <span class="param-value" id="samstart-val">0</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Sample Length</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="samlen" min="0" max="100000" value="0">
+                                <span class="param-value" id="samlen-val">0</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Loop Start</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="loopstart" min="0" max="100000" value="0">
+                                <span class="param-value" id="loopstart-val">0</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Loop End</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="loopend" min="0" max="100000" value="0">
+                                <span class="param-value" id="loopend-val">0</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Loop Fade Amount</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="loopfadeamt" min="0" max="1000" value="0">
+                                <span class="param-value" id="loopfadeamt-val">0.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Active Slice</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="actslice" min="1" max="64" value="1">
+                                <span class="param-value" id="actslice-val">1</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="param">
-                        <label class="param-label">Loop Mode</label>
-                        <select class="select" id="loopmodes">
-                            <option value="0">Off</option>
-                            <option value="1">Forward</option>
-                            <option value="2">Bidirect</option>
-                        </select>
+                </div>
+            </div>
+
+            <!-- Gran Tab -->
+            <div class="tab-content" id="tab-gran">
+                <div class="param-section">
+                    <h3>Granular Parameters</h3>
+                    <div class="param-grid">
+                        <div class="param">
+                            <label class="param-label">Grain Size</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="grainsizeperc" min="0" max="1000" value="300">
+                                <span class="param-value" id="grainsizeperc-val">30.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Grain Scatter</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="grainscat" min="0" max="1000" value="0">
+                                <span class="param-value" id="grainscat-val">0.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Grain Pan Random</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="grainpanrnd" min="0" max="1000" value="0">
+                                <span class="param-value" id="grainpanrnd-val">0.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Grain Density</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="graindensity" min="0" max="1000" value="600">
+                                <span class="param-value" id="graindensity-val">60.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Grain Read Speed</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="grainreadspeed" min="0" max="2000" value="1000">
+                                <span class="param-value" id="grainreadspeed-val">100.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Grain Source Window</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="gainssrcwin" min="0" max="1000" value="0">
+                                <span class="param-value" id="gainssrcwin-val">0.0%</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="param">
-                        <label class="param-label">Launch Mode</label>
-                        <select class="select" id="samtrigtype">
-                            <option value="0">Gate</option>
-                            <option value="1">Trigger</option>
-                            <option value="2">Toggle</option>
-                        </select>
-                    </div>
-                    <div class="param">
-                        <label class="param-label">Poly Mode</label>
-                        <select class="select" id="polymode">
-                            <option value="0">Mono</option>
-                            <option value="1">Poly 2</option>
-                            <option value="2">Poly 4</option>
-                            <option value="3">Poly 6</option>
-                            <option value="4">Poly 8</option>
-                            <option value="5">Poly Infinite</option>
-                        </select>
+                </div>
+            </div>
+
+            <!-- Config Tab -->
+            <div class="tab-content" id="tab-config">
+                <div class="param-section">
+                    <h3>Configuration</h3>
+                    <div class="param-grid">
+                        <div class="param">
+                            <label class="param-label">Cell Mode</label>
+                            <select class="select" id="cellmode">
+                                <option value="0">Sample</option>
+                                <option value="1">Clip</option>
+                                <option value="2">Slicer</option>
+                                <option value="3">Granular</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Loop Mode</label>
+                            <select class="select" id="loopmodes">
+                                <option value="0">Off</option>
+                                <option value="1">Forward</option>
+                                <option value="2">Bidirect</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Launch Mode</label>
+                            <select class="select" id="samtrigtype">
+                                <option value="0">Gate</option>
+                                <option value="1">Trigger</option>
+                                <option value="2">Toggle</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Poly Mode</label>
+                            <select class="select" id="polymode">
+                                <option value="0">Mono</option>
+                                <option value="1">Poly 2</option>
+                                <option value="2">Poly 4</option>
+                                <option value="3">Poly 6</option>
+                                <option value="4">Poly 8</option>
+                                <option value="5">Poly Infinite</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">MIDI Mode</label>
+                            <select class="select" id="midimode">
+                                <option value="0">Off</option>
+                                <option value="1">Chromatic</option>
+                                <option value="2">Drum Map</option>
+                                <option value="3">Sliced</option>
+                                <option value="4">Slice Step</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Reverse</label>
+                            <select class="select" id="reverse">
+                                <option value="0">Off</option>
+                                <option value="1">On</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Output Bus</label>
+                            <select class="select" id="outputbus">
+                                <option value="0">Main</option>
+                                <option value="1">Out 3/4</option>
+                                <option value="2">Out 5/6</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Choke Group</label>
+                            <select class="select" id="chokegrp">
+                                <option value="0">Off</option>
+                                <option value="1">Group 1</option>
+                                <option value="2">Group 2</option>
+                                <option value="3">Group 3</option>
+                                <option value="4">Group 4</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Root Note</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="rootnote" min="0" max="127" value="60">
+                                <span class="param-value" id="rootnote-val">C4 (60)</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">FX1 Send</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx1send" min="0" max="1000" value="0">
+                                <span class="param-value" id="fx1send-val">0.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">FX2 Send</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx2send" min="0" max="1000" value="0">
+                                <span class="param-value" id="fx2send-val">0.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Slice Step Mode</label>
+                            <select class="select" id="slicestepmode">
+                                <option value="0">Forward</option>
+                                <option value="1">Backward</option>
+                                <option value="2">Ping Pong</option>
+                                <option value="3">Random</option>
+                                <option value="4">Manual</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -761,6 +1047,7 @@
                 createPadGrid();
                 setupEventListeners();
                 initializeProject(); // ADD THIS
+                setupModalTabs();
                 setStatus('Ready');
                 console.log('PAD PUSHER: Ready!');
             } catch (error) {
@@ -1015,6 +1302,29 @@
             setupDragDrop();
         }
 
+        function setupModalTabs() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+                
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active from all
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                
+                    // Add active to clicked
+                    btn.classList.add('active');
+                    const tabId = 'tab-' + btn.dataset.tab;
+                    document.getElementById(tabId).classList.add('active');
+                
+                    // Redraw envelope if on Env tab
+                    if (btn.dataset.tab === 'env') {
+                        drawEnvelope();
+                    }
+                });
+            });
+        }
+
         function setupDragDrop() {
             const grid = document.getElementById('padGrid');
             grid.addEventListener('dragover', (e) => {
@@ -1066,17 +1376,12 @@
         }
 
         function setupParameterListeners() {
-            const params = [
-                'gaindb', 
-                'pitch', 
-                'panpos', 
-                'dualfilcutoff', 
-                'res',
-                'envattack', 
-                'envdecay', 
-                'envsus', 
-                'envrel'
-            ];
+            const params = ['gaindb', 'pitch', 'panpos', 'dualfilcutoff', 'res',
+                'envattack', 'envdecay', 'envsus', 'envrel',
+                'lforate', 'lfoamount', 
+                'samstart', 'samlen', 'loopstart', 'loopend', 'loopfadeamt', 'actslice',
+                'grainsizeperc', 'grainscat', 'grainpanrnd', 'graindensity', 'grainreadspeed', 'gainssrcwin',
+                'rootnote', 'fx1send', 'fx2send'];
 
             params.forEach(param => {
                 const slider = document.getElementById(param);
@@ -1120,7 +1425,7 @@
             });
 
             // Dropdowns
-            ['cellmode', 'loopmodes', 'samtrigtype', 'polymode'].forEach(param => {
+            ['cellmode', 'loopmodes', 'samtrigtype', 'polymode', 'lfowave', 'lfokeytrig', 'lfobeatsync', 'lforatebeatsync', 'midimode', 'reverse', 'outputbus', 'chokegrp', 'slicestepmode'].forEach(param => {
                 const select = document.getElementById(param);
                 if (select) {
                     select.addEventListener('change', () => {
@@ -1153,6 +1458,32 @@
                     return Math.round(val * 10);
                 default:
                     return Math.round(val);
+                case 'lforate':
+                case 'lfoamount':
+                case 'loopfadeamt':
+                case 'grainsizeperc':
+                case 'grainscat':
+                case 'grainpanrnd':
+                case 'graindensity':
+                case 'grainreadspeed':
+                case 'gainssrcwin':
+                case 'fx1send':
+                case 'fx2send':
+                    text = (val / 10).toFixed(1) + '%';
+                    break;
+                case 'samstart':
+                case 'samlen':
+                case 'loopstart':
+                case 'loopend':
+                case 'actslice':
+                    text = val.toString();
+                    break;
+                case 'rootnote':
+    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const octave = Math.floor(val / 12) - 1;
+    const note = notes[val % 12];
+    text = `${note}${octave} (${val})`;
+    break;    
             }
         }
 
@@ -1243,17 +1574,25 @@
 
         function loadParamsToModal(padData) {
             const params = padData.params;
-
+                
+            // Sliders
             ['gaindb', 'pitch', 'panpos', 'dualfilcutoff', 'res',
-                'envattack', 'envdecay', 'envsus', 'envrel'].forEach(param => {
-                    const slider = document.getElementById(param);
-                    if (slider && params[param] !== undefined) {
-                        slider.value = params[param];
-                        updateParamDisplay(param, params[param]);
-                    }
-                });
-
-            ['cellmode', 'loopmodes', 'samtrigtype', 'polymode'].forEach(param => {
+             'envattack', 'envdecay', 'envsus', 'envrel',
+             'lforate', 'lfoamount',
+             'samstart', 'samlen', 'loopstart', 'loopend', 'loopfadeamt', 'actslice',
+             'grainsizeperc', 'grainscat', 'grainpanrnd', 'graindensity', 'grainreadspeed', 'gainssrcwin',
+             'rootnote', 'fx1send', 'fx2send'].forEach(param => {
+                const slider = document.getElementById(param);
+                if (slider && params[param] !== undefined) {
+                    slider.value = params[param];
+                    updateParamDisplay(param, params[param]);
+                }
+            });
+        
+            // Dropdowns
+            ['cellmode', 'loopmodes', 'samtrigtype', 'polymode',
+             'lfowave', 'lfokeytrig', 'lfobeatsync', 'lforatebeatsync',
+             'midimode', 'reverse', 'outputbus', 'chokegrp', 'slicestepmode'].forEach(param => {
                 const select = document.getElementById(param);
                 if (select && params[param] !== undefined) {
                     select.value = params[param];
