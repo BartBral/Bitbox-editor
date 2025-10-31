@@ -1,8 +1,5 @@
 TO-DO:
 
-00-Bugfix Slice-mode preset gets broken by our app:
--Just opening and saving a working Slice-mode pad will get rendered broken, because the slice information just gets cut out of the file when saving. See here how Slices should be used in this preset.xml: https://raw.githubusercontent.com/BartBral/Bitbox-editor/refs/heads/main/Test_Presets/preset_MOD_comments.xml
-
 01-Export selected:      
 -Multi selection: It will now export all pads in the selection to the same json file. This is not what I want; I want that all pads are saved in a separate json. This will make it more easy to import one pad later on, when import pad will be integrated. 
 

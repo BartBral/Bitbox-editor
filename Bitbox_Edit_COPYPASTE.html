@@ -711,7 +711,8 @@
                     recmonoutbus: '0',
                     deftemplate: '1'
                 },
-                modsources: []
+                modsources: [],
+                slices: []
             };
         }
 
@@ -1263,7 +1264,8 @@
                         filename: cell.getAttribute('filename') || '',
                         type: cell.getAttribute('type'),
                         params: {},
-                        modsources: []
+                        modsources: [],
+                        slices: []
                     };
 
                     const params = cell.querySelector('params');
@@ -1281,6 +1283,16 @@
                             amount: mod.getAttribute('amount')
                         });
                     });
+
+                    // ADD THIS SECTION - Parse slices
+                    const slicesNode = cell.querySelector('slices');
+                    if (slicesNode) {
+                        slicesNode.querySelectorAll('slice').forEach(slice => {
+                            padData.slices.push({
+                                pos: slice.getAttribute('pos')
+                            });
+                        });
+                    }
 
                     presetData.pads[row][col] = padData;
                 });
@@ -1375,6 +1387,17 @@
                             xml += `            <modsource dest="${mod.dest}" src="${mod.src}" slot="${mod.slot}" amount="${mod.amount}"/>\n`;
                         });
                     }
+                    // ADD THIS SECTION - Output slices
+                    if (pad.slices && pad.slices.length > 0) {
+                        xml += '            <slices>\n';
+                        pad.slices.forEach(slice => {
+                            xml += `                <slice pos="${slice.pos}"/>\n`;
+                        });
+                        xml += '            </slices>\n';
+                    } else {
+                        xml += '            <slices/>\n';
+                    }
+
 
                     xml += '            <slices/>\n        </cell>\n';
                 }

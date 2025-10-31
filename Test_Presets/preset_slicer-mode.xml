@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+    <session version="2">
+        <cell row="0" column="0" layer="0" filename="\Presets\minmaxSlice_mode\Finewine\FineWine_300.wav" type="sample">
+            <params gaindb="0" pitch="-12000" panpos="0" samtrigtype="0" loopmode="0" loopmodes="2" midimode="0" reverse="1" cellmode="0" envattack="285" envdecay="301" envsus="791" envrel="440" samstart="0" samlen="40056" loopstart="2000" loopend="40037" quantsize="3" synctype="5" actslice="1" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="-353" res="259" rootnote="72" beatcount="0" fx1send="877" fx2send="643" multisammode="0" interpqual="0" playthru="0" slicerquantsize="13" slicersync="0" padnote="0" loopfadeamt="0" lfowave="6" lforate="751" lfoamount="1000" lfokeytrig="1" lfobeatsync="0" lforatebeatsync="0" grainsizeperc="300" grainscat="0" grainpanrnd="0" graindensity="600" slicemode="0" legatomode="0" gainssrcwin="0" grainreadspeed="1000" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <modsource dest="gaindb" src="velocity" slot="0" amount="409"/>
+            <modsource dest="gaindb" src="mod1" slot="1" amount="176"/>
+            <modsource dest="gaindb" src="midivol" slot="2" amount="1000"/>
+            <modsource dest="pitch" src="lfo1" slot="0" amount="1000"/>
+            <modsource dest="pitch" src="keytrig" slot="1" amount="464"/>
+            <modsource dest="pitch" src="mod2" slot="2" amount="4096"/>
+            <modsource dest="dualfilcutoff" src="mod2" slot="0" amount="920"/>
+            <modsource dest="dualfilcutoff" src="mod1" slot="1" amount="465"/>
+            <modsource dest="dualfilcutoff" src="mod2" slot="2" amount="362"/>
+            <modsource dest="lforate" src="lfo1" slot="0" amount="841"/>
+            <modsource dest="lforate" src="mod1" slot="1" amount="988"/>
+            <modsource dest="panpos" src="lfo1" slot="2" amount="661"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="0" column="1" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <modsource dest="gaindb" src="velocity" slot="0" amount="400"/>
+            <modsource dest="gaindb" src="midivol" slot="2" amount="1000"/>
+            <modsource dest="panpos" src="midipan" slot="2" amount="1000"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="0" column="2" layer="0" filename="\Presets\minmaxSlice_mode\Finewine\FineWine_302.wav" type="sample">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="1" loopmodes="1" midimode="4" reverse="0" cellmode="2" envattack="0" envdecay="0" envsus="1000" envrel="200" samstart="0" samlen="18696" loopstart="857" loopend="18678" quantsize="8" synctype="6" actslice="1" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="4" chokegrp="0" dualfilcutoff="0" res="500" rootnote="92" beatcount="0" fx1send="569" fx2send="594" multisammode="0" interpqual="0" playthru="1" slicerquantsize="13" slicersync="0" padnote="0" loopfadeamt="0" lfowave="0" lforate="100" lfoamount="1000" lfokeytrig="0" lfobeatsync="0" lforatebeatsync="0" grainsizeperc="300" grainscat="0" grainpanrnd="0" graindensity="600" slicemode="0" legatomode="0" gainssrcwin="0" grainreadspeed="1001" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <modsource dest="gaindb" src="velocity" slot="0" amount="400"/>
+            <modsource dest="gaindb" src="midivol" slot="2" amount="1000"/>
+            <modsource dest="panpos" src="midipan" slot="2" amount="1000"/>
+            <modsource dest="slicestepmode" src="keytrig" slot="0" amount="1000"/>
+            <modsource dest="actslice" src="mod1" slot="0" amount="955"/>
+            <slices>
+                <slice pos="1000"/>
+                <slice pos="2031"/>
+                <slice pos="5077"/>
+                <slice pos="6115"/>
+                <slice pos="9431"/>
+                <slice pos="14545"/>
+            </slices>
+            <slices/>
+        </cell>
+        <cell row="0" column="3" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <modsource dest="gaindb" src="velocity" slot="0" amount="400"/>
+            <modsource dest="gaindb" src="midivol" slot="2" amount="1000"/>
+            <modsource dest="panpos" src="midipan" slot="2" amount="1000"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="1" column="0" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <modsource dest="gaindb" src="velocity" slot="0" amount="400"/>
+            <modsource dest="gaindb" src="midivol" slot="2" amount="1000"/>
+            <modsource dest="panpos" src="midipan" slot="2" amount="1000"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="1" column="1" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <modsource dest="gaindb" src="velocity" slot="0" amount="400"/>
+            <modsource dest="gaindb" src="midivol" slot="2" amount="1000"/>
+            <modsource dest="panpos" src="midipan" slot="2" amount="1000"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="1" column="2" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <modsource dest="gaindb" src="velocity" slot="0" amount="400"/>
+            <modsource dest="gaindb" src="midivol" slot="2" amount="1000"/>
+            <modsource dest="panpos" src="midipan" slot="2" amount="1000"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="1" column="3" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <modsource dest="gaindb" src="velocity" slot="0" amount="400"/>
+            <modsource dest="gaindb" src="midivol" slot="2" amount="1000"/>
+            <modsource dest="panpos" src="midipan" slot="2" amount="1000"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="2" column="0" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="2" column="1" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="2" column="2" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="2" column="3" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="3" column="0" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="3" column="1" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="3" column="2" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="3" column="3" layer="0" filename="" type="samtempl">
+            <params gaindb="0" pitch="0" panpos="0" samtrigtype="0" loopmode="0" loopmodes="0" midimode="0" reverse="0" cellmode="0" envattack="0" envdecay="0" envsus="1000" envrel="200" quantsize="3" synctype="5" outputbus="0" polymode="0" polymodeslice="0" slicestepmode="0" chokegrp="0" dualfilcutoff="0" res="500" rootnote="0" beatcount="0" fx1send="0" fx2send="0" interpqual="0" playthru="0" padnote="0" deftemplate="1" recpresetlen="0" recquant="3" recinput="0" recusethres="0" recthresh="-20000" recmonoutbus="0"/>
+            <slices/>
+            <slices/>
+        </cell>
+        <cell row="0" layer="3" type="delay">
+            <params delay="400" delaymustime="6" feedback="400" cutoff="120" filtquality="1000" dealybeatsync="1" filtenable="1" delaypingpong="1"/>
+        </cell>
+        <cell row="1" layer="3" type="reverb">
+            <params decay="600" predelay="40" damping="500"/>
+        </cell>
+        <cell row="2" layer="3" type="eq">
+            <params eqactband="0" eqgain="0" eqcutoff="200" eqres="400" eqenable="1" eqtype="0" eqgain2="0" eqcutoff2="400" eqres2="400" eqenable2="1" eqtype2="0" eqgain3="0" eqcutoff3="600" eqres3="400" eqenable3="1" eqtype3="0" eqgain4="0" eqcutoff4="800" eqres4="400" eqenable4="1" eqtype4="0"/>
+        </cell>
+        <cell row="3" layer="3" type="null">
+            <params/>
+        </cell>
+        <cell row="4" layer="3" type="null">
+            <params/>
+        </cell>
+        <cell row="0" layer="8" type="ioconnectin">
+            <params inputiocon="gatein"/>
+        </cell>
+        <cell row="1" layer="8" type="ioconnectin">
+            <params inputiocon="gatein"/>
+        </cell>
+        <cell row="2" layer="8" type="ioconnectin">
+            <params inputiocon="gatein"/>
+        </cell>
+        <cell row="3" layer="8" type="ioconnectin">
+            <params inputiocon="gatein"/>
+        </cell>
+        <cell row="4" layer="8" type="ioconnectin">
+            <params inputiocon="gatein"/>
+        </cell>
+        <cell row="5" layer="8" type="ioconnectin">
+            <params inputiocon="gatein"/>
+        </cell>
+        <cell row="6" layer="8" type="ioconnectin">
+            <params inputiocon="gatein"/>
+        </cell>
+        <cell row="7" layer="8" type="ioconnectin">
+            <params inputiocon="gatein"/>
+        </cell>
+        <cell row="0" layer="9" type="ioconnectout">
+            <params outputiocon="chanout1"/>
+        </cell>
+        <cell row="1" layer="9" type="ioconnectout">
+            <params outputiocon="chanout2"/>
+        </cell>
+        <cell row="2" layer="9" type="ioconnectout">
+            <params outputiocon="chanout3"/>
+        </cell>
+        <cell row="3" layer="9" type="ioconnectout">
+            <params outputiocon="chanout4"/>
+        </cell>
+        <cell row="4" layer="9" type="ioconnectout">
+            <params outputiocon="chanout5"/>
+        </cell>
+        <cell row="5" layer="9" type="ioconnectout">
+            <params outputiocon="chanout6"/>
+        </cell>
+        <cell row="6" layer="9" type="ioconnectout">
+            <params outputiocon="masterout1"/>
+        </cell>
+        <cell row="7" layer="9" type="ioconnectout">
+            <params outputiocon="masterout2"/>
+        </cell>
+        <cell type="song">
+            <params globtempo="120" songmode="0" sectcount="1" sectloop="1" swing="50" keymode="1" keyroot="3"/>
+        </cell>
+    </session>
+</document>
