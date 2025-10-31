@@ -155,3 +155,48 @@ LFO-window:
 Gran-window:
 	Speed:		dest="grainreadspeed"
 ```
+
+
+And Modulation for the two FX; 
+Delay and Reverb:
+```
+Modulation Sources:
+src = "mod1"     
+src = "mod2"     
+src = "mod3"     
+src = "mod4"     
+src = "mod5"     
+src = "mod6"     
+src = "mod7"     
+src = "mod8"     
+src = "keytrig"  
+src = "velocity" 
+src = "lfo1"     
+src = "pitchbend"
+src = "modwheel"
+src = "midivol" 
+src = "midipan" 
+src = "midicc"  
+
+____________________________________
+
+In Delay window:
+<!-- Max 9 Modulation sources for the Delay effect -->
+Screen name:		xml name:
+
+Delay:			dest="delaymustime"
+Feedback			dest="feedback"     
+Cutoff:			dest="cutoff"        
+____________________________________
+
+In Reverb window:
+<!-- Max 9 Modulation sources for the Reverb effect -->
+Screen name:		xml name:
+
+Decay:		dest="decay"	
+Predelay:	dest="predelay"	
+Damping:		dest="damping"	
+
+____________________________________
+```
+           	
