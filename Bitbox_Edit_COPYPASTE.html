@@ -1421,6 +1421,56 @@
                             display.blur();
                         }
                     });
+                    // Add mouse wheel and touch support for parameter values
+                    display.addEventListener('wheel', (e) => {
+                        e.preventDefault();
+                        const currentVal = parseInt(slider.value);
+                        const step = e.shiftKey ? 100 : 10; // Hold shift for bigger steps
+                        const newVal = currentVal + (e.deltaY < 0 ? step : -step);
+                        const clampedVal = Math.max(parseInt(slider.min), Math.min(parseInt(slider.max), newVal));
+
+                        slider.value = clampedVal;
+                        updateParamDisplay(param, clampedVal);
+
+                        if (currentEditingPad && presetData) {
+                            const row = parseInt(currentEditingPad.dataset.row);
+                            const col = parseInt(currentEditingPad.dataset.col);
+                            presetData.pads[row][col].params[param] = clampedVal;
+                        }
+                        if (param.startsWith('env')) drawEnvelope();
+                    });
+
+                    // Touch support for mobile
+                    let touchStartY = 0;
+                    let touchStartValue = 0;
+
+                    display.addEventListener('touchstart', (e) => {
+                        touchStartY = e.touches[0].clientY;
+                        touchStartValue = parseInt(slider.value);
+                        e.preventDefault();
+                    }, { passive: false });
+
+                    display.addEventListener('touchmove', (e) => {
+                        const touchY = e.touches[0].clientY;
+                        const deltaY = touchStartY - touchY; // Inverted: swipe up = increase
+                        const sensitivity = 2; // Adjust sensitivity
+                        const step = Math.floor(deltaY / sensitivity);
+
+                        const newVal = touchStartValue + step * 10;
+                        const clampedVal = Math.max(parseInt(slider.min), Math.min(parseInt(slider.max), newVal));
+
+                        slider.value = clampedVal;
+                        updateParamDisplay(param, clampedVal);
+
+                        if (currentEditingPad && presetData) {
+                            const row = parseInt(currentEditingPad.dataset.row);
+                            const col = parseInt(currentEditingPad.dataset.col);
+                            presetData.pads[row][col].params[param] = clampedVal;
+                        }
+                        if (param.startsWith('env')) drawEnvelope();
+
+                        e.preventDefault();
+                    }, { passive: false });
                 }
             });
 
