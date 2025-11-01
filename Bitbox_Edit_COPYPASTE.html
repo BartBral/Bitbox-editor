@@ -280,7 +280,7 @@
 
         /* Context Menu */
         .context-menu {
-            position: fixed;
+            position: absolute ;
             background: #2a2a2a;
             border: 1px solid #404040;
             border-radius: 6px;
@@ -397,6 +397,7 @@
             font-weight: 500;
             color: #888;
             font-size: 0.85em;
+            
         }
 
         .param-control {
@@ -571,6 +572,16 @@
                     <h3>Main Parameters</h3>
                     <div class="param-grid">
                         <div class="param">
+                            <label class="param-label">Cell Mode</label>
+                            <select class="select" id="cellmode">
+                                <option value="0">Sample</option>
+                                <option value="1">Clip</option>
+                                <option value="2">Slicer</option>
+                                <option value="3">Granular</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            
                             <label class="param-label">Level</label>
                             <div class="param-control">
                                 <input type="range" class="slider" id="gaindb" min="-96000" max="12000" value="0">
@@ -603,6 +614,20 @@
                             <div class="param-control">
                                 <input type="range" class="slider" id="res" min="0" max="1000" value="500">
                                 <span class="param-value" id="res-val">50.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">FX1 Send</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx1send" min="0" max="1000" value="0">
+                                <span class="param-value" id="fx1send-val">0.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">FX2 Send</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx2send" min="0" max="1000" value="0">
+                                <span class="param-value" id="fx2send-val">0.0%</span>
                             </div>
                         </div>
                     </div>
@@ -655,13 +680,15 @@
                         <div class="param">
                             <label class="param-label">LFO Wave</label>
                             <select class="select" id="lfowave">
-                                <option value="0">Sine</option>
-                                <option value="1">Triangle</option>
-                                <option value="2">Saw Up</option>
-                                <option value="3">Saw Down</option>
-                                <option value="4">Square</option>
-                                <option value="5">Random</option>
-                                <option value="6">Sample & Hold</option>
+                                <option value="0">Saw Up</option>
+                                <option value="1">Saw Down</option>
+                                <option value="2">Triangle</option>
+                                <option value="3">Positive Triangle</option>
+                                <option value="4">Sine</option>
+                                <option value="5">Positive Sine</option>
+                                <option value="6">Square</option>
+                                <option value="7">Positive Square</option>
+                                <option value="8">Random</option>
                             </select>
                         </div>
                         <div class="param">
@@ -695,17 +722,18 @@
                         <div class="param">
                             <label class="param-label">LFO Rate Beat Sync</label>
                             <select class="select" id="lforatebeatsync">
-                                <option value="0">Free</option>
-                                <option value="1">1/32</option>
-                                <option value="2">1/16T</option>
-                                <option value="3">1/16</option>
-                                <option value="4">1/8T</option>
-                                <option value="5">1/8</option>
+                                <option value="0">8 bars</option>
+                                <option value="1">4 bars</option>
+                                <option value="2">2 bars</option>
+                                <option value="3">1 bar</option>
+                                <option value="4">1/2</option>
+                                <option value="5">1/2T</option>
                                 <option value="6">1/4T</option>
-                                <option value="7">1/4</option>
-                                <option value="8">1/2T</option>
-                                <option value="9">1/2</option>
-                                <option value="10">1 bar</option>
+                                <option value="7">1/8T</option>
+                                <option value="8">1/16T</option>
+                                <option value="9">1/32</option>
+                                <option value="10">1/32T</option>
+                                <option value="11">1/64</option>
                             </select>
                         </div>
                     </div>
@@ -819,15 +847,7 @@
                 <div class="param-section">
                     <h3>Configuration</h3>
                     <div class="param-grid">
-                        <div class="param">
-                            <label class="param-label">Cell Mode</label>
-                            <select class="select" id="cellmode">
-                                <option value="0">Sample</option>
-                                <option value="1">Clip</option>
-                                <option value="2">Slicer</option>
-                                <option value="3">Granular</option>
-                            </select>
-                        </div>
+                        
                         <div class="param">
                             <label class="param-label">Loop Mode</label>
                             <select class="select" id="loopmodes">
@@ -852,17 +872,29 @@
                                 <option value="2">Poly 4</option>
                                 <option value="3">Poly 6</option>
                                 <option value="4">Poly 8</option>
-                                <option value="5">Poly Infinite</option>
+                                <option value="5">Poly X</option>
                             </select>
                         </div>
                         <div class="param">
-                            <label class="param-label">MIDI Mode</label>
+                            <label class="param-label">MIDI Channel</label>
                             <select class="select" id="midimode">
-                                <option value="0">Off</option>
-                                <option value="1">Chromatic</option>
-                                <option value="2">Drum Map</option>
-                                <option value="3">Sliced</option>
-                                <option value="4">Slice Step</option>
+                                <option value="0">None</option>
+                                <option value="1">Ch 1 (omni)</option>
+                                <option value="2">Ch 2</option>
+                                <option value="3">Ch 3</option>
+                                <option value="4">Ch 4</option>
+                                <option value="5">Ch 5</option>
+                                <option value="6">Ch 6</option>
+                                <option value="7">Ch 7</option>
+                                <option value="8">Ch 8</option>
+                                <option value="9">Ch 9</option>
+                                <option value="10">Ch 10</option>
+                                <option value="11">Ch 11</option>
+                                <option value="12">Ch 12</option>
+                                <option value="13">Ch 13</option>
+                                <option value="14">Ch 14</option>
+                                <option value="15">Ch 15</option>
+                                <option value="16">Ch 16</option>
                             </select>
                         </div>
                         <div class="param">
@@ -875,50 +907,174 @@
                         <div class="param">
                             <label class="param-label">Output Bus</label>
                             <select class="select" id="outputbus">
-                                <option value="0">Main</option>
-                                <option value="1">Out 3/4</option>
-                                <option value="2">Out 5/6</option>
+                                <option value="0">Out1/2</option>
+                                <option value="1">Out3/4</option>
+                                <option value="2">Out5/6</option>
+                                <option value="3">Out7/8</option>
+                                <option value="4">Out1</option>
+                                <option value="5">Out2</option>
+                                <option value="6">Out3</option>
+                                <option value="7">Out4</option>
+                                <option value="8">Out5</option>
+                                <option value="9">Out6</option>
+                                <option value="10">Out7</option>
+                                <option value="11">Out8</option>
                             </select>
                         </div>
                         <div class="param">
-                            <label class="param-label">Choke Group</label>
+                            <label class="param-label">Excl Group:</label>
                             <select class="select" id="chokegrp">
-                                <option value="0">Off</option>
-                                <option value="1">Group 1</option>
-                                <option value="2">Group 2</option>
-                                <option value="3">Group 3</option>
-                                <option value="4">Group 4</option>
+                                <option value="0">Excl X (Off)</option>
+                                <option value="1">Excl A</option>
+                                <option value="2">Excl B</option>
+                                <option value="3">Excl C</option>
+                                <option value="4">Excl D</option>
                             </select>
                         </div>
+
                         <div class="param">
                             <label class="param-label">Root Note</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="rootnote" min="0" max="127" value="60">
-                                <span class="param-value" id="rootnote-val">C4 (60)</span>
-                            </div>
+                            <select class="select" id="rootnote">
+                                <option   value="0">Off</option>
+                                <option   value="1">C-1   (0)</option>
+                                <option   value="2">C#-1  (1)</option>
+                                <option   value="3">D-1   (2)</option>
+                                <option   value="4">D#-1  (3)</option>
+                                <option   value="5">E-1   (4)</option>
+                                <option   value="6">F-1   (5)</option>
+                                <option   value="7">F#-1  (6)</option>
+                                <option   value="8">G-1   (7)</option>
+                                <option   value="9">G#-1  (8)</option>
+                                <option  value="10">A-1   (9)</option>
+                                <option  value="11">A#-1 (10)</option>
+                                <option  value="12">B-1  (11)</option>
+                                <option  value="13">C0   (12)</option>
+                                <option  value="14">C#0  (13)</option>
+                                <option  value="15">D0   (14)</option>
+                                <option  value="16">D#0  (15)</option>
+                                <option  value="17">E0   (16)</option>
+                                <option  value="18">F0   (17)</option>
+                                <option  value="19">F#0  (18)</option>
+                                <option  value="20">G0   (19)</option>
+                                <option  value="21">G#0  (20)</option>
+                                <option  value="22">A0   (21)</option>
+                                <option  value="23">A#0  (22)</option>
+                                <option  value="24">B0   (23)</option>
+                                <option  value="25">C1   (24)</option>
+                                <option  value="26">C#1  (25)</option>
+                                <option  value="27">D1   (26)</option>
+                                <option  value="28">D#1  (27)</option>
+                                <option  value="29">E1   (28)</option>
+                                <option  value="30">F1   (29)</option>
+                                <option  value="31">F#1  (30)</option>
+                                <option  value="32">G1   (31)</option>
+                                <option  value="33">G#1  (32)</option>
+                                <option  value="34">A1   (33)</option>
+                                <option  value="35">A#1  (34)</option>
+                                <option  value="36">B1   (35)</option>
+                                <option  value="37">C2   (36)</option>
+                                <option  value="38">C#2  (37)</option>
+                                <option  value="39">D2   (38)</option>
+                                <option  value="40">D#2  (39)</option>
+                                <option  value="41">E2   (40)</option>
+                                <option  value="42">F2   (41)</option>
+                                <option  value="43">F#2  (42)</option>
+                                <option  value="44">G2   (43)</option>
+                                <option  value="45">G#2  (44)</option>
+                                <option  value="46">A2   (45)</option>
+                                <option  value="47">A#2  (46)</option>
+                                <option  value="48">B2   (47)</option>
+                                <option  value="49">C3   (48)</option>
+                                <option  value="50">C#3  (49)</option>
+                                <option  value="51">D3   (50)</option>
+                                <option  value="52">D#3  (51)</option>
+                                <option  value="53">E3   (52)</option>
+                                <option  value="54">F3   (53)</option>
+                                <option  value="55">F#3  (54)</option>
+                                <option  value="56">G3   (55)</option>
+                                <option  value="57">G#3  (56)</option>
+                                <option  value="58">A3   (57)</option>
+                                <option  value="59">A#3  (58)</option>
+                                <option  value="60">B3   (59)</option>
+                                <option  value="61">C4   (60)</option>
+                                <option  value="62">C#4  (61)</option>
+                                <option  value="63">D4   (62)</option>
+                                <option  value="64">D#4  (63)</option>
+                                <option  value="65">E4   (64)</option>
+                                <option  value="66">F4   (65)</option>
+                                <option  value="67">F#4  (66)</option>
+                                <option  value="68">G4   (67)</option>
+                                <option  value="69">G#4  (68)</option>
+                                <option  value="70">A4   (69)</option>
+                                <option  value="71">A#4  (70)</option>
+                                <option  value="72">B4   (71)</option>
+                                <option  value="73">C5   (72)</option>
+                                <option  value="74">C#5  (73)</option>
+                                <option  value="75">D5   (74)</option>
+                                <option  value="76">D#5  (75)</option>
+                                <option  value="77">E5   (76)</option>
+                                <option  value="78">F5   (77)</option>
+                                <option  value="79">F#5  (78)</option>
+                                <option  value="80">G5   (79)</option>
+                                <option  value="81">G#5  (80)</option>
+                                <option  value="82">A5   (81)</option>
+                                <option  value="83">A#5  (82)</option>
+                                <option  value="84">B5   (83)</option>
+                                <option  value="85">C6   (84)</option>
+                                <option  value="86">C#6  (85)</option>
+                                <option  value="87">D6   (86)</option>
+                                <option  value="88">D#6  (87)</option>
+                                <option  value="89">E6   (88)</option>
+                                <option  value="90">F6   (89)</option>
+                                <option  value="91">F#6  (90)</option>
+                                <option  value="92">G6   (91)</option>
+                                <option  value="93">G#6  (92)</option>
+                                <option  value="94">A6   (93)</option>
+                                <option  value="95">A#6  (94)</option>
+                                <option  value="96">B6   (95)</option>
+                                <option  value="97">C7   (96)</option>
+                                <option  value="98">C#7  (97)</option>
+                                <option  value="99">D7   (98)</option>
+                                <option value="100">D#7  (99)</option>
+                                <option value="101">E7  (100)</option>
+                                <option value="102">F7  (101)</option>
+                                <option value="103">F#7 (102)</option>
+                                <option value="104">G7  (103)</option>
+                                <option value="105">G#7 (104)</option>
+                                <option value="106">A7  (105)</option>
+                                <option value="107">A#7 (106)</option>
+                                <option value="108">B7  (107)</option>
+                                <option value="109">C8  (108)</option>
+                                <option value="110">C#8 (109)</option>
+                                <option value="111">D8  (110)</option>
+                                <option value="112">D#8 (111)</option>
+                                <option value="113">E8  (112)</option>
+                                <option value="114">F8  (113)</option>
+                                <option value="115">F#8 (114)</option>
+                                <option value="116">G8  (115)</option>
+                                <option value="117">G#8 (116)</option>
+                                <option value="118">A8  (117)</option>
+                                <option value="119">A#8 (118)</option>
+                                <option value="120">B8  (119)</option>
+                                <option value="121">C9  (120)</option>
+                                <option value="122">C#9 (121)</option>
+                                <option value="123">D9  (122)</option>
+                                <option value="124">D#9 (123)</option>
+                                <option value="125">E9  (124)</option>
+                                <option value="126">F9  (125)</option>
+                                <option value="127">F#9 (126)</option>
+                                <option value="128">G9  (127)</option> 
+                            </select>
                         </div>
+                        
                         <div class="param">
-                            <label class="param-label">FX1 Send</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="fx1send" min="0" max="1000" value="0">
-                                <span class="param-value" id="fx1send-val">0.0%</span>
-                            </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">FX2 Send</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="fx2send" min="0" max="1000" value="0">
-                                <span class="param-value" id="fx2send-val">0.0%</span>
-                            </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Slice Step Mode</label>
+                            <label class="param-label">Slice Seq:</label>
                             <select class="select" id="slicestepmode">
-                                <option value="0">Forward</option>
-                                <option value="1">Backward</option>
-                                <option value="2">Ping Pong</option>
+                                <option value="0">None</option>
+                                <option value="1">Forward</option>
+                                <option value="2">Backwards</option>
                                 <option value="3">Random</option>
-                                <option value="4">Manual</option>
+                                <option value="4">Stagger</option>
                             </select>
                         </div>
                     </div>
@@ -1421,7 +1577,7 @@
                             display.blur();
                         }
                     });
-                    // Add mouse wheel and touch support for parameter values
+                    // Add mouse wheel support (with explicit non-passive flag)
                     display.addEventListener('wheel', (e) => {
                         e.preventDefault();
                         const currentVal = parseInt(slider.value);
@@ -1438,7 +1594,7 @@
                             presetData.pads[row][col].params[param] = clampedVal;
                         }
                         if (param.startsWith('env')) drawEnvelope();
-                    });
+                    }, { passive: false });
 
                     // Touch support for mobile
                     let touchStartY = 0;
