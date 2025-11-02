@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="PAD PUSHER - The essential preset editor for 1010music Bitbox Micro and mk2">
     <title>PAD PUSHER - Bitbox Preset Editor</title>
-    
+
     <!-- <script src="https://unpkg.com/fflate@0.8.2/lib/browser.js"></script> -->
     <script src="fflate.js" defer></script>
 
@@ -280,7 +280,7 @@
 
         /* Context Menu */
         .context-menu {
-            position: absolute ;
+            position: absolute;
             background: #2a2a2a;
             border: 1px solid #404040;
             border-radius: 6px;
@@ -321,7 +321,7 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.8);
             z-index: 2000;
-            align-items: center;
+            align-items: top;
             justify-content: center;
         }
 
@@ -397,7 +397,7 @@
             font-weight: 500;
             color: #888;
             font-size: 0.85em;
-            
+
         }
 
         .param-control {
@@ -408,8 +408,8 @@
 
         .slider {
             flex: 1;
-            height: 4px;
-            border-radius: 2px;
+            /* height: 4px; */
+            border-radius: 5px;
             background: #404040;
             outline: none;
             -webkit-appearance: none;
@@ -419,14 +419,14 @@
             -webkit-appearance: none;
             width: 16px;
             height: 16px;
-            border-radius: 50%;
+            border-radius: 5px;
             background: #4a9eff;
             cursor: pointer;
         }
 
         .param-value {
             min-width: 75px;
-            text-align: right;
+            text-align: left;
             font-weight: 600;
             color: #4a9eff;
             font-size: 0.9em;
@@ -484,6 +484,35 @@
 
         .tab-content.active {
             display: block;
+        }
+
+        /* dropdown menu styling */
+        .select {
+            padding: 8px;
+            border: 1px solid #585656;
+            border-radius: 6px;
+            background: hsl(212, 54%, 37%);
+            color: #f2f1f1;
+            font-size: 0.9em;
+            cursor: pointer;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            /* ADD THIS */
+            font-weight: 500;
+            /* ADD THIS - makes text bolder */
+        }
+
+        .select option {
+            background: #1a1a1a5c;
+            color: #e0e0e0;
+            padding: 8px;
+            font-weight: 500;
+            /* ADD THIS */
+        }
+
+        /* Hover state for options (limited browser support) */
+        .select option:hover {
+            background: #4a9eff;
+            color: white;
         }
     </style>
 </head>
@@ -581,7 +610,7 @@
                             </select>
                         </div>
                         <div class="param">
-                            
+
                             <label class="param-label">Level</label>
                             <div class="param-control">
                                 <input type="range" class="slider" id="gaindb" min="-96000" max="12000" value="0">
@@ -630,6 +659,7 @@
                                 <span class="param-value" id="fx2send-val">0.0%</span>
                             </div>
                         </div>
+                        
                     </div>
                 </div>
             </div>
@@ -699,7 +729,7 @@
                             </div>
                         </div>
                         <div class="param">
-                            <label class="param-label">LFO Amount</label>
+                            <label class="param-label">LFO Depth</label>
                             <div class="param-control">
                                 <input type="range" class="slider" id="lfoamount" min="0" max="1000" value="1000">
                                 <span class="param-value" id="lfoamount-val">100.0%</span>
@@ -787,6 +817,38 @@
                                 <span class="param-value" id="actslice-val">1</span>
                             </div>
                         </div>
+                        <div class="param">
+                            <label class="param-label">Loop Modes</label>
+                            <select class="select" id="loopmodes">
+                                <option value="0">Off</option>
+                                <option value="1">Forward</option>
+                                <option value="2">Bidirect</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Loop Mode</label>
+                            <select class="select" id="loopmode">
+                                <option value="0">Off</option>
+                                <option value="1">On</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Slice Seq:</label>
+                            <select class="select" id="slicestepmode">
+                                <option value="0">None</option>
+                                <option value="1">Forward</option>
+                                <option value="2">Backwards</option>
+                                <option value="3">Random</option>
+                                <option value="4">Stagger</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Reverse</label>
+                            <select class="select" id="reverse">
+                                <option value="0">Off</option>
+                                <option value="1">On</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -847,15 +909,8 @@
                 <div class="param-section">
                     <h3>Configuration</h3>
                     <div class="param-grid">
+
                         
-                        <div class="param">
-                            <label class="param-label">Loop Mode</label>
-                            <select class="select" id="loopmodes">
-                                <option value="0">Off</option>
-                                <option value="1">Forward</option>
-                                <option value="2">Bidirect</option>
-                            </select>
-                        </div>
                         <div class="param">
                             <label class="param-label">Launch Mode</label>
                             <select class="select" id="samtrigtype">
@@ -897,13 +952,7 @@
                                 <option value="16">Ch 16</option>
                             </select>
                         </div>
-                        <div class="param">
-                            <label class="param-label">Reverse</label>
-                            <select class="select" id="reverse">
-                                <option value="0">Off</option>
-                                <option value="1">On</option>
-                            </select>
-                        </div>
+                        
                         <div class="param">
                             <label class="param-label">Output Bus</label>
                             <select class="select" id="outputbus">
@@ -935,148 +984,139 @@
                         <div class="param">
                             <label class="param-label">Root Note</label>
                             <select class="select" id="rootnote">
-                                <option   value="0">Off</option>
-                                <option   value="1">C-1   (0)</option>
-                                <option   value="2">C#-1  (1)</option>
-                                <option   value="3">D-1   (2)</option>
-                                <option   value="4">D#-1  (3)</option>
-                                <option   value="5">E-1   (4)</option>
-                                <option   value="6">F-1   (5)</option>
-                                <option   value="7">F#-1  (6)</option>
-                                <option   value="8">G-1   (7)</option>
-                                <option   value="9">G#-1  (8)</option>
-                                <option  value="10">A-1   (9)</option>
-                                <option  value="11">A#-1 (10)</option>
-                                <option  value="12">B-1  (11)</option>
-                                <option  value="13">C0   (12)</option>
-                                <option  value="14">C#0  (13)</option>
-                                <option  value="15">D0   (14)</option>
-                                <option  value="16">D#0  (15)</option>
-                                <option  value="17">E0   (16)</option>
-                                <option  value="18">F0   (17)</option>
-                                <option  value="19">F#0  (18)</option>
-                                <option  value="20">G0   (19)</option>
-                                <option  value="21">G#0  (20)</option>
-                                <option  value="22">A0   (21)</option>
-                                <option  value="23">A#0  (22)</option>
-                                <option  value="24">B0   (23)</option>
-                                <option  value="25">C1   (24)</option>
-                                <option  value="26">C#1  (25)</option>
-                                <option  value="27">D1   (26)</option>
-                                <option  value="28">D#1  (27)</option>
-                                <option  value="29">E1   (28)</option>
-                                <option  value="30">F1   (29)</option>
-                                <option  value="31">F#1  (30)</option>
-                                <option  value="32">G1   (31)</option>
-                                <option  value="33">G#1  (32)</option>
-                                <option  value="34">A1   (33)</option>
-                                <option  value="35">A#1  (34)</option>
-                                <option  value="36">B1   (35)</option>
-                                <option  value="37">C2   (36)</option>
-                                <option  value="38">C#2  (37)</option>
-                                <option  value="39">D2   (38)</option>
-                                <option  value="40">D#2  (39)</option>
-                                <option  value="41">E2   (40)</option>
-                                <option  value="42">F2   (41)</option>
-                                <option  value="43">F#2  (42)</option>
-                                <option  value="44">G2   (43)</option>
-                                <option  value="45">G#2  (44)</option>
-                                <option  value="46">A2   (45)</option>
-                                <option  value="47">A#2  (46)</option>
-                                <option  value="48">B2   (47)</option>
-                                <option  value="49">C3   (48)</option>
-                                <option  value="50">C#3  (49)</option>
-                                <option  value="51">D3   (50)</option>
-                                <option  value="52">D#3  (51)</option>
-                                <option  value="53">E3   (52)</option>
-                                <option  value="54">F3   (53)</option>
-                                <option  value="55">F#3  (54)</option>
-                                <option  value="56">G3   (55)</option>
-                                <option  value="57">G#3  (56)</option>
-                                <option  value="58">A3   (57)</option>
-                                <option  value="59">A#3  (58)</option>
-                                <option  value="60">B3   (59)</option>
-                                <option  value="61">C4   (60)</option>
-                                <option  value="62">C#4  (61)</option>
-                                <option  value="63">D4   (62)</option>
-                                <option  value="64">D#4  (63)</option>
-                                <option  value="65">E4   (64)</option>
-                                <option  value="66">F4   (65)</option>
-                                <option  value="67">F#4  (66)</option>
-                                <option  value="68">G4   (67)</option>
-                                <option  value="69">G#4  (68)</option>
-                                <option  value="70">A4   (69)</option>
-                                <option  value="71">A#4  (70)</option>
-                                <option  value="72">B4   (71)</option>
-                                <option  value="73">C5   (72)</option>
-                                <option  value="74">C#5  (73)</option>
-                                <option  value="75">D5   (74)</option>
-                                <option  value="76">D#5  (75)</option>
-                                <option  value="77">E5   (76)</option>
-                                <option  value="78">F5   (77)</option>
-                                <option  value="79">F#5  (78)</option>
-                                <option  value="80">G5   (79)</option>
-                                <option  value="81">G#5  (80)</option>
-                                <option  value="82">A5   (81)</option>
-                                <option  value="83">A#5  (82)</option>
-                                <option  value="84">B5   (83)</option>
-                                <option  value="85">C6   (84)</option>
-                                <option  value="86">C#6  (85)</option>
-                                <option  value="87">D6   (86)</option>
-                                <option  value="88">D#6  (87)</option>
-                                <option  value="89">E6   (88)</option>
-                                <option  value="90">F6   (89)</option>
-                                <option  value="91">F#6  (90)</option>
-                                <option  value="92">G6   (91)</option>
-                                <option  value="93">G#6  (92)</option>
-                                <option  value="94">A6   (93)</option>
-                                <option  value="95">A#6  (94)</option>
-                                <option  value="96">B6   (95)</option>
-                                <option  value="97">C7   (96)</option>
-                                <option  value="98">C#7  (97)</option>
-                                <option  value="99">D7   (98)</option>
-                                <option value="100">D#7  (99)</option>
-                                <option value="101">E7  (100)</option>
-                                <option value="102">F7  (101)</option>
+                                <option value="0">Off</option>
+                                <option value="1">C-1 (0)</option>
+                                <option value="2">C#-1 (1)</option>
+                                <option value="3">D-1 (2)</option>
+                                <option value="4">D#-1 (3)</option>
+                                <option value="5">E-1 (4)</option>
+                                <option value="6">F-1 (5)</option>
+                                <option value="7">F#-1 (6)</option>
+                                <option value="8">G-1 (7)</option>
+                                <option value="9">G#-1 (8)</option>
+                                <option value="10">A-1 (9)</option>
+                                <option value="11">A#-1 (10)</option>
+                                <option value="12">B-1 (11)</option>
+                                <option value="13">C0 (12)</option>
+                                <option value="14">C#0 (13)</option>
+                                <option value="15">D0 (14)</option>
+                                <option value="16">D#0 (15)</option>
+                                <option value="17">E0 (16)</option>
+                                <option value="18">F0 (17)</option>
+                                <option value="19">F#0 (18)</option>
+                                <option value="20">G0 (19)</option>
+                                <option value="21">G#0 (20)</option>
+                                <option value="22">A0 (21)</option>
+                                <option value="23">A#0 (22)</option>
+                                <option value="24">B0 (23)</option>
+                                <option value="25">C1 (24)</option>
+                                <option value="26">C#1 (25)</option>
+                                <option value="27">D1 (26)</option>
+                                <option value="28">D#1 (27)</option>
+                                <option value="29">E1 (28)</option>
+                                <option value="30">F1 (29)</option>
+                                <option value="31">F#1 (30)</option>
+                                <option value="32">G1 (31)</option>
+                                <option value="33">G#1 (32)</option>
+                                <option value="34">A1 (33)</option>
+                                <option value="35">A#1 (34)</option>
+                                <option value="36">B1 (35)</option>
+                                <option value="37">C2 (36)</option>
+                                <option value="38">C#2 (37)</option>
+                                <option value="39">D2 (38)</option>
+                                <option value="40">D#2 (39)</option>
+                                <option value="41">E2 (40)</option>
+                                <option value="42">F2 (41)</option>
+                                <option value="43">F#2 (42)</option>
+                                <option value="44">G2 (43)</option>
+                                <option value="45">G#2 (44)</option>
+                                <option value="46">A2 (45)</option>
+                                <option value="47">A#2 (46)</option>
+                                <option value="48">B2 (47)</option>
+                                <option value="49">C3 (48)</option>
+                                <option value="50">C#3 (49)</option>
+                                <option value="51">D3 (50)</option>
+                                <option value="52">D#3 (51)</option>
+                                <option value="53">E3 (52)</option>
+                                <option value="54">F3 (53)</option>
+                                <option value="55">F#3 (54)</option>
+                                <option value="56">G3 (55)</option>
+                                <option value="57">G#3 (56)</option>
+                                <option value="58">A3 (57)</option>
+                                <option value="59">A#3 (58)</option>
+                                <option value="60">B3 (59)</option>
+                                <option value="61">C4 (60)</option>
+                                <option value="62">C#4 (61)</option>
+                                <option value="63">D4 (62)</option>
+                                <option value="64">D#4 (63)</option>
+                                <option value="65">E4 (64)</option>
+                                <option value="66">F4 (65)</option>
+                                <option value="67">F#4 (66)</option>
+                                <option value="68">G4 (67)</option>
+                                <option value="69">G#4 (68)</option>
+                                <option value="70">A4 (69)</option>
+                                <option value="71">A#4 (70)</option>
+                                <option value="72">B4 (71)</option>
+                                <option value="73">C5 (72)</option>
+                                <option value="74">C#5 (73)</option>
+                                <option value="75">D5 (74)</option>
+                                <option value="76">D#5 (75)</option>
+                                <option value="77">E5 (76)</option>
+                                <option value="78">F5 (77)</option>
+                                <option value="79">F#5 (78)</option>
+                                <option value="80">G5 (79)</option>
+                                <option value="81">G#5 (80)</option>
+                                <option value="82">A5 (81)</option>
+                                <option value="83">A#5 (82)</option>
+                                <option value="84">B5 (83)</option>
+                                <option value="85">C6 (84)</option>
+                                <option value="86">C#6 (85)</option>
+                                <option value="87">D6 (86)</option>
+                                <option value="88">D#6 (87)</option>
+                                <option value="89">E6 (88)</option>
+                                <option value="90">F6 (89)</option>
+                                <option value="91">F#6 (90)</option>
+                                <option value="92">G6 (91)</option>
+                                <option value="93">G#6 (92)</option>
+                                <option value="94">A6 (93)</option>
+                                <option value="95">A#6 (94)</option>
+                                <option value="96">B6 (95)</option>
+                                <option value="97">C7 (96)</option>
+                                <option value="98">C#7 (97)</option>
+                                <option value="99">D7 (98)</option>
+                                <option value="100">D#7 (99)</option>
+                                <option value="101">E7 (100)</option>
+                                <option value="102">F7 (101)</option>
                                 <option value="103">F#7 (102)</option>
-                                <option value="104">G7  (103)</option>
+                                <option value="104">G7 (103)</option>
                                 <option value="105">G#7 (104)</option>
-                                <option value="106">A7  (105)</option>
+                                <option value="106">A7 (105)</option>
                                 <option value="107">A#7 (106)</option>
-                                <option value="108">B7  (107)</option>
-                                <option value="109">C8  (108)</option>
+                                <option value="108">B7 (107)</option>
+                                <option value="109">C8 (108)</option>
                                 <option value="110">C#8 (109)</option>
-                                <option value="111">D8  (110)</option>
+                                <option value="111">D8 (110)</option>
                                 <option value="112">D#8 (111)</option>
-                                <option value="113">E8  (112)</option>
-                                <option value="114">F8  (113)</option>
+                                <option value="113">E8 (112)</option>
+                                <option value="114">F8 (113)</option>
                                 <option value="115">F#8 (114)</option>
-                                <option value="116">G8  (115)</option>
+                                <option value="116">G8 (115)</option>
                                 <option value="117">G#8 (116)</option>
-                                <option value="118">A8  (117)</option>
+                                <option value="118">A8 (117)</option>
                                 <option value="119">A#8 (118)</option>
-                                <option value="120">B8  (119)</option>
-                                <option value="121">C9  (120)</option>
+                                <option value="120">B8 (119)</option>
+                                <option value="121">C9 (120)</option>
                                 <option value="122">C#9 (121)</option>
-                                <option value="123">D9  (122)</option>
+                                <option value="123">D9 (122)</option>
                                 <option value="124">D#9 (123)</option>
-                                <option value="125">E9  (124)</option>
-                                <option value="126">F9  (125)</option>
+                                <option value="125">E9 (124)</option>
+                                <option value="126">F9 (125)</option>
                                 <option value="127">F#9 (126)</option>
-                                <option value="128">G9  (127)</option> 
+                                <option value="128">G9 (127)</option>
                             </select>
                         </div>
+
                         
-                        <div class="param">
-                            <label class="param-label">Slice Seq:</label>
-                            <select class="select" id="slicestepmode">
-                                <option value="0">None</option>
-                                <option value="1">Forward</option>
-                                <option value="2">Backwards</option>
-                                <option value="3">Random</option>
-                                <option value="4">Stagger</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1097,63 +1137,63 @@
                 filename: '',
                 type: 'samtempl',
                 params: {
-                    gaindb: '0', 
-                    pitch: '0', 
+                    gaindb: '0',
+                    pitch: '0',
                     panpos: '0',
-                    samtrigtype: '0', 
-                    loopmode: '0', 
+                    samtrigtype: '0',
+                    loopmode: '0',
                     loopmodes: '0',
-                    midimode: '0', 
-                    reverse: '0', 
+                    midimode: '0',
+                    reverse: '0',
                     cellmode: '0',
-                    envattack: '0', 
-                    envdecay: '0', 
-                    envsus: '1000', 
+                    envattack: '0',
+                    envdecay: '0',
+                    envsus: '1000',
                     envrel: '200',
-                    samstart: '0', 
-                    samlen: '0', 
-                    loopstart: '0', 
+                    samstart: '0',
+                    samlen: '0',
+                    loopstart: '0',
                     loopend: '0',
-                    quantsize: '3', 
-                    synctype: '5', 
+                    quantsize: '3',
+                    synctype: '5',
                     actslice: '1',
-                    outputbus: '0', 
-                    polymode: '0', 
+                    outputbus: '0',
+                    polymode: '0',
                     polymodeslice: '0',
-                    slicestepmode: '0', 
-                    chokegrp: '0', 
+                    slicestepmode: '0',
+                    chokegrp: '0',
                     dualfilcutoff: '0',
-                    res: '500', 
-                    rootnote: '0', 
+                    res: '500',
+                    rootnote: '0',
                     beatcount: '0',
-                    fx1send: '0', 
-                    fx2send: '0', 
+                    fx1send: '0',
+                    fx2send: '0',
                     multisammode: '0',
-                    interpqual: '0', 
-                    playthru: '0', 
+                    interpqual: '0',
+                    playthru: '0',
                     slicerquantsize: '13',
-                    slicersync: '0', 
-                    padnote: '0', 
+                    slicersync: '0',
+                    padnote: '0',
                     loopfadeamt: '0',
-                    lfowave: '0', 
-                    lforate: '100', 
+                    lfowave: '0',
+                    lforate: '100',
                     lfoamount: '1000',
-                    lfokeytrig: '0', 
-                    lfobeatsync: '0', 
+                    lfokeytrig: '0',
+                    lfobeatsync: '0',
                     lforatebeatsync: '0',
-                    grainsizeperc: '300', 
-                    grainscat: '0', 
+                    grainsizeperc: '300',
+                    grainscat: '0',
                     grainpanrnd: '0',
-                    graindensity: '600', 
-                    slicemode: '0', 
+                    graindensity: '600',
+                    slicemode: '0',
                     legatomode: '0',
-                    gainssrcwin: '0', 
+                    gainssrcwin: '0',
                     grainreadspeed: '1000',
-                    recpresetlen: '0', 
-                    recquant: '3', 
+                    recpresetlen: '0',
+                    recquant: '3',
                     recinput: '0',
-                    recusethres: '0', 
-                    recthresh: '-20000', 
+                    recusethres: '0',
+                    recthresh: '-20000',
                     recmonoutbus: '0',
                     deftemplate: '1'
                 },
@@ -1244,7 +1284,7 @@
                     grid.appendChild(pad);
                 }
             }
-            
+
             console.log('Pad grid created');
         }
 
@@ -1252,7 +1292,7 @@
             pad.addEventListener('click', (e) => handlePadClick(e, pad));
             pad.addEventListener('dblclick', () => openEditModal(pad));
             pad.addEventListener('contextmenu', (e) => showContextMenu(e, pad));
-                        pad.addEventListener('dragstart', (e) => {
+            pad.addEventListener('dragstart', (e) => {
                 console.log('DRAGSTART on pad:', pad.dataset.padnum);
                 handleDragStart(e, pad);
             });
@@ -1342,7 +1382,7 @@
             }
         }
 
-       function swapPads(pad1, pad2) {
+        function swapPads(pad1, pad2) {
             const row1 = parseInt(pad1.dataset.row);
             const col1 = parseInt(pad1.dataset.col);
             const row2 = parseInt(pad2.dataset.row);
@@ -1357,7 +1397,7 @@
             assetCells.forEach(asset => {
                 const assetRow = parseInt(asset.params.asssrcrow);
                 const assetCol = parseInt(asset.params.asssrccol);
-                
+
                 if (assetRow === row1 && assetCol === col1) {
                     asset.params.asssrcrow = String(row2);
                     asset.params.asssrccol = String(col2);
@@ -1369,7 +1409,7 @@
 
             // Force visual update by recreating the pad display
             updatePadDisplay();
-            
+
             setStatus(`Swapped Pad ${pad1.dataset.padnum} with Pad ${pad2.dataset.padnum}`, 'success');
         }
 
@@ -1461,24 +1501,96 @@
         function setupModalTabs() {
             const tabBtns = document.querySelectorAll('.tab-btn');
             const tabContents = document.querySelectorAll('.tab-content');
-                
+
             tabBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
                     // Remove active from all
                     tabBtns.forEach(b => b.classList.remove('active'));
                     tabContents.forEach(c => c.classList.remove('active'));
-                
+
                     // Add active to clicked
                     btn.classList.add('active');
                     const tabId = 'tab-' + btn.dataset.tab;
                     document.getElementById(tabId).classList.add('active');
-                
+
                     // Redraw envelope if on Env tab
                     if (btn.dataset.tab === 'env') {
                         drawEnvelope();
                     }
                 });
             });
+        }
+
+        function updateTabVisibility() {
+            const cellmode = document.getElementById('cellmode').value;
+            const granTab = document.querySelector('[data-tab="gran"]');
+            const posTab = document.querySelector('[data-tab="pos"]');
+            const lfoTab = document.querySelector('[data-tab="lfo"]');
+
+            // Get the actual tab content panels
+            const granContent = document.getElementById('tab-gran');
+            const posContent = document.getElementById('tab-pos');
+
+            // Reset all tabs to visible/enabled
+            [granTab, posTab, lfoTab].forEach(tab => {
+                tab.style.display = '';
+                tab.style.opacity = '1';
+            });
+            [granContent, posContent].forEach(content => {
+                if (content) {
+                    content.style.opacity = '1';
+                    content.style.pointerEvents = '';
+
+                }
+            });
+
+            // Hide/disable based on cellmode
+            // 0=Sample, 1=Clip, 2=Slice, 3=Granular
+            switch (cellmode) {
+                case '0': // Sample mode - all tabs available
+                    granTab.style.opacity = '0.3';
+                    granContent.style.opacity = '0.3';
+
+                    break;
+                case '1': // Clip mode - hide Gran, grey out Pos
+                    granTab.style.opacity = '0.3';
+                    posTab.style.opacity = '0.3';
+                    if (posContent) {
+                        posContent.style.opacity = '0.3';
+                        granContent.style.opacity = '0.3';
+                    };
+                    break;
+                case '2': // Slice mode - hide Gran
+                    granTab.style.opacity = '0.3';
+
+                    posTab.style.opacity = '1';
+                    
+                        posContent.style.opacity = '1';
+
+                    break;
+                case '3': // Granular mode - all available
+                    break;
+            }
+        }
+        // Conditional LFO parameter visibilaty
+        function updateLFOParameterVisibility() {
+            const lfobeatsync = document.getElementById('lfobeatsync').value;
+            const lforateParam = document.getElementById('lforate').closest('.param');
+            const lforatebeatsyncParam = document.getElementById('lforatebeatsync').closest('.param');
+
+            if (lfobeatsync === '1') {
+                // Beat Sync ON - grey out Hz rate, show beat sync
+                lforateParam.style.opacity = '0.3';
+                lforateParam.style.pointerEvents = '';
+                lforatebeatsyncParam.style.opacity = '1';
+                lforatebeatsyncParam.style.pointerEvents = '';
+            } else {
+                // Beat Sync OFF - show Hz rate, grey out beat sync
+                lforateParam.style.opacity = '1';
+                lforateParam.style.pointerEvents = '';
+                lforatebeatsyncParam.style.opacity = '0.3';
+                lforatebeatsyncParam.style.pointerEvents = '';
+            }
         }
 
         function setupDragDrop() {
@@ -1532,12 +1644,36 @@
         }
 
         function setupParameterListeners() {
-            const params = ['gaindb', 'pitch', 'panpos', 'dualfilcutoff', 'res',
-                'envattack', 'envdecay', 'envsus', 'envrel',
-                'lforate', 'lfoamount', 
-                'samstart', 'samlen', 'loopstart', 'loopend', 'loopfadeamt', 'actslice',
-                'grainsizeperc', 'grainscat', 'grainpanrnd', 'graindensity', 'grainreadspeed', 'gainssrcwin',
-                'rootnote', 'fx1send', 'fx2send'];
+            const params = [
+                'gaindb', 
+                'pitch', 
+                'panpos', 
+                'dualfilcutoff', 
+                'res',
+                'envattack', 
+                'envdecay', 
+                'envsus', 
+                'envrel',
+                'lforate', 
+                'lfoamount',
+                'samstart', 
+                'samlen', 
+                'loopstart', 
+                'loopend', 
+                'loopfadeamt', 
+                'loopmodes', // forward, bidirectional
+                'loopmode', // flag to set loop on Slice mode
+                'actslice',
+                'grainsizeperc', 
+                'grainscat', 
+                'grainpanrnd', 
+                'graindensity', 
+                'grainreadspeed', 
+                'gainssrcwin',
+                'rootnote', 
+                'fx1send', 
+                'fx2send'
+                ];
 
             params.forEach(param => {
                 const slider = document.getElementById(param);
@@ -1631,7 +1767,7 @@
             });
 
             // Dropdowns
-            ['cellmode', 'loopmodes', 'samtrigtype', 'polymode', 'lfowave', 'lfokeytrig', 'lfobeatsync', 'lforatebeatsync', 'midimode', 'reverse', 'outputbus', 'chokegrp', 'slicestepmode'].forEach(param => {
+            ['cellmode', 'loopmodes', 'loopmode', 'samtrigtype', 'polymode', 'lfowave', 'lfokeytrig', 'lfobeatsync', 'lforatebeatsync', 'midimode', 'reverse', 'outputbus', 'chokegrp', 'slicestepmode'].forEach(param => {
                 const select = document.getElementById(param);
                 if (select) {
                     select.addEventListener('change', () => {
@@ -1640,6 +1776,13 @@
                             const col = parseInt(currentEditingPad.dataset.col);
                             presetData.pads[row][col].params[param] = select.value;
                         }
+                        if (param === 'cellmode') {
+                            updateTabVisibility();
+                        }
+                        if (param === 'lfobeatsync') {
+                            updateLFOParameterVisibility();
+                        }
+
                     });
                 }
             });
@@ -1665,6 +1808,10 @@
                 default:
                     return Math.round(val);
                 case 'lforate':
+                    // User types Hz, convert back to 0-1000
+                    const hz = parseFloat(text);
+                    if (isNaN(hz) || hz < 0.1 || hz > 12) return null;
+                    return Math.round(((hz - 0.1) / 11.9) * 1000);
                 case 'lfoamount':
                 case 'loopfadeamt':
                 case 'grainsizeperc':
@@ -1685,11 +1832,11 @@
                     text = val.toString();
                     break;
                 case 'rootnote':
-    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const octave = Math.floor(val / 12) - 1;
-    const note = notes[val % 12];
-    text = `${note}${octave} (${val})`;
-    break;    
+                    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                    const octave = Math.floor(val / 12) - 1;
+                    const note = notes[val % 12];
+                    text = `${note}${octave} (${val})`;
+                    break;
             }
         }
 
@@ -1712,6 +1859,15 @@
                     else if (val < 0) text = 'L ' + Math.abs(val / 10).toFixed(1) + '%';
                     else text = 'R ' + (val / 10).toFixed(1) + '%';
                     break;
+                case 'lforate':
+                    // Map 0-1000 to 0.1-12 Hz (logarithmic scale feels more natural)
+                    const minHz = 0.1;
+                    const maxHz = 12;
+                    const normalizedVal = val / 1000; // 0 to 1
+                    const hz = minHz + (normalizedVal * (maxHz - minHz));
+                    text = hz.toFixed(2) + ' Hz';
+                    break;
+
                 default:
                     text = (val / 10).toFixed(1) + '%';
             }
@@ -1770,6 +1926,8 @@
             loadParamsToModal(padData);
             document.getElementById('editModal').classList.add('show');
             drawEnvelope();
+            updateTabVisibility();
+            updateLFOParameterVisibility();  
         }
 
         function closeEditModal() {
@@ -1783,27 +1941,27 @@
 
             // Sliders
             ['gaindb', 'pitch', 'panpos', 'dualfilcutoff', 'res',
-             'envattack', 'envdecay', 'envsus', 'envrel',
-             'lforate', 'lfoamount',
-             'samstart', 'samlen', 'loopstart', 'loopend', 'loopfadeamt', 'actslice',
-             'grainsizeperc', 'grainscat', 'grainpanrnd', 'graindensity', 'grainreadspeed', 'gainssrcwin',
-             'rootnote', 'fx1send', 'fx2send'].forEach(param => {
-                const slider = document.getElementById(param);
-                if (slider && params[param] !== undefined) {
-                    slider.value = params[param];
-                    updateParamDisplay(param, params[param]);
-                }
-            });
-        
+                'envattack', 'envdecay', 'envsus', 'envrel',
+                'lforate', 'lfoamount',
+                'samstart', 'samlen', 'loopstart', 'loopend', 'loopfadeamt', 'actslice',
+                'grainsizeperc', 'grainscat', 'grainpanrnd', 'graindensity', 'grainreadspeed', 'gainssrcwin',
+                'rootnote', 'fx1send', 'fx2send'].forEach(param => {
+                    const slider = document.getElementById(param);
+                    if (slider && params[param] !== undefined) {
+                        slider.value = params[param];
+                        updateParamDisplay(param, params[param]);
+                    }
+                });
+
             // Dropdowns
-            ['cellmode', 'loopmodes', 'samtrigtype', 'polymode',
-             'lfowave', 'lfokeytrig', 'lfobeatsync', 'lforatebeatsync',
-             'midimode', 'reverse', 'outputbus', 'chokegrp', 'slicestepmode'].forEach(param => {
-                const select = document.getElementById(param);
-                if (select && params[param] !== undefined) {
-                    select.value = params[param];
-                }
-            });
+            ['cellmode', 'loopmodes', 'loopmode', 'samtrigtype', 'polymode',
+                'lfowave', 'lfokeytrig', 'lfobeatsync', 'lforatebeatsync',
+                'midimode', 'reverse', 'outputbus', 'chokegrp', 'slicestepmode'].forEach(param => {
+                    const select = document.getElementById(param);
+                    if (select && params[param] !== undefined) {
+                        select.value = params[param];
+                    }
+                });
         }
 
         async function loadPreset(file) {
@@ -2006,41 +2164,41 @@
                 setStatus('No pads selected', 'error');
                 return;
             }
-        
+
             const playmodeNames = {
                 '0': 'Sample',
                 '1': 'Clip',
                 '2': 'Slice',
                 '3': 'Granular'
             };
-        
+
             const files = {};
-        
+
             for (const padNum of selectedPads) {
                 const pad = document.querySelector(`[data-padnum="${padNum}"]`);
                 const row = parseInt(pad.dataset.row);
                 const col = parseInt(pad.dataset.col);
                 const padData = presetData.pads[row][col];
-            
+
                 if (!padData) continue;
-            
+
                 // Get sample name
                 let sampleName = 'Empty';
                 if (padData.filename) {
                     sampleName = padData.filename.split(/[/\\]/).pop().replace(/\.(wav|WAV)$/, '');
                 }
-            
+
                 // Get playmode
                 const cellmode = padData.params.cellmode || '0';
                 const playmode = playmodeNames[cellmode] || 'Sample';
-            
+
                 // Check for multisample mode
                 const isMultisample = padData.params.multisammode === '1';
                 const finalPlaymode = isMultisample ? 'Multisample' : playmode;
-            
+
                 // Build filename
                 const filename = `${projectName}_${sampleName}_${finalPlaymode}_Pad${padNum.toString().padStart(2, '0')}.json`;
-            
+
                 // Build export data
                 const exportData = {
                     padNumber: padNum,
@@ -2057,18 +2215,18 @@
                         slices: padData.slices || []
                     }
                 };
-            
+
                 // Add asset references if multisample
                 if (isMultisample) {
-                    exportData.assetReferences = assetCells.filter(asset => 
-                        parseInt(asset.params.asssrcrow) === row && 
+                    exportData.assetReferences = assetCells.filter(asset =>
+                        parseInt(asset.params.asssrcrow) === row &&
                         parseInt(asset.params.asssrccol) === col
                     );
                 }
-            
+
                 files[filename] = JSON.stringify(exportData, null, 2);
             }
-        
+
             // Single pad - download directly as JSON
             if (selectedPads.size === 1) {
                 const filename = Object.keys(files)[0];
@@ -2083,7 +2241,7 @@
                 setStatus(`Exported 1 pad as JSON`, 'success');
                 return;
             }
-        
+
             // Multiple pads - create ZIP
             try {
                 // Convert strings to Uint8Array for fflate
@@ -2091,7 +2249,7 @@
                 for (const [name, content] of Object.entries(files)) {
                     filesForZip[name] = new TextEncoder().encode(content);
                 }
-            
+
                 const zipped = fflate.zipSync(filesForZip);
                 const blob = new Blob([zipped], { type: 'application/zip' });
                 const url = URL.createObjectURL(blob);
@@ -2100,7 +2258,7 @@
                 a.download = `${projectName}_pads_export.zip`;
                 a.click();
                 URL.revokeObjectURL(url);
-            
+
                 setStatus(`Exported ${selectedPads.size} pads to ZIP`, 'success');
             } catch (error) {
                 setStatus(`Error creating ZIP: ${error.message}`, 'error');
