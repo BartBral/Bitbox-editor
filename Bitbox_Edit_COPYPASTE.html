@@ -820,11 +820,12 @@
                         <div class="param">
                             <label class="param-label">Loop Modes</label>
                             <select class="select" id="loopmodes">
-                                <option value="0">Off</option>
-                                <option value="1">Forward</option>
+                                <option value="1" selected>Forward</option>
                                 <option value="2">Bidirect</option>
+                                <option value="0">Off</option>
                             </select>
                         </div>
+
                         <div class="param">
                             <label class="param-label">Loop Mode</label>
                             <select class="select" id="loopmode">
@@ -1132,6 +1133,8 @@
         let currentEditingPad = null;
         let assetCells = []; // Store asset references
 
+        let greyValue = '0.5'; // set the greyed-out amount
+
         function createEmptyPadData() {
             return {
                 filename: '',
@@ -1142,7 +1145,7 @@
                     panpos: '0',
                     samtrigtype: '0',
                     loopmode: '0',
-                    loopmodes: '0',
+                    loopmodes: '1',
                     midimode: '0',
                     reverse: '0',
                     cellmode: '0',
@@ -1547,31 +1550,101 @@
             // Hide/disable based on cellmode
             // 0=Sample, 1=Clip, 2=Slice, 3=Granular
             switch (cellmode) {
-                case '0': // Sample mode - all tabs available
-                    granTab.style.opacity = '0.3';
-                    granContent.style.opacity = '0.3';
+                case '0': // Sample mode - hide Gran
+                    granTab.style.opacity = greyValue;
+                    granContent.style.opacity = greyValue;
 
                     break;
-                case '1': // Clip mode - hide Gran, grey out Pos
-                    granTab.style.opacity = '0.3';
-                    posTab.style.opacity = '0.3';
-                    if (posContent) {
-                        posContent.style.opacity = '0.3';
-                        granContent.style.opacity = '0.3';
-                    };
+                case '1': // Clip mode - grey out Gran, grey out Pos
+                    granTab.style.opacity = greyValue;
+                    granContent.style.opacity = greyValue;
+                    // if (posContent) {
+                    //     posContent.style.opacity = greyValue;
+                    //     granContent.style.opacity = greyValue;
+                    // };
                     break;
                 case '2': // Slice mode - hide Gran
-                    granTab.style.opacity = '0.3';
-
-                    posTab.style.opacity = '1';
+                    granTab.style.opacity = greyValue;
+                    granContent.style.opacity = greyValue;
+                    // posTab.style.opacity = '1';
                     
-                        posContent.style.opacity = '1';
+                    //     posContent.style.opacity = '1';
 
                     break;
                 case '3': // Granular mode - all available
                     break;
             }
         }
+
+        function updatePosConditionalVisibility() {
+            const cellmode = document.getElementById('cellmode').value;
+            const loopmodes = document.getElementById('loopmodes').value;
+
+            // Get all Pos tab parameters
+            const samstartParam = document.getElementById('samstart')?.closest('.param');
+            const samlenParam = document.getElementById('samlen')?.closest('.param');
+            const loopstartParam = document.getElementById('loopstart')?.closest('.param');
+            const loopendParam = document.getElementById('loopend')?.closest('.param');
+            const loopfadeamtParam = document.getElementById('loopfadeamt')?.closest('.param');
+            const loopmodesParam = document.getElementById('loopmodes')?.closest('.param');
+            const loopmode = document.getElementById('loopmode')?.closest('.param');
+            const actsliceParam = document.getElementById('actslice')?.closest('.param');
+            const slicestepmode = document.getElementById('slicestepmode')?.closest('.param');
+            const reverseParam = document.getElementById('reverse')?.closest('.param');
+
+            // Reset all to visible
+            [samstartParam, samlenParam, loopstartParam, loopendParam, loopfadeamtParam, 
+             loopmodesParam, loopmode, actsliceParam, slicestepmode, reverseParam].forEach(param => {
+                if (param) {
+                    param.style.opacity = '1';
+                }
+            });
+
+            // Apply greying based on cellmode
+            switch(cellmode) {
+                case '0': // Sample mode - grey out slice-specific
+                    if (actsliceParam) actsliceParam.style.opacity = greyValue;
+                    if (slicestepmode) slicestepmode.style.opacity = greyValue;
+                    if (loopmode) loopmode.style.opacity = greyValue;
+                    break;
+
+                case '1': // Clip mode - grey out sample/loop specific
+                    if (samstartParam) samstartParam.style.opacity = greyValue;
+                    if (samlenParam) samlenParam.style.opacity = greyValue;
+                    if (loopstartParam) loopstartParam.style.opacity = greyValue;
+                    if (loopendParam) loopendParam.style.opacity = greyValue;
+                    if (loopfadeamtParam) loopfadeamtParam.style.opacity = greyValue;
+                    if (loopmodesParam) loopmodesParam.style.opacity = greyValue;
+                    if (actsliceParam) actsliceParam.style.opacity = greyValue;
+                    if (slicestepmode) slicestepmode.style.opacity = greyValue;
+                    if (reverseParam) reverseParam.style.opacity = greyValue;
+                    break;
+
+                case '2': // Slice mode - grey out sample-specific
+                    if (samstartParam) samstartParam.style.opacity = greyValue;
+                    if (samlenParam) samlenParam.style.opacity = greyValue;
+                    if (loopstartParam) loopstartParam.style.opacity = greyValue;
+                    if (loopendParam) loopendParam.style.opacity = greyValue;
+                    if (loopfadeamtParam) loopfadeamtParam.style.opacity = greyValue;
+                    if (loopmodesParam) loopmodesParam.style.opacity = greyValue;
+                    if (reverseParam) reverseParam.style.opacity = greyValue;
+                    break;
+
+                case '3': // Granular mode - grey out slice-specific
+                    if (actsliceParam) actsliceParam.style.opacity = greyValue;
+                    if (slicestepmode) slicestepmode.style.opacity = greyValue;
+                    if (loopmode) loopmode.style.opacity = greyValue;
+                    break;
+            }
+
+            // Additional: grey out loop params when Loop Modes = None (for Sample/Granular)
+            if ((cellmode === '0' || cellmode === '3') && loopmodes === '0') {
+                if (loopstartParam) loopstartParam.style.opacity = greyValue;
+                if (loopendParam) loopendParam.style.opacity = greyValue;
+                if (loopfadeamtParam) loopfadeamtParam.style.opacity = greyValue;
+            }
+        }
+
         // Conditional LFO parameter visibilaty
         function updateLFOParameterVisibility() {
             const lfobeatsync = document.getElementById('lfobeatsync').value;
@@ -1580,7 +1653,7 @@
 
             if (lfobeatsync === '1') {
                 // Beat Sync ON - grey out Hz rate, show beat sync
-                lforateParam.style.opacity = '0.3';
+                lforateParam.style.opacity = greyValue;
                 lforateParam.style.pointerEvents = '';
                 lforatebeatsyncParam.style.opacity = '1';
                 lforatebeatsyncParam.style.pointerEvents = '';
@@ -1588,7 +1661,7 @@
                 // Beat Sync OFF - show Hz rate, grey out beat sync
                 lforateParam.style.opacity = '1';
                 lforateParam.style.pointerEvents = '';
-                lforatebeatsyncParam.style.opacity = '0.3';
+                lforatebeatsyncParam.style.opacity = greyValue;
                 lforatebeatsyncParam.style.pointerEvents = '';
             }
         }
@@ -1782,6 +1855,10 @@
                         if (param === 'lfobeatsync') {
                             updateLFOParameterVisibility();
                         }
+                        if (param === 'cellmode' || param === 'loopmodes') {
+                            updateTabVisibility();
+                            updatePosConditionalVisibility();
+                        }
 
                     });
                 }
@@ -1928,6 +2005,7 @@
             drawEnvelope();
             updateTabVisibility();
             updateLFOParameterVisibility();  
+            updatePosConditionalVisibility();
         }
 
         function closeEditModal() {
@@ -1961,6 +2039,7 @@
                     if (select && params[param] !== undefined) {
                         select.value = params[param];
                     }
+                    
                 });
         }
 
