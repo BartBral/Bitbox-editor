@@ -720,7 +720,7 @@
                                 <span class="param-value" id="fx2send-val">0.0%</span>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
             </div>
@@ -975,7 +975,7 @@
                     <h3>Configuration</h3>
                     <div class="param-grid">
 
-                        
+
                         <div class="param">
                             <label class="param-label">Launch Mode</label>
                             <select class="select" id="samtrigtype">
@@ -1017,7 +1017,7 @@
                                 <option value="16">Ch 16</option>
                             </select>
                         </div>
-                        
+
                         <div class="param">
                             <label class="param-label">Output Bus</label>
                             <select class="select" id="outputbus">
@@ -1181,7 +1181,7 @@
                             </select>
                         </div>
 
-                        
+
                     </div>
                 </div>
             </div>
@@ -1324,13 +1324,13 @@
                     samlen: '0',
                     loopstart: '0',
                     loopend: '0',
-                        quantsize: '3', // Only in Clipmode:
-                                        // Quant Size: 8 bars, 4 bars, 2 bars, 1 bar, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, None
-                        synctype: '5', // In Clip-mode only: Sync: 0=Slice, 1=1 bar, 2=1/2, 3=1/4, 4=1/8, 5=1/16, 6=none. 
+                    quantsize: '3', // Only in Clipmode:
+                    // Quant Size: 8 bars, 4 bars, 2 bars, 1 bar, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, None
+                    synctype: '5', // In Clip-mode only: Sync: 0=Slice, 1=1 bar, 2=1/2, 3=1/4, 4=1/8, 5=1/16, 6=none. 
                     actslice: '1',
                     outputbus: '0',
                     polymode: '0',
-                        polymodeslice: '0',
+                    polymodeslice: '0',
 
                     slicemode: '0',
                     slicestepmode: '0',
@@ -1338,25 +1338,25 @@
                     dualfilcutoff: '0',
                     res: '500',
                     rootnote: '0',
-                        beatcount: '0', // In Slice-mode and Clip-mode: // 0=Auto, 1=1, 2=2, 3=3 ... 512=512
+                    beatcount: '0', // In Slice-mode and Clip-mode: // 0=Auto, 1=1, 2=2, 3=3 ... 512=512
                     fx1send: '0',
                     fx2send: '0',
-                        multisammode: '0', // TO-DO: Making a Multi-Sample!
-                        interpqual: '0', // Interp: 0=Normal 1=HighQuality
-                        playthru: '0', // Only in Slice-mode: 0=off 1=on
-                        slicerquantsize: '13',  // Only in Slicemode: 
-                                                // Quant Size: 2 bars, 1 bar, 1/2, 1/2T, 1/4, 1/4T, 1/8, 1/8T, 1/16, 1/16T, 1/32, 1/32T, 1/64, None
-                        slicersync: '0', // Only in Slicemode: 0=off 1=on
-                        padnote: '0', // 
+                    multisammode: '0', // TO-DO: Making a Multi-Sample!
+                    interpqual: '0', // Interp: 0=Normal 1=HighQuality
+                    playthru: '0', // Only in Slice-mode: 0=off 1=on
+                    slicerquantsize: '13',  // Only in Slicemode: 
+                    // Quant Size: 2 bars, 1 bar, 1/2, 1/2T, 1/4, 1/4T, 1/8, 1/8T, 1/16, 1/16T, 1/32, 1/32T, 1/64, None
+                    slicersync: '0', // Only in Slicemode: 0=off 1=on
+                    padnote: '0', // 
                     loopfadeamt: '0',
-                    
+
                     /* LFO */
                     lfowave: '0',
                     lforate: '100',
                     lfoamount: '1000',
                     lfokeytrig: '0',
                     lfobeatsync: '0',
-                    lforatebeatsync: '0', 
+                    lforatebeatsync: '0',
 
                     /* Granular */
                     graindensity: '600', // Density: min=0.0% max=100.0%
@@ -1365,21 +1365,21 @@
                     grainscat: '0', // Scatter: min=0.0% max=100.0%
                     grainpanrnd: '0', // Pan Rnd: min=0.0% max=100.0%
                     grainreadspeed: '1000', // Speed: min=0.0% max=100.0%
-                    
-                        /* Legato */
-                        legatomode: '0', // Legato: 0=off 1=on // Plays a sample as long as the envelope takes, and pitchshifts one sample like pitchbend.
-                    
-                        /* Record settings */
-                        recinput: '0', // Rec Input: 0="In 1/2" 1="In 1" 2="In 2" 3="Resample"
-                        // ingain, // Gain: min=-96.0 dB max=+20.0 dB // Can't find this one, might be bug (experiment)
-                        // recautoplay: '0', // RecToPlay: 0=off 1=on // Can't find this one, might be bug (experiment)
-                        recpresetlen: '0',
-                        recquant: '3',
-                        // recmonmode: '1', // Rec Mon: 0=On 1=Auto 2=off // Can't find this one, might be bug (experiment)
-                        recmonoutbus: '0',// Mon Output: 0="Out 1/2" 1="Out 3/4" 2="Out 5/6" 3="Out 7/8" 4="Out 1" 5="Out 2" 6="Out 3" 7="Out 4" 8="Out 5" 9="Out 6" 10="Out 7" 11="Out 8"
-                        recusethres: '0', // RecThresh: 0=off 1=on // use the record threshold yes or no
-                        recthresh: '-20000', // Threshold: min=-96.0 dB max=0dB
-                        
+
+                    /* Legato */
+                    legatomode: '0', // Legato: 0=off 1=on // Plays a sample as long as the envelope takes, and pitchshifts one sample like pitchbend.
+
+                    /* Record settings */
+                    recinput: '0', // Rec Input: 0="In 1/2" 1="In 1" 2="In 2" 3="Resample"
+                    // ingain, // Gain: min=-96.0 dB max=+20.0 dB // Can't find this one, might be bug (experiment)
+                    // recautoplay: '0', // RecToPlay: 0=off 1=on // Can't find this one, might be bug (experiment)
+                    recpresetlen: '0',
+                    recquant: '3',
+                    // recmonmode: '1', // Rec Mon: 0=On 1=Auto 2=off // Can't find this one, might be bug (experiment)
+                    recmonoutbus: '0',// Mon Output: 0="Out 1/2" 1="Out 3/4" 2="Out 5/6" 3="Out 7/8" 4="Out 1" 5="Out 2" 6="Out 3" 7="Out 4" 8="Out 5" 9="Out 6" 10="Out 7" 11="Out 8"
+                    recusethres: '0', // RecThresh: 0=off 1=on // use the record threshold yes or no
+                    recthresh: '-20000', // Threshold: min=-96.0 dB max=0dB
+
                     deftemplate: '1'
                 },
                 modsources: [],
@@ -1633,149 +1633,152 @@
         }
 
         function createModSlotHTML(modData, index, cellmode) {
-    const destinations = MOD_DESTINATIONS[cellmode] || MOD_DESTINATIONS['0'];
-    
-    const sourceOptions = MOD_SOURCES.map(src => 
-        `<option value="${src.value}" ${modData.src === src.value ? 'selected' : ''}>${src.label}</option>`
-    ).join('');
-    
-    const destOptions = destinations.map(dest => 
-        `<option value="${dest.value}" ${modData.dest === dest.value ? 'selected' : ''}>${dest.label}</option>`
-    ).join('');
-    
-    const amount = parseInt(modData.amount) || 0;
-    const amountText = (amount >= 0 ? '+' : '') + (amount / 10).toFixed(1) + '%';
-    
-    return `
-        <div class="mod-slot" data-slot="${index}">
-            <div class="mod-slot-number">${index + 1}</div>
-            <select class="select mod-source" data-slot="${index}">
-                ${sourceOptions}
-            </select>
-            <select class="select mod-dest" data-slot="${index}">
-                ${destOptions}
-            </select>
-            <div class="mod-amount">
-                <input type="range" class="slider mod-amount-slider" data-slot="${index}" 
-                       min="-1000" max="1000" value="${amount}">
-                <span class="mod-amount-val" data-slot="${index}">${amountText}</span>
-            </div>
-            <button class="mod-remove-btn" data-slot="${index}">×</button>
-        </div>
-    `;
-}
+            const isActive = modData.src !== 'none' && modData.dest !== 'none';
+            const slotClass = isActive ? 'mod-slot' : 'mod-slot inactive';
 
-function renderModSlots(padData) {
-    const container = document.getElementById('modSlotContainer');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    const cellmode = padData.params.cellmode || '0';
-    const modsources = padData.modsources || [];
-    
-    // Render existing mod slots
-    modsources.forEach((mod, index) => {
-        container.innerHTML += createModSlotHTML(mod, index, cellmode);
-    });
-    
-    // Setup event listeners for all slots
-    setupModSlotListeners();
-}
+            const destinations = MOD_DESTINATIONS[cellmode] || MOD_DESTINATIONS['0'];
 
-function setupModSlotListeners() {
-    // Source dropdowns
-    document.querySelectorAll('.mod-source').forEach(select => {
-        select.addEventListener('change', (e) => {
-            const slot = parseInt(e.target.dataset.slot);
-            updateModSlot(slot, 'src', e.target.value);
-        });
-    });
-    
-    // Destination dropdowns
-    document.querySelectorAll('.mod-dest').forEach(select => {
-        select.addEventListener('change', (e) => {
-            const slot = parseInt(e.target.dataset.slot);
-            updateModSlot(slot, 'dest', e.target.value);
-        });
-    });
-    
-    // Amount sliders
-    document.querySelectorAll('.mod-amount-slider').forEach(slider => {
-        slider.addEventListener('input', (e) => {
-            const slot = parseInt(e.target.dataset.slot);
-            const amount = e.target.value;
-            updateModSlot(slot, 'amount', amount);
-            
-            // Update display
-            const display = document.querySelector(`.mod-amount-val[data-slot="${slot}"]`);
-            if (display) {
-                const amountText = (amount >= 0 ? '+' : '') + (amount / 10).toFixed(1) + '%';
-                display.textContent = amountText;
+            const sourceOptions = MOD_SOURCES.map(src =>
+                `<option value="${src.value}" ${modData.src === src.value ? 'selected' : ''}>${src.label}</option>`
+            ).join('');
+
+            const destOptions = destinations.map(dest =>
+                `<option value="${dest.value}" ${modData.dest === dest.value ? 'selected' : ''}>${dest.label}</option>`
+            ).join('');
+
+            const amount = parseInt(modData.amount) || 0;
+            const amountText = (amount >= 0 ? '+' : '') + (amount / 10).toFixed(1) + '%';
+
+            return `
+                <div class="${slotClass}" data-slot="${index}" style="${isActive ? '' : 'opacity: 0.5;'}">
+                    <div class="mod-slot-number">${index + 1}</div>
+                    <select class="select mod-source" data-slot="${index}">
+                        ${sourceOptions}
+                    </select>
+                    <select class="select mod-dest" data-slot="${index}">
+                        ${destOptions}
+                    </select>
+                    <div class="mod-amount">
+                        <input type="range" class="slider mod-amount-slider" data-slot="${index}" 
+                               min="-1000" max="1000" value="${amount}">
+                        <span class="mod-amount-val" data-slot="${index}">${amountText}</span>
+                    </div>
+                    <button class="mod-remove-btn" data-slot="${index}">×</button>
+                </div>
+            `;
+        }
+
+        function renderModSlots(padData) {
+            const container = document.getElementById('modSlotContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            const cellmode = padData.params.cellmode || '0';
+            const modsources = padData.modsources || [];
+
+            // Render existing mod slots
+            modsources.forEach((mod, index) => {
+                container.innerHTML += createModSlotHTML(mod, index, cellmode);
+            });
+
+            // Setup event listeners for all slots
+            setupModSlotListeners();
+        }
+
+        function setupModSlotListeners() {
+            // Source dropdowns
+            document.querySelectorAll('.mod-source').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    updateModSlot(slot, 'src', e.target.value);
+                });
+            });
+
+            // Destination dropdowns
+            document.querySelectorAll('.mod-dest').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    updateModSlot(slot, 'dest', e.target.value);
+                });
+            });
+
+            // Amount sliders
+            document.querySelectorAll('.mod-amount-slider').forEach(slider => {
+                slider.addEventListener('input', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    const amount = e.target.value;
+                    updateModSlot(slot, 'amount', amount);
+
+                    // Update display
+                    const display = document.querySelector(`.mod-amount-val[data-slot="${slot}"]`);
+                    if (display) {
+                        const amountText = (amount >= 0 ? '+' : '') + (amount / 10).toFixed(1) + '%';
+                        display.textContent = amountText;
+                    }
+                });
+            });
+
+            // Remove buttons
+            document.querySelectorAll('.mod-remove-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    removeModSlot(slot);
+                });
+            });
+        }
+
+        function updateModSlot(slot, field, value) {
+            if (!currentEditingPad || !presetData) return;
+
+            const row = parseInt(currentEditingPad.dataset.row);
+            const col = parseInt(currentEditingPad.dataset.col);
+            const padData = presetData.pads[row][col];
+
+            if (!padData.modsources[slot]) {
+                padData.modsources[slot] = { dest: 'none', src: 'none', slot: slot.toString(), amount: '0' };
             }
-        });
-    });
-    
-    // Remove buttons
-    document.querySelectorAll('.mod-remove-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const slot = parseInt(e.target.dataset.slot);
-            removeModSlot(slot);
-        });
-    });
-}
 
-function updateModSlot(slot, field, value) {
-    if (!currentEditingPad || !presetData) return;
-    
-    const row = parseInt(currentEditingPad.dataset.row);
-    const col = parseInt(currentEditingPad.dataset.col);
-    const padData = presetData.pads[row][col];
-    
-    if (!padData.modsources[slot]) {
-        padData.modsources[slot] = { dest: 'none', src: 'none', slot: slot.toString(), amount: '0' };
-    }
-    
-    padData.modsources[slot][field] = value.toString();
-}
+            padData.modsources[slot][field] = value.toString();
+        }
 
-function removeModSlot(slot) {
-    if (!currentEditingPad || !presetData) return;
-    
-    const row = parseInt(currentEditingPad.dataset.row);
-    const col = parseInt(currentEditingPad.dataset.col);
-    const padData = presetData.pads[row][col];
-    
-    padData.modsources.splice(slot, 1);
-    
-    // Re-render
-    renderModSlots(padData);
-}
+        function removeModSlot(slot) {
+            if (!currentEditingPad || !presetData) return;
 
-function addModSlot() {
-    if (!currentEditingPad || !presetData) return;
-    
-    const row = parseInt(currentEditingPad.dataset.row);
-    const col = parseInt(currentEditingPad.dataset.col);
-    const padData = presetData.pads[row][col];
-    
-    if (!padData.modsources) padData.modsources = [];
-    
-    if (padData.modsources.length >= 12) {
-        setStatus('Maximum 12 modulation slots per pad', 'error');
-        return;
-    }
-    
-    const newSlot = {
-        dest: 'gaindb',
-        src: 'velocity',
-        slot: padData.modsources.length.toString(),
-        amount: '400'
-    };
-    
-    padData.modsources.push(newSlot);
-    renderModSlots(padData);
-}
+            const row = parseInt(currentEditingPad.dataset.row);
+            const col = parseInt(currentEditingPad.dataset.col);
+            const padData = presetData.pads[row][col];
+
+            padData.modsources.splice(slot, 1);
+
+            // Re-render
+            renderModSlots(padData);
+        }
+
+        function addModSlot() {
+            if (!currentEditingPad || !presetData) return;
+
+            const row = parseInt(currentEditingPad.dataset.row);
+            const col = parseInt(currentEditingPad.dataset.col);
+            const padData = presetData.pads[row][col];
+
+            if (!padData.modsources) padData.modsources = [];
+
+            if (padData.modsources.length >= 12) {
+                setStatus('Maximum 12 modulation slots per pad', 'error');
+                return;
+            }
+
+            const newSlot = {
+                dest: 'gaindb',
+                src: 'velocity',
+                slot: padData.modsources.length.toString(),
+                amount: '400'
+            };
+
+            padData.modsources.push(newSlot);
+            renderModSlots(padData);
+        }
 
         function setupEventListeners() {
             document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -1896,7 +1899,7 @@ function addModSlot() {
                     granTab.style.opacity = greyValue;
                     granContent.style.opacity = greyValue;
                     // posTab.style.opacity = '1';
-                    
+
                     //     posContent.style.opacity = '1';
 
                     break;
@@ -1922,15 +1925,15 @@ function addModSlot() {
             const reverseParam = document.getElementById('reverse')?.closest('.param');
 
             // Reset all to visible
-            [samstartParam, samlenParam, loopstartParam, loopendParam, loopfadeamtParam, 
-             loopmodesParam, loopmode, actsliceParam, slicestepmode, reverseParam].forEach(param => {
-                if (param) {
-                    param.style.opacity = '1';
-                }
-            });
+            [samstartParam, samlenParam, loopstartParam, loopendParam, loopfadeamtParam,
+                loopmodesParam, loopmode, actsliceParam, slicestepmode, reverseParam].forEach(param => {
+                    if (param) {
+                        param.style.opacity = '1';
+                    }
+                });
 
             // Apply greying based on cellmode
-            switch(cellmode) {
+            switch (cellmode) {
                 case '0': // Sample mode - grey out slice-specific
                     if (actsliceParam) actsliceParam.style.opacity = greyValue;
                     if (slicestepmode) slicestepmode.style.opacity = greyValue;
@@ -2047,35 +2050,35 @@ function addModSlot() {
 
         function setupParameterListeners() {
             const params = [
-                'gaindb', 
-                'pitch', 
-                'panpos', 
-                'dualfilcutoff', 
+                'gaindb',
+                'pitch',
+                'panpos',
+                'dualfilcutoff',
                 'res',
-                'envattack', 
-                'envdecay', 
-                'envsus', 
+                'envattack',
+                'envdecay',
+                'envsus',
                 'envrel',
-                'lforate', 
+                'lforate',
                 'lfoamount',
-                'samstart', 
-                'samlen', 
-                'loopstart', 
-                'loopend', 
-                'loopfadeamt', 
+                'samstart',
+                'samlen',
+                'loopstart',
+                'loopend',
+                'loopfadeamt',
                 'loopmodes', // forward, bidirectional
                 'loopmode', // flag to set loop on Slice mode
                 'actslice',
-                'grainsizeperc', 
-                'grainscat', 
-                'grainpanrnd', 
-                'graindensity', 
-                'grainreadspeed', 
+                'grainsizeperc',
+                'grainscat',
+                'grainpanrnd',
+                'graindensity',
+                'grainreadspeed',
                 'gainssrcwin',
-                'rootnote', 
-                'fx1send', 
+                'rootnote',
+                'fx1send',
                 'fx2send'
-                ];
+            ];
 
             params.forEach(param => {
                 const slider = document.getElementById(param);
@@ -2188,6 +2191,16 @@ function addModSlot() {
                             updateTabVisibility();
                             updatePosConditionalVisibility();
                         }
+                        if (param === 'cellmode') {
+                            updateTabVisibility();
+                            // Refresh mod destinations
+                            if (currentEditingPad) {
+                                const row = parseInt(currentEditingPad.dataset.row);
+                                const col = parseInt(currentEditingPad.dataset.col);
+                                renderModSlots(presetData.pads[row][col]);
+                            }
+                        }
+
                     });
                 }
             });
@@ -2341,7 +2354,7 @@ function addModSlot() {
             document.getElementById('editModal').classList.add('show');
             drawEnvelope();
             updateTabVisibility();
-            updateLFOParameterVisibility();  
+            updateLFOParameterVisibility();
             updatePosConditionalVisibility();
         }
 
@@ -2356,39 +2369,39 @@ function addModSlot() {
 
             // Sliders
             [
-                'gaindb', 
-                'pitch', 
-                'panpos', 
-                'dualfilcutoff', 
+                'gaindb',
+                'pitch',
+                'panpos',
+                'dualfilcutoff',
                 'res',
-                'envattack', 
-                'envdecay', 
-                'envsus', 
+                'envattack',
+                'envdecay',
+                'envsus',
                 'envrel',
-                'lforate', 
+                'lforate',
                 'lfoamount',
-                'samstart', 
-                'samlen', 
-                'loopstart', 
-                'loopend', 
-                'loopfadeamt', 
+                'samstart',
+                'samlen',
+                'loopstart',
+                'loopend',
+                'loopfadeamt',
                 'actslice',
-                'grainsizeperc', 
-                'grainscat', 
-                'grainpanrnd', 
-                'graindensity', 
-                'grainreadspeed', 
+                'grainsizeperc',
+                'grainscat',
+                'grainpanrnd',
+                'graindensity',
+                'grainreadspeed',
                 'gainssrcwin',
-                'rootnote', 
-                'fx1send', 
+                'rootnote',
+                'fx1send',
                 'fx2send'
             ].forEach(param => {
-                    const slider = document.getElementById(param);
-                    if (slider && params[param] !== undefined) {
-                        slider.value = params[param];
-                        updateParamDisplay(param, params[param]);
-                    }
-                });
+                const slider = document.getElementById(param);
+                if (slider && params[param] !== undefined) {
+                    slider.value = params[param];
+                    updateParamDisplay(param, params[param]);
+                }
+            });
 
             // Dropdowns
             ['cellmode', 'loopmodes', 'loopmode', 'samtrigtype', 'polymode',
@@ -2567,7 +2580,7 @@ function addModSlot() {
 
             // Layer 0 - Pads
             for (let col = 0; col < 4; col++) {
-                    for (let row = 0; row < 4; row++) {
+                for (let row = 0; row < 4; row++) {
                     const pad = data.pads[row]?.[col];
                     if (!pad) continue;
 
@@ -2580,7 +2593,7 @@ function addModSlot() {
 
                     // Modsources - filter out 'none' slots
                     if (pad.modsources?.length > 0) {
-                        const activeModSlots = pad.modsources.filter(mod => 
+                        const activeModSlots = pad.modsources.filter(mod =>
                             mod.src !== 'none' && mod.dest !== 'none' && mod.src && mod.dest
                         );
 
@@ -2614,11 +2627,11 @@ function addModSlot() {
                 { type: 'null', params: '' },
                 { type: 'null', params: '' }
             ];
-                    
+
             for (let i = 0; i < 5; i++) {
                 const fxData = data.fx?.[i];
                 const defaults = fxDefaults[i];
-                
+
                 if (fxData) {
                     // Use loaded FX data
                     xml += `        <cell row="${i}" layer="3" type="${fxData.type}">\n`;
@@ -2627,7 +2640,7 @@ function addModSlot() {
                         xml += ` ${key}="${value}"`;
                     }
                     xml += '/>\n';
-                    
+
                     // Add FX modsources
                     if (fxData.modsources?.length > 0) {
                         fxData.modsources.forEach(mod => {

@@ -1,0 +1,47 @@
+# # For a slider
+# my_param = {
+#     'name': 'attack_curve',
+#     'type': 'slider',
+#     'label': 'Attack Curve',
+#     'min': 0,
+#     'max': 1000,
+#     'default': 500,
+#     'format': 'percentage'  # or 'db', 'semitones', 'hz', 'ms', 'custom'
+# }
+
+# # For a dropdown
+# my_param = {
+#     'name': 'voice_mode',
+#     'type': 'dropdown',
+#     'label': 'Voice Mode',
+#     'default': '0',
+#     'options': [
+#         {'value': '0', 'label': 'Mono'},
+#         {'value': '1', 'label': 'Poly'},
+#         {'value': '2', 'label': 'Unison'}
+#     ]
+# }
+
+# For a slider
+my_param = {
+    'name': 'attack_curve',
+    'type': 'slider',
+    'label': 'Attack Curve',
+    'min': 0,
+    'max': 1000,
+    'default': 500,
+    'format': 'percentage'  # or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+
+# For a dropdown
+my_param = {
+    'name': 'voice_mode',
+    'type': 'dropdown',
+    'label': 'Voice Mode',
+    'default': '0',
+    'options': [
+        {'value': '0', 'label': 'Mono'},
+        {'value': '1', 'label': 'Poly'},
+        {'value': '2', 'label': 'Unison'}
+    ]
+}
