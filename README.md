@@ -4,6 +4,8 @@
 
 
 TO-DO:
+
+01-Add "Modulation Tab": The Bitbox Micro can have 12 modulation sources per pad, that can control the settings of the sampler. The Reverb and Delay can also have Modulations. Read further down this page for details. I have also a preset.xml file with details on how the xml structure is done.
 		
 02-**New feature** Merge presets: When user has a preset open, and clicks merge preset; the following should happen: See what and how many Pads are unused. See how many pads are inside the file just selected to be merged with the one already in memory. If in-memory-pads + to-be-merged-pads > 16pads then ask the user, what pads should be imported from to-be-merged-preset; and checked on a checklist in a message window.
 
