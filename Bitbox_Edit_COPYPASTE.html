@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="PAD PUSHER - The essential preset editor for 1010music Bitbox Micro and mk2">
-    <title>PAD PUSHER - Bitbox Preset Editor</title>
+    <meta name="description" content="BITBOXER - The essential preset editor for 1010music Bitbox Micro and mk2">
+    <title>BITBOXER - Bitbox Preset Editor</title>
 
     <!-- <script src="https://unpkg.com/fflate@0.8.2/lib/browser.js"></script> -->
     <script src="fflate.js" defer></script>
@@ -1422,7 +1422,7 @@
 
         // Modify DOMContentLoaded:
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('PAD PUSHER: Initializing...');
+            console.log('BITBOXER: Initializing...');
             try {
                 createEmptyPreset();
                 createPadGrid();
@@ -1430,9 +1430,9 @@
                 initializeProject(); // ADD THIS
                 setupModalTabs();
                 setStatus('Ready');
-                console.log('PAD PUSHER: Ready!');
+                console.log('BITBOXER: Ready!');
             } catch (error) {
-                console.error('PAD PUSHER ERROR:', error);
+                console.error('BITBOXER ERROR:', error);
                 setStatus('Initialization error - check console', 'error');
             }
         });
@@ -1633,25 +1633,26 @@
         }
 
         function createModSlotHTML(modData, index, cellmode) {
-            const isActive = modData.src !== 'none' && modData.dest !== 'none';
-            const slotClass = isActive ? 'mod-slot' : 'mod-slot inactive';
-
             const destinations = MOD_DESTINATIONS[cellmode] || MOD_DESTINATIONS['0'];
 
-            const sourceOptions = MOD_SOURCES.map(src =>
+            const sourceOptions = MOD_SOURCES.map(src => 
                 `<option value="${src.value}" ${modData.src === src.value ? 'selected' : ''}>${src.label}</option>`
             ).join('');
 
-            const destOptions = destinations.map(dest =>
+            const destOptions = destinations.map(dest => 
                 `<option value="${dest.value}" ${modData.dest === dest.value ? 'selected' : ''}>${dest.label}</option>`
             ).join('');
 
             const amount = parseInt(modData.amount) || 0;
             const amountText = (amount >= 0 ? '+' : '') + (amount / 10).toFixed(1) + '%';
 
+            // Show destination slot number if dest is not 'none'
+            const destSlot = modData.slot || '0';
+            const slotLabel = modData.dest !== 'none' ? `${index + 1} [${destSlot}]` : `${index + 1}`;
+
             return `
-                <div class="${slotClass}" data-slot="${index}" style="${isActive ? '' : 'opacity: 0.5;'}">
-                    <div class="mod-slot-number">${index + 1}</div>
+                <div class="mod-slot" data-slot="${index}">
+                    <div class="mod-slot-number" title="Slot ${index + 1}, Dest Slot ${destSlot}">${slotLabel}</div>
                     <select class="select mod-source" data-slot="${index}">
                         ${sourceOptions}
                     </select>
@@ -1667,6 +1668,50 @@
                 </div>
             `;
         }
+
+        function updateModSlotAppearance(slotElement) {
+            const slotIndex = slotElement.dataset.slot;
+            const sourceSelect = slotElement.querySelector('.mod-source');
+            const destSelect = slotElement.querySelector('.mod-dest');
+
+            if (!sourceSelect || !destSelect) return;
+
+            const isActive = sourceSelect.value !== 'none' && destSelect.value !== 'none';
+
+            // Update opacity
+            slotElement.style.opacity = isActive ? '1' : '0.5';
+
+            // Optionally add/remove a class for more styling control
+            if (isActive) {
+                slotElement.classList.remove('inactive');
+            } else {
+                slotElement.classList.add('inactive');
+            }
+        }
+
+
+        function validateModDestination(destValue, currentSlotIndex) {
+            if (!currentEditingPad || !presetData) return { valid: true, count: 0 };
+
+            const row = parseInt(currentEditingPad.dataset.row);
+            const col = parseInt(currentEditingPad.dataset.col);
+            const padData = presetData.pads[row][col];
+
+            if (!padData.modsources) return { valid: true, count: 0 };
+
+            // Count how many slots already target this destination (excluding current slot)
+            const count = padData.modsources.filter((mod, index) => 
+                mod.dest === destValue && index !== currentSlotIndex
+            ).length;
+
+            return {
+                valid: count < 3,
+                count: count,
+                remaining: 3 - count
+            };
+        }
+
+
 
         function renderModSlots(padData) {
             const container = document.getElementById('modSlotContainer');
@@ -1684,6 +1729,11 @@
 
             // Setup event listeners for all slots
             setupModSlotListeners();
+
+            // Apply initial appearance to all slots
+            document.querySelectorAll('.mod-slot').forEach(slotElement => {
+                updateModSlotAppearance(slotElement);
+            });
         }
 
         function setupModSlotListeners() {
@@ -1692,6 +1742,10 @@
                 select.addEventListener('change', (e) => {
                     const slot = parseInt(e.target.dataset.slot);
                     updateModSlot(slot, 'src', e.target.value);
+
+                    // Update appearance immediately
+                    const slotElement = e.target.closest('.mod-slot');
+                    if (slotElement) updateModSlotAppearance(slotElement);
                 });
             });
 
@@ -1699,7 +1753,38 @@
             document.querySelectorAll('.mod-dest').forEach(select => {
                 select.addEventListener('change', (e) => {
                     const slot = parseInt(e.target.dataset.slot);
-                    updateModSlot(slot, 'dest', e.target.value);
+                    const newDest = e.target.value;
+
+                    // Validate destination limit (skip validation for 'none')
+                    if (newDest !== 'none') {
+                        const validation = validateModDestination(newDest, slot);
+
+                        if (!validation.valid) {
+                            setStatus(`Maximum 3 modulations per destination! ${newDest} already has 3 slots.`, 'error');
+                            // Revert to previous value
+                            const row = parseInt(currentEditingPad.dataset.row);
+                            const col = parseInt(currentEditingPad.dataset.col);
+                            const previousDest = presetData.pads[row][col].modsources[slot]?.dest || 'none';
+                            e.target.value = previousDest;
+                            return;
+                        }
+                    }
+
+                    updateModSlot(slot, 'dest', newDest);
+
+                    // Update appearance immediately
+                    const slotElement = e.target.closest('.mod-slot');
+                    if (slotElement) updateModSlotAppearance(slotElement);
+
+                    // Update slot number in data to match destination's slot count
+                    if (newDest !== 'none') {
+                        const row = parseInt(currentEditingPad.dataset.row);
+                        const col = parseInt(currentEditingPad.dataset.col);
+                        const destSlotNum = presetData.pads[row][col].modsources.filter((mod, idx) => 
+                            mod.dest === newDest && idx <= slot
+                        ).length - 1;
+                        updateModSlot(slot, 'slot', destSlotNum.toString());
+                    }
                 });
             });
 
@@ -1736,10 +1821,19 @@
             const padData = presetData.pads[row][col];
 
             if (!padData.modsources[slot]) {
-                padData.modsources[slot] = { dest: 'none', src: 'none', slot: slot.toString(), amount: '0' };
+                padData.modsources[slot] = { dest: 'none', src: 'none', slot: '0', amount: '0' };
             }
 
             padData.modsources[slot][field] = value.toString();
+
+            // Auto-update the destination slot number when dest changes
+            if (field === 'dest' && value !== 'none') {
+                // Count how many slots before this one target the same destination
+                const destSlotNum = padData.modsources.filter((mod, idx) => 
+                    mod.dest === value && idx <= slot
+                ).length - 1;
+                padData.modsources[slot].slot = destSlotNum.toString();
+            }
         }
 
         function removeModSlot(slot) {
@@ -1757,25 +1851,34 @@
 
         function addModSlot() {
             if (!currentEditingPad || !presetData) return;
-
+                
             const row = parseInt(currentEditingPad.dataset.row);
             const col = parseInt(currentEditingPad.dataset.col);
             const padData = presetData.pads[row][col];
-
+                
             if (!padData.modsources) padData.modsources = [];
-
+                
             if (padData.modsources.length >= 12) {
                 setStatus('Maximum 12 modulation slots per pad', 'error');
                 return;
             }
-
+            
             const newSlot = {
                 dest: 'gaindb',
                 src: 'velocity',
-                slot: padData.modsources.length.toString(),
+                slot: '0', // Will be recalculated when destination is set
                 amount: '400'
             };
-
+            
+            // Check if gaindb already has 3 slots
+            const validation = validateModDestination('gaindb', -1);
+            if (!validation.valid) {
+                // Default to 'none' if gaindb is full
+                newSlot.dest = 'none';
+                newSlot.src = 'none';
+                setStatus('Added slot with no destination (default gaindb is full)', 'success');
+            }
+            
             padData.modsources.push(newSlot);
             renderModSlots(padData);
         }
