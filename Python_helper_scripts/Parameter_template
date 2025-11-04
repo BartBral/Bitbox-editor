@@ -1,47 +1,234 @@
-# # For a slider
-# my_param = {
-#     'name': 'attack_curve',
-#     'type': 'slider',
-#     'label': 'Attack Curve',
-#     'min': 0,
-#     'max': 1000,
-#     'default': 500,
-#     'format': 'percentage'  # or 'db', 'semitones', 'hz', 'ms', 'custom'
-# }
+#   # For a slider
+#   my_param = {
+#       'name': 'attack_curve',
+#       'type': 'slider',
+#       'label': 'Attack Curve',
+#       'min': 0,
+#       'max': 1000,
+#       'default': 500,
+#       'format': 'percentage'  # or 'db', 'semitones', 'hz', 'ms', 'custom'
+#   }
 
-# # For a dropdown
-# my_param = {
-#     'name': 'voice_mode',
-#     'type': 'dropdown',
-#     'label': 'Voice Mode',
-#     'default': '0',
-#     'options': [
-#         {'value': '0', 'label': 'Mono'},
-#         {'value': '1', 'label': 'Poly'},
-#         {'value': '2', 'label': 'Unison'}
-#     ]
-# }
+#   # For a dropdown
+#   my_param = {
+#       'name': 'voice_mode',
+#       'type': 'dropdown',
+#       'label': 'Voice Mode',
+#       'default': '0',
+#       'options': [
+#           {'value': '0', 'label': 'Mono'},
+#           {'value': '1', 'label': 'Poly'},
+#           {'value': '2', 'label': 'Unison'}
+#       ]
+#   }
 
-# For a slider
-my_param = {
-    'name': 'attack_curve',
-    'type': 'slider',
-    'label': 'Attack Curve',
-    'min': 0,
-    'max': 1000,
-    'default': 500,
-    'format': 'percentage'  # or 'db', 'semitones', 'hz', 'ms', 'custom'
-}
+#   # Example 1: Adding a slider parameter (e.g., Distortion)
+#     distortion_config = {
+#         'name': 'distortion',
+#         'type': 'slider',
+#         'label': 'Distortion',
+#         'min': 0,
+#         'max': 1000,
+#         'default': 0,
+#         'format': 'percentage'
+#     }
+    
+#     # Example 2: Adding a dropdown parameter (e.g., Filter Type)
+#     filter_type_config = {
+#         'name': 'filtertype',
+#         'type': 'dropdown',
+#         'label': 'Filter Type',
+#         'default': '0',
+#         'options': [
+#             {'value': '0', 'label': 'Low Pass'},
+#             {'value': '1', 'label': 'High Pass'},
+#             {'value': '2', 'label': 'Band Pass'},
+#             {'value': '3', 'label': 'Notch'}
+#         ]
+#     }
+    
+#     # Example 3: Advanced slider with Hz formatting
+#     cutoff_config = {
+#         'name': 'filtercutoff',
+#         'type': 'slider',
+#         'label': 'Filter Cutoff',
+#         'min': 0,
+#         'max': 1000,
+#         'default': 500,
+#         'format': 'hz',
+#         'format_options': {
+#             'min_hz': 20,
+#             'max_hz': 20000
+#         }
+#     }
 
-# For a dropdown
-my_param = {
-    'name': 'voice_mode',
+# Legato dropdown
+legatomode = {
+    'name': 'legatomode',
     'type': 'dropdown',
-    'label': 'Voice Mode',
+    'label': 'Legato Mode',
+    'tab': 'Config',
     'default': '0',
     'options': [
-        {'value': '0', 'label': 'Mono'},
-        {'value': '1', 'label': 'Poly'},
-        {'value': '2', 'label': 'Unison'}
+        { 'value': '0',  'label': 'Off' },
+        { 'value': '1',  'label': 'On' }
+    ]
+}
+
+#Interpolation Quality
+interpqual = {
+    'name': 'interpqual',
+    'type': 'dropdown',
+    'label': 'Interp Qual',
+    'tab': 'Config',
+    'default': '0',
+    'options': [
+        { 'value': '0',  'label': 'Normal' },
+        { 'value': '1',  'label': 'HighQuality' }
+    ]
+}
+
+# Quant Size // Only available in Clipmode
+quantsize = {
+    'name': 'quantsize',
+    'type': 'dropdown',
+    'label': 'Quant Size',
+    'tab': 'Pos',
+    'exclusively': 'Clip-mode',
+    'default': '3',
+    'options': [
+        { 'value':  '0',   'label': '8 bars' },
+        { 'value':  '1',   'label': '4 bars' },
+        { 'value':  '2',   'label': '2 bars' },
+        { 'value':  '3',   'label':  '1 bar' },
+        { 'value':  '4',   'label':    '1/2' },
+        { 'value':  '5',   'label':    '1/4' },
+        { 'value':  '6',   'label':    '1/8' },
+        { 'value':  '7',   'label':   '1/16' },
+        { 'value':  '8',   'label':   '1/32' },
+        { 'value':  '9',   'label':   '1/64' },
+        { 'value': '10',   'label':   'none' }
+    ]
+}
+
+# Sync Type // Only available in Clipmode
+synctype = {
+    'name': 'synctype',
+    'type': 'dropdown',
+    'label': 'Sync Type',
+    'tab': 'Pos',
+    'exclusively': 'Clip-mode',
+    'default': '5',
+    'options': [
+        { 'value':  '0',   'label': 'Slice' },
+        { 'value':  '1',   'label': '1 bar' },
+        { 'value':  '2',   'label':   '1/2' },
+        { 'value':  '3',   'label':   '1/4' },
+        { 'value':  '4',   'label':   '1/8' },
+        { 'value':  '5',   'label':  '1/16' },
+        { 'value':  '6',   'label':  'none' }
+    ]
+}
+
+#Beat Count // In both Slice-mode and Clip-mode
+# beatcount = {
+#     'name': 'beatcount',
+#     'type': 'slider',
+#     'label': 'Beat Count',
+#     'tab': 'Pos',
+#     'exclusively': {'Clip-mode', 'Slice-mode'},
+#     'min': 0,
+#     'max': 512,
+#     'default': 0,
+#     'format': 'custom',
+#     'format_options': {
+#         'min_custom': Auto,
+#         'max_custom': 512
+#     }
+# }
+
+beatcount = {
+    'name': 'beatcount',
+    'type': 'slider',
+    'label': 'Beat Count',
+    'tab': 'Pos',
+    'exclusively': {'Clip-mode', 'Slice-mode'},
+    'min': 0,
+    'max': 512,
+    'default': 0,
+    'format': 'custom',
+    'format_options': {
+        'custom_code_display': """
+case 'beatcount':
+    if (val === 0) {
+        text = 'Auto';
+    } else {
+        text = val.toString();
+    }
+    break;
+""",
+        'custom_code_parse': """
+const num = parseInt(text, 10);
+if (text === 'Auto') return 0;
+if (isNaN(num) || num < 0 || num > 512) return null;
+return num;
+"""
+    }
+}
+
+
+
+
+# Play thru
+playthru = {
+    'name': 'playthru',
+    'type': 'dropdown',
+    'label': 'Play thru',
+    'tab': 'Pos',
+    'exclusively': 'Slice-mode',
+    'default': '0',
+    'options': [
+        { 'value': '0',  'label': 'Off' },
+        { 'value': '1',  'label':  'On' }
+    ]
+}
+
+# Slicer Quantize:
+slicerquantsize = {
+    'name': 'slicerquantsize',
+    'type': 'dropdown',
+    'label': 'Slicer Quantize',
+    'tab': 'Pos',
+    'exclusively': 'Slice-mode',
+    'default': '4',
+    'options': [
+        { 'value':  '0',   'label': '2 bars' },
+        { 'value':  '1',   'label':  '1 bar' },
+        { 'value':  '2',   'label':    '1/2' },
+        { 'value':  '3',   'label':   '1/2T' },
+        { 'value':  '4',   'label':    '1/4' },
+        { 'value':  '5',   'label':   '1/4T' },
+        { 'value':  '6',   'label':    '1/8' },
+        { 'value':  '7',   'label':   '1/8T' },
+        { 'value':  '8',   'label':   '1/16' },
+        { 'value':  '9',   'label':  '1/16T' },
+        { 'value': '10',   'label':   '1/32' },
+        { 'value': '11',   'label':  '1/32T' },
+        { 'value': '12',   'label':   '1/64' },
+        { 'value': '13',   'label':   'none' }
+    ]
+}
+
+# Slicer Sync
+slicersync = {
+    'name': 'slicersync',
+    'type': 'dropdown',
+    'label': 'Slicer Sync',
+    'tab': 'Pos',
+    'exclusively': 'Slice-mode',
+    'default': '0',
+    'options': [
+        { 'value': '0',  'label': 'Off' },
+        { 'value': '1',  'label':  'On' }
     ]
 }

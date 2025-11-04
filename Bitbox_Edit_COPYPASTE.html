@@ -388,9 +388,11 @@
         }
 
         .param {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+            /* display: flex; */
+                gap: 6px;
+                flex-direction: column;
+                justify-content: center;
+                align-items: baseline;
         }
 
         .param-label {
@@ -432,15 +434,15 @@
             font-size: 0.9em;
         }
 
-        .select {
-            padding: 8px;
+        /* .select {
+            padding: 3px;
             border: 1px solid #404040;
             border-radius: 6px;
             background: #1a1a1a;
             color: #e0e0e0;
             font-size: 0.9em;
             cursor: pointer;
-        }
+        } */
 
         .envelope-viz {
             width: 100%;
@@ -488,7 +490,7 @@
 
         /* dropdown menu styling */
         .select {
-            padding: 8px;
+            /* padding: 3px; */
             border: 1px solid #585656;
             border-radius: 6px;
             background: hsl(212, 54%, 37%);
@@ -519,15 +521,16 @@
         .mod-slot-container {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            /* gap: 12px; */
+            align-items: center;
         }
 
         .mod-slot {
-            display: grid;
+            /* display: grid; */
             grid-template-columns: 30px 1fr 1fr 100px 30px;
-            gap: 8px;
+            /* gap: 8px; */
             align-items: center;
-            padding: 10px;
+            padding: 3px;
             background: #2a2a2a;
             border-radius: 6px;
             border: 1px solid #404040;
@@ -540,16 +543,16 @@
         }
 
         .mod-remove-btn {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: none;
-            background: #ff5e5e;
-            color: white;
-            cursor: pointer;
-            font-size: 1.2em;
-            line-height: 1;
-            transition: all 0.2s;
+               width: 24px;
+                height: 24px;
+                border-radius: 6px;
+                border: none;
+                background: #ff5e5e70;
+                color: white;
+                cursor: pointer;
+                font-size: 1.2em;
+                line-height: 1;
+                transition: all 0.2s;
         }
 
         .mod-remove-btn:hover {
@@ -558,9 +561,16 @@
         }
 
         .mod-amount {
-            display: flex;
+            /* display: flex; */
             align-items: center;
             gap: 8px;
+        }
+
+        .mod-arrow {
+            width: 20px;
+            height: 20px;
+            margin: 0 auto;
+            display: block;
         }
 
         .mod-amount input[type="range"] {
@@ -877,7 +887,7 @@
                         <div class="param">
                             <label class="param-label">Active Slice</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="actslice" min="1" max="64" value="1">
+                                <input type="range" class="slider" id="actslice" min="1" max="512" value="1">
                                 <span class="param-value" id="actslice-val">1</span>
                             </div>
                         </div>
@@ -889,7 +899,13 @@
                                 <option value="0">Off</option>
                             </select>
                         </div>
-
+                        <div class="param">
+                            <label class="param-label">Reverse</label>
+                            <select class="select" id="reverse">
+                                <option value="0">Off</option>
+                                <option value="1">On</option>
+                            </select>
+                        </div>
                         <div class="param">
                             <label class="param-label">Loop Mode</label>
                             <select class="select" id="loopmode">
@@ -907,9 +923,73 @@
                                 <option value="4">Stagger</option>
                             </select>
                         </div>
+                        
+
+
                         <div class="param">
-                            <label class="param-label">Reverse</label>
-                            <select class="select" id="reverse">
+                            <label class="param-label">Quant Size</label>
+                            <select class="select" id="quantsize">
+                                <option value="0">8 bars</option>
+                                <option value="1">4 bars</option>
+                                <option value="2">2 bars</option>
+                                <option value="3">1 bar</option>
+                                <option value="4">1/2</option>
+                                <option value="5">1/4</option>
+                                <option value="6">1/8</option>
+                                <option value="7">1/16</option>
+                                <option value="8">1/32</option>
+                                <option value="9">1/64</option>
+                                <option value="10">none</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Sync Type</label>
+                            <select class="select" id="synctype">
+                                <option value="0">Slice</option>
+                                <option value="1">1 bar</option>
+                                <option value="2">1/2</option>
+                                <option value="3">1/4</option>
+                                <option value="4">1/8</option>
+                                <option value="5">1/16</option>
+                                <option value="6">none</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Beat Count</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="beatcount" min="0" max="512" value="0">
+                                <span class="param-value" id="beatcount-val">Auto</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Play Thru</label>
+                            <select class="select" id="playthru">
+                                <option value="0">Off</option>
+                                <option value="1">On</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Slicer Quantize</label>
+                            <select class="select" id="slicerquantsize">
+                                <option value="0">2 bars</option>
+                                <option value="1">1 bar</option>
+                                <option value="2">1/2</option>
+                                <option value="3">1/2T</option>
+                                <option value="4">1/4</option>
+                                <option value="5">1/4T</option>
+                                <option value="6">1/8</option>
+                                <option value="7">1/8T</option>
+                                <option value="8">1/16</option>
+                                <option value="9">1/16T</option>
+                                <option value="10">1/32</option>
+                                <option value="11">1/32T</option>
+                                <option value="12">1/64</option>
+                                <option value="13">none</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Slicer Sync</label>
+                            <select class="select" id="slicersync">
                                 <option value="0">Off</option>
                                 <option value="1">On</option>
                             </select>
@@ -1180,7 +1260,20 @@
                                 <option value="128">G9 (127)</option>
                             </select>
                         </div>
-
+                        <div class="param">
+                            <label class="param-label">Legato Mode</label>
+                            <select class="select" id="legatomode">
+                                <option value="0">Off</option>
+                                <option value="1">On</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Interp Quality</label>
+                            <select class="select" id="interpqual">
+                                <option value="0">Normal</option>
+                                <option value="1">High Quality</option>
+                            </select>
+                        </div>
 
                     </div>
                 </div>
@@ -1326,7 +1419,7 @@
                     loopend: '0',
                     quantsize: '3', // Only in Clipmode:
                     // Quant Size: 8 bars, 4 bars, 2 bars, 1 bar, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, None
-                    synctype: '5', // In Clip-mode only: Sync: 0=Slice, 1=1 bar, 2=1/2, 3=1/4, 4=1/8, 5=1/16, 6=none. 
+                    synctype: '5',  // In Clip-mode only: Sync: 0=Slice, 1=1 bar, 2=1/2, 3=1/4, 4=1/8, 5=1/16, 6=none. 
                     actslice: '1',
                     outputbus: '0',
                     polymode: '0',
@@ -1635,37 +1728,37 @@
         function createModSlotHTML(modData, index, cellmode) {
             const destinations = MOD_DESTINATIONS[cellmode] || MOD_DESTINATIONS['0'];
 
-            const sourceOptions = MOD_SOURCES.map(src => 
+            const sourceOptions = MOD_SOURCES.map(src =>
                 `<option value="${src.value}" ${modData.src === src.value ? 'selected' : ''}>${src.label}</option>`
             ).join('');
 
-            const destOptions = destinations.map(dest => 
+            const destOptions = destinations.map(dest =>
                 `<option value="${dest.value}" ${modData.dest === dest.value ? 'selected' : ''}>${dest.label}</option>`
             ).join('');
 
             const amount = parseInt(modData.amount) || 0;
             const amountText = (amount >= 0 ? '+' : '') + (amount / 10).toFixed(1) + '%';
 
-            // Show destination slot number if dest is not 'none'
-            const destSlot = modData.slot || '0';
-            const slotLabel = modData.dest !== 'none' ? `${index + 1} [${destSlot}]` : `${index + 1}`;
+            const slotLabel = `${index + 1}`;
 
             return `
                 <div class="mod-slot" data-slot="${index}">
-                    <div class="mod-slot-number" title="Slot ${index + 1}, Dest Slot ${destSlot}">${slotLabel}</div>
+                    <div class="mod-slot-number" title="Slot ${index + 1}">${slotLabel}
+                        </div>                    
                     <select class="select mod-source" data-slot="${index}">
                         ${sourceOptions}
                     </select>
+                    
+                    <input type="range" class="slider mod-amount-slider" data-slot="${index}"min="-1000" max="1000" value="${amount}">
+                        
                     <select class="select mod-dest" data-slot="${index}">
                         ${destOptions}
                     </select>
-                    <div class="mod-amount">
-                        <input type="range" class="slider mod-amount-slider" data-slot="${index}" 
-                               min="-1000" max="1000" value="${amount}">
-                        <span class="mod-amount-val" data-slot="${index}">${amountText}</span>
-                    </div>
+                    
                     <button class="mod-remove-btn" data-slot="${index}">×</button>
+                    <div class="mod-amount-val" data-slot="${index}">${amountText}</div>
                 </div>
+                
             `;
         }
 
@@ -1700,7 +1793,7 @@
             if (!padData.modsources) return { valid: true, count: 0 };
 
             // Count how many slots already target this destination (excluding current slot)
-            const count = padData.modsources.filter((mod, index) => 
+            const count = padData.modsources.filter((mod, index) =>
                 mod.dest === destValue && index !== currentSlotIndex
             ).length;
 
@@ -1780,7 +1873,7 @@
                     if (newDest !== 'none') {
                         const row = parseInt(currentEditingPad.dataset.row);
                         const col = parseInt(currentEditingPad.dataset.col);
-                        const destSlotNum = presetData.pads[row][col].modsources.filter((mod, idx) => 
+                        const destSlotNum = presetData.pads[row][col].modsources.filter((mod, idx) =>
                             mod.dest === newDest && idx <= slot
                         ).length - 1;
                         updateModSlot(slot, 'slot', destSlotNum.toString());
@@ -1829,7 +1922,7 @@
             // Auto-update the destination slot number when dest changes
             if (field === 'dest' && value !== 'none') {
                 // Count how many slots before this one target the same destination
-                const destSlotNum = padData.modsources.filter((mod, idx) => 
+                const destSlotNum = padData.modsources.filter((mod, idx) =>
                     mod.dest === value && idx <= slot
                 ).length - 1;
                 padData.modsources[slot].slot = destSlotNum.toString();
@@ -1851,25 +1944,25 @@
 
         function addModSlot() {
             if (!currentEditingPad || !presetData) return;
-                
+
             const row = parseInt(currentEditingPad.dataset.row);
             const col = parseInt(currentEditingPad.dataset.col);
             const padData = presetData.pads[row][col];
-                
+
             if (!padData.modsources) padData.modsources = [];
-                
+
             if (padData.modsources.length >= 12) {
                 setStatus('Maximum 12 modulation slots per pad', 'error');
                 return;
             }
-            
+
             const newSlot = {
                 dest: 'gaindb',
                 src: 'velocity',
                 slot: '0', // Will be recalculated when destination is set
                 amount: '400'
             };
-            
+
             // Check if gaindb already has 3 slots
             const validation = validateModDestination('gaindb', -1);
             if (!validation.valid) {
@@ -1878,7 +1971,7 @@
                 newSlot.src = 'none';
                 setStatus('Added slot with no destination (default gaindb is full)', 'success');
             }
-            
+
             padData.modsources.push(newSlot);
             renderModSlots(padData);
         }
@@ -2027,23 +2120,41 @@
             const slicestepmode = document.getElementById('slicestepmode')?.closest('.param');
             const reverseParam = document.getElementById('reverse')?.closest('.param');
 
-            // Reset all to visible
-            [samstartParam, samlenParam, loopstartParam, loopendParam, loopfadeamtParam,
-                loopmodesParam, loopmode, actsliceParam, slicestepmode, reverseParam].forEach(param => {
-                    if (param) {
-                        param.style.opacity = '1';
-                    }
-                });
+            // Clip mode params
+            const quantsizeParam = document.getElementById('quantsize')?.closest('.param');
+            const synctypeParam = document.getElementById('synctype')?.closest('.param');
+            const beatcountParam = document.getElementById('beatcount')?.closest('.param');
 
+            // Slice mode params
+            const playthruParam = document.getElementById('playthru')?.closest('.param');
+            const slicerquantsizeParam = document.getElementById('slicerquantsize')?.closest('.param');
+            const slicersyncParam = document.getElementById('slicersync')?.closest('.param');
+
+            // Reset all to visible and fully opaque
+            [samstartParam, samlenParam, loopstartParam, loopendParam, loopfadeamtParam, 
+             loopmodesParam, loopmode, actsliceParam, slicestepmode, reverseParam,
+             quantsizeParam, synctypeParam, beatcountParam, playthruParam, 
+             slicerquantsizeParam, slicersyncParam].forEach(param => {
+                if (param) {
+                    param.style.opacity = '1';
+                }
+            });
+        
             // Apply greying based on cellmode
-            switch (cellmode) {
-                case '0': // Sample mode - grey out slice-specific
+            switch(cellmode) {
+                case '0': // Sample mode - grey out slice and clip specific
                     if (actsliceParam) actsliceParam.style.opacity = greyValue;
                     if (slicestepmode) slicestepmode.style.opacity = greyValue;
                     if (loopmode) loopmode.style.opacity = greyValue;
+                    if (quantsizeParam) quantsizeParam.style.opacity = greyValue;
+                    if (synctypeParam) synctypeParam.style.opacity = greyValue;
+                    if (beatcountParam) beatcountParam.style.opacity = greyValue;
+                    if (playthruParam) playthruParam.style.opacity = greyValue;
+                    if (slicerquantsizeParam) slicerquantsizeParam.style.opacity = greyValue;
+                    if (slicersyncParam) slicersyncParam.style.opacity = greyValue;
                     break;
-
-                case '1': // Clip mode - grey out sample/loop specific
+            
+                case '1': // Clip mode - grey out sample/loop and slice specific
                     if (samstartParam) samstartParam.style.opacity = greyValue;
                     if (samlenParam) samlenParam.style.opacity = greyValue;
                     if (loopstartParam) loopstartParam.style.opacity = greyValue;
@@ -2053,9 +2164,13 @@
                     if (actsliceParam) actsliceParam.style.opacity = greyValue;
                     if (slicestepmode) slicestepmode.style.opacity = greyValue;
                     if (reverseParam) reverseParam.style.opacity = greyValue;
+                    if (loopmode) loopmode.style.opacity = greyValue;
+                    if (playthruParam) playthruParam.style.opacity = greyValue;
+                    if (slicerquantsizeParam) slicerquantsizeParam.style.opacity = greyValue;
+                    if (slicersyncParam) slicersyncParam.style.opacity = greyValue;
                     break;
-
-                case '2': // Slice mode - grey out sample-specific
+            
+                case '2': // Slice mode - grey out sample-specific and clip-specific
                     if (samstartParam) samstartParam.style.opacity = greyValue;
                     if (samlenParam) samlenParam.style.opacity = greyValue;
                     if (loopstartParam) loopstartParam.style.opacity = greyValue;
@@ -2063,15 +2178,23 @@
                     if (loopfadeamtParam) loopfadeamtParam.style.opacity = greyValue;
                     if (loopmodesParam) loopmodesParam.style.opacity = greyValue;
                     if (reverseParam) reverseParam.style.opacity = greyValue;
+                    if (quantsizeParam) quantsizeParam.style.opacity = greyValue;
+                    if (synctypeParam) synctypeParam.style.opacity = greyValue;
                     break;
-
-                case '3': // Granular mode - grey out slice-specific
+            
+                case '3': // Granular mode - grey out slice-specific and clip-specific
                     if (actsliceParam) actsliceParam.style.opacity = greyValue;
                     if (slicestepmode) slicestepmode.style.opacity = greyValue;
                     if (loopmode) loopmode.style.opacity = greyValue;
+                    if (quantsizeParam) quantsizeParam.style.opacity = greyValue;
+                    if (synctypeParam) synctypeParam.style.opacity = greyValue;
+                    if (beatcountParam) beatcountParam.style.opacity = greyValue;
+                    if (playthruParam) playthruParam.style.opacity = greyValue;
+                    if (slicerquantsizeParam) slicerquantsizeParam.style.opacity = greyValue;
+                    if (slicersyncParam) slicersyncParam.style.opacity = greyValue;
                     break;
             }
-
+        
             // Additional: grey out loop params when Loop Modes = None (for Sample/Granular)
             if ((cellmode === '0' || cellmode === '3') && loopmodes === '0') {
                 if (loopstartParam) loopstartParam.style.opacity = greyValue;
@@ -2180,7 +2303,10 @@
                 'gainssrcwin',
                 'rootnote',
                 'fx1send',
-                'fx2send'
+                'fx2send',
+                'legatomode',
+                'interpqual',
+                'beatcount'
             ];
 
             params.forEach(param => {
@@ -2275,38 +2401,58 @@
             });
 
             // Dropdowns
-            ['cellmode', 'loopmodes', 'loopmode', 'samtrigtype', 'polymode', 'lfowave', 'lfokeytrig', 'lfobeatsync', 'lforatebeatsync', 'midimode', 'reverse', 'outputbus', 'chokegrp', 'slicestepmode'].forEach(param => {
-                const select = document.getElementById(param);
-                if (select) {
-                    select.addEventListener('change', () => {
-                        if (currentEditingPad && presetData) {
-                            const row = parseInt(currentEditingPad.dataset.row);
-                            const col = parseInt(currentEditingPad.dataset.col);
-                            presetData.pads[row][col].params[param] = select.value;
-                        }
-                        if (param === 'cellmode') {
-                            updateTabVisibility();
-                        }
-                        if (param === 'lfobeatsync') {
-                            updateLFOParameterVisibility();
-                        }
-                        if (param === 'cellmode' || param === 'loopmodes') {
-                            updateTabVisibility();
-                            updatePosConditionalVisibility();
-                        }
-                        if (param === 'cellmode') {
-                            updateTabVisibility();
-                            // Refresh mod destinations
-                            if (currentEditingPad) {
+            ['cellmode',
+                'loopmodes',
+                'loopmode',
+                'samtrigtype',
+                'polymode',
+                'lfowave',
+                'lfokeytrig',
+                'lfobeatsync',
+                'lforatebeatsync',
+                'midimode',
+                'reverse',
+                'outputbus',
+                'chokegrp',
+                'slicestepmode',
+                'legatomode',
+                'interpqual',
+                'quantsize',
+                'synctype',
+                'playthru',
+                'slicerquantsize',
+                'slicersync'].forEach(param => {
+                    const select = document.getElementById(param);
+                    if (select) {
+                        select.addEventListener('change', () => {
+                            if (currentEditingPad && presetData) {
                                 const row = parseInt(currentEditingPad.dataset.row);
                                 const col = parseInt(currentEditingPad.dataset.col);
-                                renderModSlots(presetData.pads[row][col]);
+                                presetData.pads[row][col].params[param] = select.value;
                             }
-                        }
+                            if (param === 'cellmode') {
+                                updateTabVisibility();
+                            }
+                            if (param === 'lfobeatsync') {
+                                updateLFOParameterVisibility();
+                            }
+                            if (param === 'cellmode' || param === 'loopmodes') {
+                                updateTabVisibility();
+                                updatePosConditionalVisibility();
+                            }
+                            if (param === 'cellmode') {
+                                updateTabVisibility();
+                                // Refresh mod destinations
+                                if (currentEditingPad) {
+                                    const row = parseInt(currentEditingPad.dataset.row);
+                                    const col = parseInt(currentEditingPad.dataset.col);
+                                    renderModSlots(presetData.pads[row][col]);
+                                }
+                            }
 
-                    });
-                }
-            });
+                        });
+                    }
+                });
         }
 
         function parseDisplayValue(param, text) {
@@ -2358,6 +2504,12 @@
                     const note = notes[val % 12];
                     text = `${note}${octave} (${val})`;
                     break;
+                case 'beatcount':
+                    const trimmed = text.trim();
+                    if (trimmed.toLowerCase() === 'auto') return 0;
+                    const num = parseInt(trimmed, 10);
+                    if (isNaN(num) || num < 0 || num > 512) return null;
+                    return num;
             }
         }
 
@@ -2388,7 +2540,13 @@
                     const hz = minHz + (normalizedVal * (maxHz - minHz));
                     text = hz.toFixed(2) + ' Hz';
                     break;
-
+                case 'beatcount':
+                    if (val === 0) {
+                        text = 'Auto';
+                    } else {
+                        text = val.toString();
+                    }
+                    break;
                 default:
                     text = (val / 10).toFixed(1) + '%';
             }
@@ -2497,19 +2655,37 @@
                 'gainssrcwin',
                 'rootnote',
                 'fx1send',
-                'fx2send'
-            ].forEach(param => {
-                const slider = document.getElementById(param);
-                if (slider && params[param] !== undefined) {
-                    slider.value = params[param];
-                    updateParamDisplay(param, params[param]);
-                }
-            });
+                'fx2send',
+                'beatcount'].forEach(param => {
+                    const slider = document.getElementById(param);
+                    if (slider && params[param] !== undefined) {
+                        slider.value = params[param];
+                        updateParamDisplay(param, params[param]);
+                    }
+                });
 
             // Dropdowns
-            ['cellmode', 'loopmodes', 'loopmode', 'samtrigtype', 'polymode',
-                'lfowave', 'lfokeytrig', 'lfobeatsync', 'lforatebeatsync',
-                'midimode', 'reverse', 'outputbus', 'chokegrp', 'slicestepmode'].forEach(param => {
+            ['cellmode',
+                'loopmodes',
+                'loopmode',
+                'samtrigtype',
+                'polymode',
+                'lfowave',
+                'lfokeytrig',
+                'lfobeatsync',
+                'lforatebeatsync',
+                'midimode',
+                'reverse',
+                'outputbus',
+                'chokegrp',
+                'slicestepmode',
+                'legatomode',
+                'interpqual',
+                'quantsize',
+                'synctype',
+                'playthru',
+                'slicerquantsize',
+                'slicersync'].forEach(param => {
                     const select = document.getElementById(param);
                     if (select && params[param] !== undefined) {
                         select.value = params[param];
