@@ -357,7 +357,7 @@
         .close-btn {
             width: 32px;
             height: 32px;
-            border-radius: 50%;
+            border-radius: 3px;
             border: none;
             background: #404040;
             font-size: 1.3em;
@@ -367,7 +367,7 @@
         }
 
         .close-btn:hover {
-            background: #ff5e5e;
+            background: #5eff69;
             color: white;
         }
 
@@ -410,8 +410,8 @@
 
         .slider {
             flex: 1;
-            /* height: 4px; */
-            border-radius: 5px;
+            height: 20px;
+            border-radius: 3px;
             background: #404040;
             outline: none;
             -webkit-appearance: none;
@@ -419,9 +419,9 @@
 
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
             background: #4a9eff;
             cursor: pointer;
         }
@@ -434,21 +434,11 @@
             font-size: 0.9em;
         }
 
-        /* .select {
-            padding: 3px;
-            border: 1px solid #404040;
-            border-radius: 6px;
-            background: #1a1a1a;
-            color: #e0e0e0;
-            font-size: 0.9em;
-            cursor: pointer;
-        } */
-
         .envelope-viz {
             width: 100%;
             height: 120px;
             background: #1a1a1a;
-            border-radius: 6px;
+            border-radius: 12px;
             margin-top: 10px;
         }
 
@@ -489,19 +479,19 @@
         }
 
         /* dropdown menu styling */
-        .select {
+        
+            .select {
             /* padding: 3px; */
-            border: 1px solid #585656;
-            border-radius: 6px;
+            border: 0px solid #585656;
+            border-radius: 3px;
             background: hsl(212, 54%, 37%);
             color: #f2f1f1;
             font-size: 0.9em;
             cursor: pointer;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            /* ADD THIS */
             font-weight: 500;
-            /* ADD THIS - makes text bolder */
         }
+        
 
         .select option {
             background: #1a1a1a5c;
@@ -526,9 +516,9 @@
         }
 
         .mod-slot {
-            /* display: grid; */
-            grid-template-columns: 30px 1fr 1fr 100px 30px;
-            /* gap: 8px; */
+            display: grid;
+            grid-template-columns: 30px 1fr 3fr 1fr 12px 10px;
+            gap: 3px;
             align-items: center;
             padding: 3px;
             background: #2a2a2a;
@@ -543,16 +533,16 @@
         }
 
         .mod-remove-btn {
-               width: 24px;
-                height: 24px;
-                border-radius: 6px;
-                border: none;
-                background: #ff5e5e70;
-                color: white;
-                cursor: pointer;
-                font-size: 1.2em;
-                line-height: 1;
-                transition: all 0.2s;
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            border: none;
+            background: #ff5e5e70;
+            color: white;
+            cursor: pointer;
+            line-height: 0;
+            transition: all 0.2s;
+            margin-top: -9px;
         }
 
         .mod-remove-btn:hover {
@@ -560,11 +550,15 @@
             transform: scale(1.1);
         }
 
+  
+
         .mod-amount {
-            /* display: flex; */
+            position: relative;  /* Create positioning context */
+            display: flex;
             align-items: center;
-            gap: 8px;
+            height: 20px;  /* Fixed height for slider */
         }
+
 
         .mod-arrow {
             width: 20px;
@@ -578,12 +572,42 @@
         }
 
         .mod-amount-val {
-            min-width: 60px;
-            text-align: center;
-            font-weight: 600;
-            color: #4a9eff;
-            font-size: 0.85em;
+            position: absolute;  /* Overlay positioning */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);  /* Perfect centering */
+            z-index: 2;  /* Text on top layer */
+            font-size: 0.75em;
+            font-weight: 700;  /* Bold so it stands out */
+            color: #ffffff;  /* White text */
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);  /* Shadow for readability */
+            pointer-events: none;  /* Click-through to slider */
+            user-select: none;  /* No text selection */
+            white-space: nowrap;  /* Don't wrap */
+            line-height: 1;
         }
+
+        .mod-midicc-config {
+            display: grid;
+            grid-template-columns: 0px 1fr 14px 1fr 3px;
+            /* gap: 8px; */
+            padding: 0px 1px 4px 4px;
+            background: #2a2a2a;
+            border-left: 1px solid #404040;
+            border-bottom: 1px solid #404040;
+            border-right: 1px solid #404040;
+            margin-left: -374px;
+            margin-top: -1px;
+            border-radius: 0 0 6px 6px;
+        }
+
+        .mod-midicc-label {
+            color: #888;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+
     </style>
 </head>
 
@@ -652,7 +676,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modalTitle">Edit Pad</h2>
-                <button class="close-btn" id="closeModal">×</button>
+                <button class="close-btn" id="closeModal">✔</button>
             </div>
 
             <!-- Tabs -->
@@ -1725,14 +1749,52 @@
             }
         }
 
+        // function createModSlotHTML(modData, index, cellmode) {
+        //     const destinations = MOD_DESTINATIONS[cellmode] || MOD_DESTINATIONS['0'];
+
+        //     const sourceOptions = MOD_SOURCES.map(src => 
+        //         `<option value="${src.value}" ${modData.src === src.value ? 'selected' : ''}>${src.label}</option>`
+        //     ).join('');
+
+        //     const destOptions = destinations.map(dest => 
+        //         `<option value="${dest.value}" ${modData.dest === dest.value ? 'selected' : ''}>${dest.label}</option>`
+        //     ).join('');
+
+        //     const amount = parseInt(modData.amount) || 0;
+        //     const amountText = (amount >= 0 ? '+' : '') + (amount / 10).toFixed(1) + '%';
+
+        //     const slotLabel = `${index + 1}`;
+
+        //     return `
+        //         <div class="mod-slot" data-slot="${index}">
+        //             <div class="mod-slot-number" title="Slot ${index + 1}">${slotLabel}</div>
+        //             <select class="select mod-source" data-slot="${index}">
+        //                 ${sourceOptions}
+        //             </select>
+        //            <div class="mod-amount">
+        //                 <input type="range" class="slider mod-amount-slider" data-slot="${index}" 
+        //                        min="-1000" max="1000" value="${amount}">
+        //                 <span class="mod-amount-val" data-slot="${index}">${amountText}</span>
+        //             </div>
+                    
+
+        //             <select class="select mod-dest" data-slot="${index}">
+        //                 ${destOptions}
+        //             </select>
+                    
+        //             <button class="mod-remove-btn" data-slot="${index}">×</button>
+        //         </div>
+        //     `;
+        // }
+
         function createModSlotHTML(modData, index, cellmode) {
             const destinations = MOD_DESTINATIONS[cellmode] || MOD_DESTINATIONS['0'];
 
-            const sourceOptions = MOD_SOURCES.map(src =>
+            const sourceOptions = MOD_SOURCES.map(src => 
                 `<option value="${src.value}" ${modData.src === src.value ? 'selected' : ''}>${src.label}</option>`
             ).join('');
 
-            const destOptions = destinations.map(dest =>
+            const destOptions = destinations.map(dest => 
                 `<option value="${dest.value}" ${modData.dest === dest.value ? 'selected' : ''}>${dest.label}</option>`
             ).join('');
 
@@ -1741,26 +1803,58 @@
 
             const slotLabel = `${index + 1}`;
 
+            // Check if this slot uses MIDI CC
+            const isMidiCC = modData.src === 'midicc';
+            const midiChannel = modData.mchan !== undefined ? parseInt(modData.mchan) : 0;
+            const midiCCNum = modData.ccnum !== undefined ? parseInt(modData.ccnum) : 0;
+
+            // Generate MIDI channel options (1-16)
+            let channelOptions = '';
+            for (let i = 0; i < 16; i++) {
+                channelOptions += `<option value="${i}" ${midiChannel === i ? 'selected' : ''}>Ch ${i + 1}</option>`;
+            }
+
+            // Generate CC number options (0-127)
+            let ccOptions = '';
+            for (let i = 0; i <= 127; i++) {
+                ccOptions += `<option value="${i}" ${midiCCNum === i ? 'selected' : ''}>CC ${i}</option>`;
+            }
+
             return `
                 <div class="mod-slot" data-slot="${index}">
-                    <div class="mod-slot-number" title="Slot ${index + 1}">${slotLabel}
-                        </div>                    
+                    <div class="mod-slot-number" title="Slot ${index + 1}">${slotLabel}</div>
                     <select class="select mod-source" data-slot="${index}">
                         ${sourceOptions}
                     </select>
+                   <div class="mod-amount">
+                        <input type="range" class="slider mod-amount-slider" data-slot="${index}" 
+                               min="-1000" max="1000" value="${amount}">
+                        <span class="mod-amount-val" data-slot="${index}">${amountText}</span>
+                    </div>
                     
-                    <input type="range" class="slider mod-amount-slider" data-slot="${index}"min="-1000" max="1000" value="${amount}">
-                        
+
                     <select class="select mod-dest" data-slot="${index}">
                         ${destOptions}
                     </select>
-                    
+                    <div></div>
                     <button class="mod-remove-btn" data-slot="${index}">×</button>
-                    <div class="mod-amount-val" data-slot="${index}">${amountText}</div>
+                    
                 </div>
                 
+                <div class="mod-midicc-config" data-slot="${index}" style="display: ${isMidiCC ? 'grid' : 'none'};">
+                    <div></div>
+                    <select class="select mod-midicc-channel" data-slot="${index}">
+                        ${channelOptions}
+                    </select>
+                    <span class="mod-midicc-label">+</span>
+                    <select class="select mod-midicc-ccnum" data-slot="${index}">
+                        ${ccOptions}
+                    </select>
+                    <div></div> <div></div>
+                </div>
             `;
-        }
+        }    
+
 
         function updateModSlotAppearance(slotElement) {
             const slotIndex = slotElement.dataset.slot;
@@ -1830,15 +1924,60 @@
         }
 
         function setupModSlotListeners() {
-            // Source dropdowns
+            // Source dropdowns - EXPANDED VERSION
             document.querySelectorAll('.mod-source').forEach(select => {
                 select.addEventListener('change', (e) => {
                     const slot = parseInt(e.target.dataset.slot);
-                    updateModSlot(slot, 'src', e.target.value);
+                    const newSource = e.target.value;
 
-                    // Update appearance immediately
+                    if (!currentEditingPad || !presetData) return;
+
+                    const row = parseInt(currentEditingPad.dataset.row);
+                    const col = parseInt(currentEditingPad.dataset.col);
+                    const padData = presetData.pads[row][col];
+
+                    if (!padData.modsources[slot]) {
+                        padData.modsources[slot] = { dest: 'none', src: 'none', slot: '0', amount: '0' };
+                    }
+
+                    // Update source
+                    padData.modsources[slot].src = newSource;
+
+                    // Show/hide MIDI CC config
+                    const midiccConfig = document.querySelector(`.mod-midicc-config[data-slot="${slot}"]`);
+                    if (midiccConfig) {
+                        if (newSource === 'midicc') {
+                            midiccConfig.style.display = 'grid';
+                            // Set defaults if not already set
+                            if (!padData.modsources[slot].mchan) padData.modsources[slot].mchan = '0';
+                            if (!padData.modsources[slot].ccnum) padData.modsources[slot].ccnum = '0';
+                        } else {
+                            midiccConfig.style.display = 'none';
+                            // Remove MIDI CC data
+                            delete padData.modsources[slot].mchan;
+                            delete padData.modsources[slot].ccnum;
+                        }
+                    }
+
+                    // Update appearance
                     const slotElement = e.target.closest('.mod-slot');
                     if (slotElement) updateModSlotAppearance(slotElement);
+                });
+            });
+
+            // MIDI CC Channel dropdowns - ADD THIS NEW SECTION
+            document.querySelectorAll('.mod-midicc-channel').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    updateModSlot(slot, 'mchan', e.target.value);
+                });
+            });
+
+            // MIDI CC Number dropdowns - ADD THIS NEW SECTION
+            document.querySelectorAll('.mod-midicc-ccnum').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    updateModSlot(slot, 'ccnum', e.target.value);
                 });
             });
 
@@ -1960,7 +2099,7 @@
                 dest: 'gaindb',
                 src: 'velocity',
                 slot: '0', // Will be recalculated when destination is set
-                amount: '400'
+                amount: '0'
             };
 
             // Check if gaindb already has 3 slots
@@ -2728,12 +2867,20 @@
                     }
 
                     cell.querySelectorAll('modsource').forEach(mod => {
-                        padData.modsources.push({
+                        const modSource = {
                             dest: mod.getAttribute('dest'),
                             src: mod.getAttribute('src'),
                             slot: mod.getAttribute('slot'),
                             amount: mod.getAttribute('amount')
-                        });
+                        };
+
+                        // Add MIDI CC attributes if present
+                        const mchan = mod.getAttribute('mchan');
+                        const ccnum = mod.getAttribute('ccnum');
+                        if (mchan !== null) modSource.mchan = mchan;
+                        if (ccnum !== null) modSource.ccnum = ccnum;
+
+                        padData.modsources.push(modSource);
                     });
 
                     // ADD THIS SECTION - Parse slices
@@ -2878,6 +3025,16 @@
 
                         activeModSlots.forEach(mod => {
                             xml += `            <modsource dest="${mod.dest}" src="${mod.src}" slot="${mod.slot}" amount="${mod.amount}"/>\n`;
+                                            
+                            // Add MIDI CC attributes if present
+                            if (mod.mchan !== undefined) {
+                                xml += ` mchan="${mod.mchan}"`;
+                            }
+                            if (mod.ccnum !== undefined) {
+                                xml += ` ccnum="${mod.ccnum}"`;
+                            }
+
+                            xml += ` slot="${mod.slot}" amount="${mod.amount}"/>\n`;
                         });
                     }
 
