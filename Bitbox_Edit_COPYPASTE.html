@@ -388,11 +388,11 @@
         }
 
         .param {
-            /* display: flex; */
+            display: flex;
             gap: 6px;
             flex-direction: column;
             justify-content: center;
-            align-items: baseline;
+            align-items: stretch;
         }
 
         .param-label {
@@ -406,6 +406,18 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .fader-container {
+            display: flex;                  /* 1. Use Flexbox layout */
+            justify-content: space-between; /* 2. Push children to opposite ends */
+            margin-bottom: 5px;             /* Add a little space before the visual */
+        }
+
+        .dropdown-container-1 {
+            display: flex;                  /* 1. Use Flexbox layout */
+            justify-content: space-between; /* 2. Push children to opposite ends */
+            margin-bottom: 5px;             /* Add a little space before the visual */
         }
 
         .slider {
@@ -701,13 +713,8 @@
                 <button class="close-btn" id="closeModal">✔</button>
             </div>
 
-            <div class="modal-header">
-                <h2 id="modalTitle">Edit Pad</h2>
-                <button class="close-btn" id="closeModal">×</button>
-            </div>
 
-            <!-- Status Bar / console -->
-            <div class="status-bar" id="editModalStatusBar"></div>
+            
 
             
             <!-- Tabs -->
@@ -726,6 +733,7 @@
                 <div class="param-section">
                     <h3>Main Parameters</h3>
                     <div class="param-grid">
+
                         <div class="param">
                             <label class="param-label">Cell Mode</label>
                             <select class="select" id="cellmode">
@@ -735,54 +743,74 @@
                                 <option value="3">Granular</option>
                             </select>
                         </div>
-                        <div class="param">
 
-                            <label class="param-label">Level</label>
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Level</label>
+                                <span class="param-value" id="gaindb-val">0.0 dB</span>
+                            </div>    
                             <div class="param-control">
                                 <input type="range" class="slider" id="gaindb" min="-96000" max="12000" value="0">
-                                <span class="param-value" id="gaindb-val">0.0 dB</span>
                             </div>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Pitch</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="pitch" min="-24000" max="24000" value="0">
+                            <div class="fader-container">
+                                <label class="param-label">Pitch</label>
                                 <span class="param-value" id="pitch-val">0.00 st</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Pan</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="panpos" min="-1000" max="1000" value="0">
+                                <input type="range" class="slider" id="pitch" min="-24000" max="24000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Pan</label>
                                 <span class="param-value" id="panpos-val">Center</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Filter</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="dualfilcutoff" min="-1000" max="1000" value="0">
+                                <input type="range" class="slider" id="panpos" min="-1000" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Filter</label>
                                 <span class="param-value" id="dualfilcutoff-val">0.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Resonance</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="res" min="0" max="1000" value="500">
+                                <input type="range" class="slider" id="dualfilcutoff" min="-1000" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Resonance</label>
                                 <span class="param-value" id="res-val">50.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">FX1 Send</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="fx1send" min="0" max="1000" value="0">
-                                <span class="param-value" id="fx1send-val">0.0%</span>
+                                <input type="range" class="slider" id="res" min="0" max="1000" value="500">
                             </div>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">FX2 Send</label>
+                            <div class="fader-container">
+                                <label class="param-label">FX1 Send</label>
+                                <span class="param-value" id="fx1send-val">0.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx1send" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">FX2 Send</label>
+                                <span class="param-value" id="fx2send-val">0.0%</span>
+                            </div>
                             <div class="param-control">
                                 <input type="range" class="slider" id="fx2send" min="0" max="1000" value="0">
-                                <span class="param-value" id="fx2send-val">0.0%</span>
                             </div>
                         </div>
 
@@ -796,34 +824,47 @@
                     <h3>Envelope</h3>
                     <canvas class="envelope-viz" id="envelopeCanvas"></canvas>
                     <div class="param-grid">
+                
                         <div class="param">
-                            <label class="param-label">Attack</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="envattack" min="0" max="1000" value="0">
+                            <div class="fader-container">
+                                <label class="param-label">Attack</label>
                                 <span class="param-value" id="envattack-val">0.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Decay</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="envdecay" min="0" max="1000" value="0">
+                                <input type="range" class="slider" id="envattack" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+                
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Decay</label>
                                 <span class="param-value" id="envdecay-val">0.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Sustain</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="envsus" min="0" max="1000" value="1000">
+                                <input type="range" class="slider" id="envdecay" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+                
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Sustain</label>
                                 <span class="param-value" id="envsus-val">100.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Release</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="envrel" min="0" max="1000" value="200">
-                                <span class="param-value" id="envrel-val">20.0%</span>
+                                <input type="range" class="slider" id="envsus" min="0" max="1000" value="1000">
                             </div>
                         </div>
+                
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Release</label>
+                                <span class="param-value" id="envrel-val">20.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="envrel" min="0" max="1000" value="200">
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -833,34 +874,45 @@
                 <div class="param-section">
                     <h3>LFO Parameters</h3>
                     <div class="param-grid">
+
                         <div class="param">
-                            <label class="param-label">LFO Wave</label>
-                            <select class="select" id="lfowave">
-                                <option value="0">Saw Up</option>
-                                <option value="1">Saw Down</option>
-                                <option value="2">Triangle</option>
-                                <option value="3">Positive Triangle</option>
-                                <option value="4">Sine</option>
-                                <option value="5">Positive Sine</option>
-                                <option value="6">Square</option>
-                                <option value="7">Positive Square</option>
-                                <option value="8">Random</option>
-                            </select>
+                             <label class="param-label">LFO Wave</label>
+                            <div class="dropdown-container-1">
+                               
+                                <select class="select" id="lfowave">
+                                    <option value="0">Saw Up</option>
+                                    <option value="1">Saw Down</option>
+                                    <option value="2">Triangle</option>
+                                    <option value="3">Positive Triangle</option>
+                                    <option value="4">Sine</option>
+                                    <option value="5">Positive Sine</option>
+                                    <option value="6">Square</option>
+                                    <option value="7">Positive Square</option>
+                                    <option value="8">Random</option>
+                                </select>
+                            </div>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">LFO Rate</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="lforate" min="0" max="1000" value="100">
+                            <div class="fader-container">
+                                <label class="param-label">LFO Rate</label>
                                 <span class="param-value" id="lforate-val">10.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">LFO Depth</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="lfoamount" min="0" max="1000" value="1000">
-                                <span class="param-value" id="lfoamount-val">100.0%</span>
+                                <input type="range" class="slider" id="lforate" min="0" max="1000" value="100">
                             </div>
                         </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">LFO Depth</label>
+                                <span class="param-value" id="lfoamount-val">100.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="lfoamount" min="0" max="1000" value="1000">
+                            </div>
+                        </div>
+
                         <div class="param">
                             <label class="param-label">LFO Key Trigger</label>
                             <select class="select" id="lfokeytrig">
@@ -904,44 +956,57 @@
                 <div class="param-section">
                     <h3>Position & Loop</h3>
                     <div class="param-grid">
+                        
                         <div class="param">
-                            <span>
+                            <div class="fader-container">
                                 <label class="param-label">Sample Start</label>
                                 <span class="param-value" id="samstart-val">0</span>
-                            </span>
+                            </div>
                             <div class="param-control">
                                 <input type="range" class="slider" id="samstart" min="0" max="4294967295" value="0">
-                                
                             </div>
                         </div>
+                        
                         <div class="param">
-                            <label class="param-label">Sample Length</label>
+                            <div class="fader-container">
+                                <label class="param-label">Sample Length</label>
+                                <span class="param-value" id="samlen-val">0</span>        
+                            </div>
                             <div class="param-control">
                                 <input type="range" class="slider" id="samlen" min="0" max="4294967295" value="0">
-                                <span class="param-value" id="samlen-val">0</span>
                             </div>
                         </div>
+                        
                         <div class="param">
-                            <label class="param-label">Loop Start</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="loopstart" min="0" max="4294967295" value="0">
+                            <div class="fader-container">
+                                <label class="param-label">Loop Start</label>
                                 <span class="param-value" id="loopstart-val">0</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Loop End</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="loopend" min="0" max="4294967295" value="0">
+                                <input type="range" class="slider" id="loopstart" min="0" max="4294967295" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Loop End</label>
                                 <span class="param-value" id="loopend-val">0</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Loop Fade Amount</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="loopfadeamt" min="0" max="1000" value="0">
-                                <span class="param-value" id="loopfadeamt-val">0.0%</span>
+                                <input type="range" class="slider" id="loopend" min="0" max="4294967295" value="0">
                             </div>
                         </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Loop Fade Amount</label>
+                                <span class="param-value" id="loopfadeamt-val">0.0%</span>
+                            </div>    
+                            <div class="param-control">
+                                <input type="range" class="slider" id="loopfadeamt" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
                         <div>
                             <div class="param">
                                 <label class="param-label">Loop Modes</label>
@@ -959,13 +1024,17 @@
                                 </select>
                             </div>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Active Slice</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="actslice" min="1" max="512" value="1">
+                            <div class="fader-container">
+                                <label class="param-label">Active Slice</label>
                                 <span class="param-value" id="actslice-val">1</span>
                             </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="actslice" min="1" max="512" value="1">
+                            </div>
                         </div>
+
                         <div class="param">
                             <label class="param-label">Loop Mode</label>
                             <select class="select" id="loopmode">
@@ -973,6 +1042,7 @@
                                 <option value="1">On</option>
                             </select>
                         </div>
+
                         <div class="param">
                             <label class="param-label">Slice Seq:</label>
                             <select class="select" id="slicestepmode">
@@ -983,8 +1053,6 @@
                                 <option value="4">Stagger</option>
                             </select>
                         </div>
-
-
 
                         <div class="param">
                             <label class="param-label">Quant Size</label>
@@ -1002,6 +1070,7 @@
                                 <option value="10">none</option>
                             </select>
                         </div>
+ 
                         <div class="param">
                             <label class="param-label">Sync Type</label>
                             <select class="select" id="synctype">
@@ -1014,13 +1083,17 @@
                                 <option value="6">none</option>
                             </select>
                         </div>
+ 
                         <div class="param">
-                            <label class="param-label">Beat Count</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="beatcount" min="0" max="512" value="0">
+                            <div class="fader-container">
+                                <label class="param-label">Beat Count</label>
                                 <span class="param-value" id="beatcount-val">Auto</span>
                             </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="beatcount" min="0" max="512" value="0">
+                            </div>
                         </div>
+ 
                         <div class="param">
                             <label class="param-label">Play Thru</label>
                             <select class="select" id="playthru">
@@ -1349,6 +1422,10 @@
                     <button class="btn" id="addModSlotBtn" style="margin-top: 10px;">+ Add Modulation</button>
                 </div>
             </div>
+
+            <!-- Status Bar / console -->
+            <div class="status-bar" id="editModalStatusBar"></div>
+
         </div>
     </div>
 
@@ -1357,11 +1434,10 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Global FX Settings</h2>
-                <button class="close-btn" id="closeFxModal">×</button>
+                <button class="close-btn" id="closeFxModal">✔</button>
             </div>
 
-            <!-- Status Bar / console -->
-            <div class="status-bar" id="fxModalStatusBar"></div>
+
 
             <!-- FX Tabs -->
             <div class="modal-tabs">
@@ -1674,6 +1750,9 @@
                     </div>
                 </div>
             </div>
+
+                        <!-- Status Bar / console -->
+            <div class="status-bar" id="fxModalStatusBar"></div>
         </div>
     </div>
 
@@ -2087,8 +2166,9 @@
                 createEmptyPreset();
                 createPadGrid();
                 setupEventListeners();
-                initializeProject(); // ADD THIS
+                initializeProject();
                 setupModalTabs();
+                setupGlobalDragDrop(); 
                 setStatus('Ready');
                 console.log('BITBOXER: Ready!');
             } catch (error) {
@@ -2155,6 +2235,55 @@
             });
             pad.addEventListener('dragleave', () => pad.classList.remove('drag-over'));
         }
+
+        // ========================================
+        // GLOBAL DRAG & DROP PREVENTION
+        // ========================================
+
+        function setupGlobalDragDrop() {
+            // Prevent default drag behaviors on the entire page
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // Add visual feedback for dragging over page
+            document.body.addEventListener('dragover', () => {
+                document.body.style.backgroundColor = '#252525';
+            });
+
+            document.body.addEventListener('dragleave', () => {
+                document.body.style.backgroundColor = '#1a1a1a';
+            });
+
+            document.body.addEventListener('drop', () => {
+                document.body.style.backgroundColor = '#1a1a1a';
+            });
+
+            // Handle drops on the body (outside pads)
+            document.body.addEventListener('drop', (e) => {
+                e.preventDefault();
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+
+                    if (file.name.endsWith('.xml')) {
+                        // Ask user if they want to load preset
+                        if (confirm(`Load preset from ${file.name}? This will replace the current preset.`)) {
+                            loadPreset(file);
+                        }
+                    } else {
+                        setStatus(`Unsupported file type: ${file.name}. Please drop .xml preset files.`, 'error');
+                    }
+                }
+            });
+        }
+
 
         function handlePadClick(e, pad) {
             if (e.ctrlKey || e.metaKey) {
@@ -2291,44 +2420,6 @@
                 setStatus(`Error loading pad: ${error.message}`, 'error');
             }
         }
-
-        // function createModSlotHTML(modData, index, cellmode) {
-        //     const destinations = MOD_DESTINATIONS[cellmode] || MOD_DESTINATIONS['0'];
-
-        //     const sourceOptions = MOD_SOURCES.map(src => 
-        //         `<option value="${src.value}" ${modData.src === src.value ? 'selected' : ''}>${src.label}</option>`
-        //     ).join('');
-
-        //     const destOptions = destinations.map(dest => 
-        //         `<option value="${dest.value}" ${modData.dest === dest.value ? 'selected' : ''}>${dest.label}</option>`
-        //     ).join('');
-
-        //     const amount = parseInt(modData.amount) || 0;
-        //     const amountText = (amount >= 0 ? '+' : '') + (amount / 10).toFixed(1) + '%';
-
-        //     const slotLabel = `${index + 1}`;
-
-        //     return `
-        //         <div class="mod-slot" data-slot="${index}">
-        //             <div class="mod-slot-number" title="Slot ${index + 1}">${slotLabel}</div>
-        //             <select class="select mod-source" data-slot="${index}">
-        //                 ${sourceOptions}
-        //             </select>
-        //            <div class="mod-amount">
-        //                 <input type="range" class="slider mod-amount-slider" data-slot="${index}" 
-        //                        min="-1000" max="1000" value="${amount}">
-        //                 <span class="mod-amount-val" data-slot="${index}">${amountText}</span>
-        //             </div>
-
-
-        //             <select class="select mod-dest" data-slot="${index}">
-        //                 ${destOptions}
-        //             </select>
-
-        //             <button class="mod-remove-btn" data-slot="${index}">×</button>
-        //         </div>
-        //     `;
-        // }
 
         function createModSlotHTML(modData, index, cellmode) {
             const destinations = MOD_DESTINATIONS[cellmode] || MOD_DESTINATIONS['0'];
