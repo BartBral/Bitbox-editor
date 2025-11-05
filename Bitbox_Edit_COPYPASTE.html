@@ -428,7 +428,7 @@
 
         .param-value {
             min-width: 75px;
-            text-align: left;
+            text-align: right;
             font-weight: 600;
             color: #4a9eff;
             font-size: 0.9em;
@@ -509,7 +509,7 @@
 
         /* Modulation Slots */
         .mod-slot-container {
-            display: flex;
+            /* display: flex; */
             flex-direction: column;
             /* gap: 12px; */
             align-items: center;
@@ -890,10 +890,13 @@
                     <h3>Position & Loop</h3>
                     <div class="param-grid">
                         <div class="param">
-                            <label class="param-label">Sample Start</label>
+                            <span>
+                                <label class="param-label">Sample Start</label>
+                                <span class="param-value" id="samstart-val">0</span>
+                            </span>
                             <div class="param-control">
                                 <input type="range" class="slider" id="samstart" min="0" max="4294967295" value="0">
-                                <span class="param-value" id="samstart-val">0</span>
+                                
                             </div>
                         </div>
                         <div class="param">
@@ -924,27 +927,29 @@
                                 <span class="param-value" id="loopfadeamt-val">0.0%</span>
                             </div>
                         </div>
+                        <div>
+                            <div class="param">
+                                <label class="param-label">Loop Modes</label>
+                                <select class="select" id="loopmodes">
+                                    <option value="1" selected>Forward</option>
+                                    <option value="2">Bidirect</option>
+                                    <option value="0">Off</option>
+                                </select>
+                            </div>
+                            <div class="param">
+                                <label class="param-label">Reverse</label>
+                                <select class="select" id="reverse">
+                                    <option value="0">Off</option>
+                                    <option value="1">On</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="param">
                             <label class="param-label">Active Slice</label>
                             <div class="param-control">
                                 <input type="range" class="slider" id="actslice" min="1" max="512" value="1">
                                 <span class="param-value" id="actslice-val">1</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Loop Modes</label>
-                            <select class="select" id="loopmodes">
-                                <option value="1" selected>Forward</option>
-                                <option value="2">Bidirect</option>
-                                <option value="0">Off</option>
-                            </select>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Reverse</label>
-                            <select class="select" id="reverse">
-                                <option value="0">Off</option>
-                                <option value="1">On</option>
-                            </select>
                         </div>
                         <div class="param">
                             <label class="param-label">Loop Mode</label>
