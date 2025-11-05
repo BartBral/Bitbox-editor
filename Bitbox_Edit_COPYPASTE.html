@@ -2904,6 +2904,26 @@
             renderModSlots(padData);
         }
 
+        function updateModSlotAppearance(slotElement) {
+            const slotIndex = slotElement.dataset.slot;
+            const sourceSelect = slotElement.querySelector('.mod-source');
+            const destSelect = slotElement.querySelector('.mod-dest');
+
+            if (!sourceSelect || !destSelect) return;
+
+            const isActive = sourceSelect.value !== 'none' && destSelect.value !== 'none';
+
+            // Update opacity
+            slotElement.style.opacity = isActive ? '1' : '0.5';
+
+            // Optionally add/remove a class for more styling control
+            if (isActive) {
+                slotElement.classList.remove('inactive');
+            } else {
+                slotElement.classList.add('inactive');
+            }
+        }
+
         function setupEventListeners() {
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
