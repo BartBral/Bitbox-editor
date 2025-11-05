@@ -389,10 +389,10 @@
 
         .param {
             /* display: flex; */
-                gap: 6px;
-                flex-direction: column;
-                justify-content: center;
-                align-items: baseline;
+            gap: 6px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: baseline;
         }
 
         .param-label {
@@ -479,8 +479,8 @@
         }
 
         /* dropdown menu styling */
-        
-            .select {
+
+        .select {
             /* padding: 3px; */
             border: 0px solid #585656;
             border-radius: 3px;
@@ -491,7 +491,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             font-weight: 500;
         }
-        
+
 
         .select option {
             background: #1a1a1a5c;
@@ -550,13 +550,15 @@
             transform: scale(1.1);
         }
 
-  
+
 
         .mod-amount {
-            position: relative;  /* Create positioning context */
+            position: relative;
+            /* Create positioning context */
             display: flex;
             align-items: center;
-            height: 20px;  /* Fixed height for slider */
+            height: 20px;
+            /* Fixed height for slider */
         }
 
 
@@ -572,18 +574,27 @@
         }
 
         .mod-amount-val {
-            position: absolute;  /* Overlay positioning */
+            position: absolute;
+            /* Overlay positioning */
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);  /* Perfect centering */
-            z-index: 2;  /* Text on top layer */
+            transform: translate(-50%, -50%);
+            /* Perfect centering */
+            z-index: 2;
+            /* Text on top layer */
             font-size: 0.75em;
-            font-weight: 700;  /* Bold so it stands out */
-            color: #ffffff;  /* White text */
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);  /* Shadow for readability */
-            pointer-events: none;  /* Click-through to slider */
-            user-select: none;  /* No text selection */
-            white-space: nowrap;  /* Don't wrap */
+            font-weight: 700;
+            /* Bold so it stands out */
+            color: #ffffff;
+            /* White text */
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            /* Shadow for readability */
+            pointer-events: none;
+            /* Click-through to slider */
+            user-select: none;
+            /* No text selection */
+            white-space: nowrap;
+            /* Don't wrap */
             line-height: 1;
         }
 
@@ -606,8 +617,6 @@
             font-size: 0.9em;
             text-align: center;
         }
-
-
     </style>
 </head>
 
@@ -636,6 +645,13 @@
                         <input type="file" id="fileInput" accept=".xml">
                         <button class="btn btn-primary" id="saveBtn">Save Preset</button>
                         <button class="btn" id="newPresetBtn">New Preset</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Edit effects</h3>
+                    <div class="controls">
+                        <button class="btn" id="fxBtn">FX Settings</button>
                     </div>
                 </div>
 
@@ -947,7 +963,7 @@
                                 <option value="4">Stagger</option>
                             </select>
                         </div>
-                        
+
 
 
                         <div class="param">
@@ -1316,6 +1332,330 @@
         </div>
     </div>
 
+    <!-- FX Modal -->
+    <div class="modal" id="fxModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Global FX Settings</h2>
+                <button class="close-btn" id="closeFxModal">×</button>
+            </div>
+
+            <!-- FX Tabs -->
+            <div class="modal-tabs">
+                <button class="tab-btn active" data-tab="delay">Delay</button>
+                <button class="tab-btn" data-tab="reverb">Reverb</button>
+                <button class="tab-btn" data-tab="eq">EQ</button>
+            </div>
+
+            <!-- Delay Tab -->
+            <div class="tab-content active" id="tab-delay">
+                <div class="param-section">
+                    <h3>Delay Parameters</h3>
+                    <div class="param-grid">
+                        <div class="param">
+                            <label class="param-label">Delay Time (ms)</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-delay" min="0" max="1000" value="400">
+                                <span class="param-value" id="fx-delay-val">40.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Delay Time (sync)</label>
+                            <select class="select" id="fx-delaymustime">
+                                <option value="0">1/64</option>
+                                <option value="1">1/32</option>
+                                <option value="2">1/16</option>
+                                <option value="3">1/8T</option>
+                                <option value="4">1/16D</option>
+                                <option value="5">1/8</option>
+                                <option value="6">1/4T</option>
+                                <option value="7" selected>1/8D</option>
+                                <option value="8">1/4</option>
+                                <option value="9">1/2T</option>
+                                <option value="10">1/2</option>
+                                <option value="11">1 bar</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Feedback</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-feedback" min="0" max="1000" value="400">
+                                <span class="param-value" id="fx-feedback-val">40.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Cutoff</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-cutoff" min="0" max="1000" value="120">
+                                <span class="param-value" id="fx-cutoff-val">12.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Filter Quality</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-filtquality" min="0" max="1000" value="1000">
+                                <span class="param-value" id="fx-filtquality-val">100.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Beat Sync</label>
+                            <select class="select" id="fx-dealybeatsync">
+                                <option value="0">Off</option>
+                                <option value="1" selected>On</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Filter Enable</label>
+                            <select class="select" id="fx-filtenable">
+                                <option value="0">Off</option>
+                                <option value="1" selected>On</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Ping Pong</label>
+                            <select class="select" id="fx-delaypingpong">
+                                <option value="0">Off</option>
+                                <option value="1" selected>On</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delay Modulation -->
+                <div class="param-section">
+                    <h3>Delay Modulation (Max 9 slots)</h3>
+                    <div id="fxDelayModContainer" class="mod-slot-container"></div>
+                    <button class="btn" id="addDelayModSlotBtn" style="margin-top: 10px;">+ Add Modulation</button>
+                </div>
+            </div>
+
+            <!-- Reverb Tab -->
+            <div class="tab-content" id="tab-reverb">
+                <div class="param-section">
+                    <h3>Reverb Parameters</h3>
+                    <div class="param-grid">
+                        <div class="param">
+                            <label class="param-label">Decay</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-decay" min="0" max="1000" value="600">
+                                <span class="param-value" id="fx-decay-val">60.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Pre-delay</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-predelay" min="0" max="1000" value="40">
+                                <span class="param-value" id="fx-predelay-val">4.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Damping</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-damping" min="0" max="1000" value="500">
+                                <span class="param-value" id="fx-damping-val">50.0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reverb Modulation -->
+                <div class="param-section">
+                    <h3>Reverb Modulation (Max 9 slots)</h3>
+                    <div id="fxReverbModContainer" class="mod-slot-container"></div>
+                    <button class="btn" id="addReverbModSlotBtn" style="margin-top: 10px;">+ Add Modulation</button>
+                </div>
+            </div>
+
+            <!-- EQ Tab -->
+            <div class="tab-content" id="tab-eq">
+                <div class="param-section">
+                    <h3>EQ Band 1</h3>
+                    <div class="param-grid">
+                        <div>
+                            <div class="param">
+                                <label class="param-label">Type</label>
+                                <select class="select" id="fx-eqtype">
+                                    <option value="0">None</option>
+                                    <option value="1" selected>Low Cut</option>
+                                    <option value="2">Low Shelf</option>
+                                    <option value="3">Parametric</option>
+                                    <option value="4">High Shelf</option>
+                                    <option value="5">High Cut</option>
+                                </select>
+                            </div>
+                            <div class="param">
+                                <label class="param-label">Enable</label>
+                                <select class="select" id="fx-eqenable">
+                                    <option value="0">Off</option>
+                                    <option value="1" selected>On</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Gain</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqgain" min="-24000" max="24000" value="0">
+                                <span class="param-value" id="fx-eqgain-val">0.0 dB</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Frequency</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqcutoff" min="0" max="1000" value="200">
+                                <span class="param-value" id="fx-eqcutoff-val">20.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Q / Width</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqres" min="0" max="1000" value="400">
+                                <span class="param-value" id="fx-eqres-val">40.0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Repeat for bands 2, 3, 4 -->
+                <div class="param-section">
+                    <h3>EQ Band 2</h3>
+                    <div class="param-grid">
+                        <div class="param">
+                            <label class="param-label">Type</label>
+                            <select class="select" id="fx-eqtype2">
+                                <option value="0">None</option>
+                                <option value="1">Low Cut</option>
+                                <option value="2">Low Shelf</option>
+                                <option value="3" selected>Parametric</option>
+                                <option value="4">High Shelf</option>
+                                <option value="5">High Cut</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Enable</label>
+                            <select class="select" id="fx-eqenable2">
+                                <option value="0">Off</option>
+                                <option value="1" selected>On</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Gain</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqgain2" min="-24000" max="24000" value="0">
+                                <span class="param-value" id="fx-eqgain2-val">0.0 dB</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Frequency</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqcutoff2" min="0" max="1000" value="400">
+                                <span class="param-value" id="fx-eqcutoff2-val">40.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Q / Width</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqres2" min="0" max="1000" value="400">
+                                <span class="param-value" id="fx-eqres2-val">40.0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="param-section">
+                    <h3>EQ Band 3</h3>
+                    <div class="param-grid">
+                        <div class="param">
+                            <label class="param-label">Type</label>
+                            <select class="select" id="fx-eqtype3">
+                                <option value="0">None</option>
+                                <option value="1">Low Cut</option>
+                                <option value="2">Low Shelf</option>
+                                <option value="3" selected>Parametric</option>
+                                <option value="4">High Shelf</option>
+                                <option value="5">High Cut</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Enable</label>
+                            <select class="select" id="fx-eqenable3">
+                                <option value="0">Off</option>
+                                <option value="1" selected>On</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Gain</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqgain3" min="-24000" max="24000" value="0">
+                                <span class="param-value" id="fx-eqgain3-val">0.0 dB</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Frequency</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqcutoff3" min="0" max="1000" value="600">
+                                <span class="param-value" id="fx-eqcutoff3-val">60.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Q / Width</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqres3" min="0" max="1000" value="400">
+                                <span class="param-value" id="fx-eqres3-val">40.0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="param-section">
+                    <h3>EQ Band 4</h3>
+                    <div class="param-grid">
+                        <div class="param">
+                            <label class="param-label">Type</label>
+                            <select class="select" id="fx-eqtype4">
+                                <option value="0">None</option>
+                                <option value="1">Low Cut</option>
+                                <option value="2">Low Shelf</option>
+                                <option value="3">Parametric</option>
+                                <option value="4" selected>High Shelf</option>
+                                <option value="5">High Cut</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Enable</label>
+                            <select class="select" id="fx-eqenable4">
+                                <option value="0">Off</option>
+                                <option value="1" selected>On</option>
+                            </select>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Gain</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqgain4" min="-24000" max="24000" value="0">
+                                <span class="param-value" id="fx-eqgain4-val">0.0 dB</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Frequency</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqcutoff4" min="0" max="1000" value="800">
+                                <span class="param-value" id="fx-eqcutoff4-val">80.0%</span>
+                            </div>
+                        </div>
+                        <div class="param">
+                            <label class="param-label">Q / Width</label>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqres4" min="0" max="1000" value="400">
+                                <span class="param-value" id="fx-eqres4-val">40.0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
     <script>
         let currentMode = 'micro';
         let presetData = null;
@@ -1504,11 +1844,190 @@
             };
         }
 
+        // ========================================
+        // FX DATA STRUCTURE
+        // ========================================
+
+        function createEmptyFXData() {
+            return {
+                delay: {
+                    type: 'delay',
+                    params: {
+                        delay: '400',
+                        delaymustime: '6',
+                        feedback: '400',
+                        cutoff: '120',
+                        filtquality: '1000',
+                        dealybeatsync: '1',
+                        filtenable: '1',
+                        delaypingpong: '1'
+                    },
+                    modsources: []
+                },
+                reverb: {
+                    type: 'reverb',
+                    params: {
+                        decay: '600',
+                        predelay: '40',
+                        damping: '500'
+                    },
+                    modsources: []
+                },
+                eq: {
+                    type: 'eq',
+                    params: {
+                        eqactband: '0',
+                        eqgain: '0',
+                        eqcutoff: '200',
+                        eqres: '400',
+                        eqenable: '1',
+                        eqtype: '0',
+                        eqgain2: '0',
+                        eqcutoff2: '400',
+                        eqres2: '400',
+                        eqenable2: '1',
+                        eqtype2: '0',
+                        eqgain3: '0',
+                        eqcutoff3: '600',
+                        eqres3: '400',
+                        eqenable3: '1',
+                        eqtype3: '0',
+                        eqgain4: '0',
+                        eqcutoff4: '800',
+                        eqres4: '400',
+                        eqenable4: '1',
+                        eqtype4: '0'
+                    },
+                    modsources: []
+                }
+            };
+        }
+
+        // ========================================
+        // FX MODAL FUNCTIONS
+        // ========================================
+
+        function openFxModal() {
+            if (!presetData.fx) {
+                presetData.fx = createEmptyFXData();
+            }
+
+            loadFxParamsToModal();
+
+            // Show the modal
+            document.getElementById('fxModal').classList.add('show');
+
+            // Reset tabs to default (Delay active)
+            const fxModal = document.getElementById('fxModal');
+            const tabBtns = fxModal.querySelectorAll('.tab-btn');
+            const tabContents = fxModal.querySelectorAll('.tab-content');
+
+            // Remove all active classes
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            // Activate first tab (Delay)
+            tabBtns[0].classList.add('active');
+            tabContents[0].classList.add('active');
+
+            // Setup tab switching
+            setupFxModalTabs();
+        }
+
+        function closeFxModal() {
+            document.getElementById('fxModal').classList.remove('show');
+        }
+
+        function setupFxModalTabs() {
+            const fxModal = document.getElementById('fxModal');
+            const tabBtns = fxModal.querySelectorAll('.tab-btn');
+            const tabContents = fxModal.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active from all
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+
+                    // Add active to clicked
+                    btn.classList.add('active');
+                    const tabId = 'tab-' + btn.dataset.tab;
+                    const targetTab = fxModal.querySelector('#' + tabId);
+                    if (targetTab) targetTab.classList.add('active');
+                });
+            });
+        }
+
+        function loadFxParamsToModal() {
+            if (!presetData.fx) return;
+
+            // Load Delay params
+            const delayParams = presetData.fx.delay?.params || createEmptyFXData().delay.params;
+            ['delay', 'delaymustime', 'feedback', 'cutoff', 'filtquality', 'dealybeatsync', 'filtenable', 'delaypingpong'].forEach(param => {
+                const element = document.getElementById('fx-' + param);
+                if (element && delayParams[param] !== undefined) {
+                    element.value = delayParams[param];
+                    if (element.type === 'range') {
+                        updateFxParamDisplay(param, delayParams[param]);
+                    }
+                }
+            });
+
+            // Load Reverb params
+            const reverbParams = presetData.fx.reverb?.params || createEmptyFXData().reverb.params;
+            ['decay', 'predelay', 'damping'].forEach(param => {
+                const element = document.getElementById('fx-' + param);
+                if (element && reverbParams[param] !== undefined) {
+                    element.value = reverbParams[param];
+                    updateFxParamDisplay(param, reverbParams[param]);
+                }
+            });
+
+            // Load EQ params
+            const eqParams = presetData.fx.eq?.params || createEmptyFXData().eq.params;
+            ['eqgain', 'eqcutoff', 'eqres', 'eqenable', 'eqtype',
+                'eqgain2', 'eqcutoff2', 'eqres2', 'eqenable2', 'eqtype2',
+                'eqgain3', 'eqcutoff3', 'eqres3', 'eqenable3', 'eqtype3',
+                'eqgain4', 'eqcutoff4', 'eqres4', 'eqenable4', 'eqtype4'].forEach(param => {
+                    const element = document.getElementById('fx-' + param);
+                    if (element && eqParams[param] !== undefined) {
+                        element.value = eqParams[param];
+                        if (element.type === 'range') {
+                            updateFxParamDisplay(param, eqParams[param]);
+                        }
+                    }
+                });
+
+            // Render FX modulation
+            renderFxModSlots('delay');
+            renderFxModSlots('reverb');
+        }
+
+        function updateFxParamDisplay(param, value) {
+            const display = document.getElementById('fx-' + param + '-val');
+            if (!display) return;
+
+            const val = parseFloat(value);
+            let text = '';
+
+            // Handle EQ gain (dB)
+            if (param.startsWith('eqgain')) {
+                text = (val >= 0 ? '+' : '') + (val / 1000).toFixed(1) + ' dB';
+            }
+            // Handle percentages
+            else {
+                text = (val / 10).toFixed(1) + '%';
+            }
+
+            display.textContent = text;
+        }
+
         function createEmptyPreset() {
             presetData = {
                 version: '2',
                 pads: {},
-                tempo: '120'
+                tempo: '120',
+                fx: createEmptyFXData()
             };
 
             assetCells = [];
@@ -1776,12 +2295,12 @@
         //                        min="-1000" max="1000" value="${amount}">
         //                 <span class="mod-amount-val" data-slot="${index}">${amountText}</span>
         //             </div>
-                    
+
 
         //             <select class="select mod-dest" data-slot="${index}">
         //                 ${destOptions}
         //             </select>
-                    
+
         //             <button class="mod-remove-btn" data-slot="${index}">×</button>
         //         </div>
         //     `;
@@ -1790,11 +2309,11 @@
         function createModSlotHTML(modData, index, cellmode) {
             const destinations = MOD_DESTINATIONS[cellmode] || MOD_DESTINATIONS['0'];
 
-            const sourceOptions = MOD_SOURCES.map(src => 
+            const sourceOptions = MOD_SOURCES.map(src =>
                 `<option value="${src.value}" ${modData.src === src.value ? 'selected' : ''}>${src.label}</option>`
             ).join('');
 
-            const destOptions = destinations.map(dest => 
+            const destOptions = destinations.map(dest =>
                 `<option value="${dest.value}" ${modData.dest === dest.value ? 'selected' : ''}>${dest.label}</option>`
             ).join('');
 
@@ -1853,8 +2372,250 @@
                     <div></div> <div></div>
                 </div>
             `;
-        }    
+        }
 
+        // ========================================
+        // FX MODULATION FUNCTIONS
+        // ========================================
+
+        // FX Modulation destinations
+        const FX_MOD_DESTINATIONS = {
+            delay: [
+                { value: 'none', label: '--- None ---' },
+                { value: 'delaymustime', label: 'Delay Time' },
+                { value: 'feedback', label: 'Feedback' },
+                { value: 'cutoff', label: 'Cutoff' }
+            ],
+            reverb: [
+                { value: 'none', label: '--- None ---' },
+                { value: 'decay', label: 'Decay' },
+                { value: 'predelay', label: 'Pre-delay' },
+                { value: 'damping', label: 'Damping' }
+            ]
+        };
+
+        function createFxModSlotHTML(modData, index, fxType) {
+            const destinations = FX_MOD_DESTINATIONS[fxType] || [];
+
+            const sourceOptions = MOD_SOURCES.map(src =>
+                `<option value="${src.value}" ${modData.src === src.value ? 'selected' : ''}>${src.label}</option>`
+            ).join('');
+
+            const destOptions = destinations.map(dest =>
+                `<option value="${dest.value}" ${modData.dest === dest.value ? 'selected' : ''}>${dest.label}</option>`
+            ).join('');
+
+            const amount = parseInt(modData.amount) || 0;
+            const amountText = (amount >= 0 ? '+' : '') + (amount / 10).toFixed(1) + '%';
+
+            const slotLabel = `${index + 1}`;
+
+            // Check if this slot uses MIDI CC
+            const isMidiCC = modData.src === 'midicc';
+            const midiChannel = modData.mchan !== undefined ? parseInt(modData.mchan) : 0;
+            const midiCCNum = modData.ccnum !== undefined ? parseInt(modData.ccnum) : 0;
+
+            // Generate MIDI channel options (1-16)
+            let channelOptions = '';
+            for (let i = 0; i < 16; i++) {
+                channelOptions += `<option value="${i}" ${midiChannel === i ? 'selected' : ''}>Ch ${i + 1}</option>`;
+            }
+
+            // Generate CC number options (0-127)
+            let ccOptions = '';
+            for (let i = 0; i <= 127; i++) {
+                ccOptions += `<option value="${i}" ${midiCCNum === i ? 'selected' : ''}>CC ${i}</option>`;
+            }
+
+            return `
+                <div class="mod-slot" data-slot="${index}" data-fx-type="${fxType}">
+                    <div class="mod-slot-number" title="Slot ${index + 1}">${slotLabel}</div>
+                    <select class="select fx-mod-source" data-slot="${index}" data-fx-type="${fxType}">
+                        ${sourceOptions}
+                    </select>
+                    <span class="mod-arrow">→</span>
+                    <select class="select fx-mod-dest" data-slot="${index}" data-fx-type="${fxType}">
+                        ${destOptions}
+                    </select>
+                    <div class="mod-amount">
+                        <input type="range" class="slider fx-mod-amount-slider" data-slot="${index}" data-fx-type="${fxType}"
+                               min="-1000" max="1000" value="${amount}">
+                        <span class="mod-amount-val" data-slot="${index}">${amountText}</span>
+                    </div>
+                    <button class="mod-remove-btn fx-mod-remove" data-slot="${index}" data-fx-type="${fxType}">×</button>
+                </div>
+                <div class="mod-midicc-config" data-slot="${index}" style="display: ${isMidiCC ? 'grid' : 'none'};">
+                    <div></div>
+                    <select class="select fx-mod-midicc-channel" data-slot="${index}" data-fx-type="${fxType}">
+                        ${channelOptions}
+                    </select>
+                    <span class="mod-midicc-label">+</span>
+                    <select class="select fx-mod-midicc-ccnum" data-slot="${index}" data-fx-type="${fxType}">
+                        ${ccOptions}
+                    </select>
+                    <div></div>
+                    <div></div>
+                </div>
+            `;
+        }
+
+        function renderFxModSlots(fxType) {
+            const containerId = fxType === 'delay' ? 'fxDelayModContainer' : 'fxReverbModContainer';
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (!presetData.fx || !presetData.fx[fxType]) return;
+
+            const modsources = presetData.fx[fxType].modsources || [];
+
+            // Render existing mod slots
+            modsources.forEach((mod, index) => {
+                container.innerHTML += createFxModSlotHTML(mod, index, fxType);
+            });
+
+            // Setup event listeners for all slots
+            setupFxModSlotListeners();
+        }
+
+        function setupFxModSlotListeners() {
+            // Source dropdowns
+            document.querySelectorAll('.fx-mod-source').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    const fxType = e.target.dataset.fxType;
+                    const newSource = e.target.value;
+
+                    if (!presetData.fx || !presetData.fx[fxType]) return;
+
+                    if (!presetData.fx[fxType].modsources[slot]) {
+                        presetData.fx[fxType].modsources[slot] = { dest: 'none', src: 'none', slot: '0', amount: '0' };
+                    }
+
+                    // Update source
+                    presetData.fx[fxType].modsources[slot].src = newSource;
+
+                    // Show/hide MIDI CC config
+                    const slotElement = e.target.closest('.mod-slot');
+                    const midiccConfig = slotElement?.nextElementSibling;
+                    if (midiccConfig && midiccConfig.classList.contains('mod-midicc-config')) {
+                        if (newSource === 'midicc') {
+                            midiccConfig.style.display = 'grid';
+                            if (!presetData.fx[fxType].modsources[slot].mchan) presetData.fx[fxType].modsources[slot].mchan = '0';
+                            if (!presetData.fx[fxType].modsources[slot].ccnum) presetData.fx[fxType].modsources[slot].ccnum = '0';
+                        } else {
+                            midiccConfig.style.display = 'none';
+                            delete presetData.fx[fxType].modsources[slot].mchan;
+                            delete presetData.fx[fxType].modsources[slot].ccnum;
+                        }
+                    }
+                });
+            });
+
+            // MIDI CC Channel dropdowns
+            document.querySelectorAll('.fx-mod-midicc-channel').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    const fxType = e.target.dataset.fxType;
+                    if (presetData.fx && presetData.fx[fxType] && presetData.fx[fxType].modsources[slot]) {
+                        presetData.fx[fxType].modsources[slot].mchan = e.target.value;
+                    }
+                });
+            });
+
+            // MIDI CC Number dropdowns
+            document.querySelectorAll('.fx-mod-midicc-ccnum').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    const fxType = e.target.dataset.fxType;
+                    if (presetData.fx && presetData.fx[fxType] && presetData.fx[fxType].modsources[slot]) {
+                        presetData.fx[fxType].modsources[slot].ccnum = e.target.value;
+                    }
+                });
+            });
+
+            // Destination dropdowns
+            document.querySelectorAll('.fx-mod-dest').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    const fxType = e.target.dataset.fxType;
+                    const newDest = e.target.value;
+
+                    // Validate destination limit (skip validation for 'none')
+                    if (newDest !== 'none') {
+                        const validation = validateFxModDestination(fxType, newDest, slot);
+
+                        if (!validation.valid) {
+                            setStatus(`Maximum 3 modulations per destination! ${newDest} already has 3 slots.`, 'error');
+                            // Revert to previous value
+                            const previousDest = presetData.fx[fxType].modsources[slot]?.dest || 'none';
+                            e.target.value = previousDest;
+                            return;
+                        }
+                    }
+
+                    if (presetData.fx && presetData.fx[fxType] && presetData.fx[fxType].modsources[slot]) {
+                        presetData.fx[fxType].modsources[slot].dest = newDest;
+                    }
+                });
+            });
+
+            // Amount sliders
+            document.querySelectorAll('.fx-mod-amount-slider').forEach(slider => {
+                slider.addEventListener('input', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    const fxType = e.target.dataset.fxType;
+                    const amount = e.target.value;
+
+                    if (presetData.fx && presetData.fx[fxType] && presetData.fx[fxType].modsources[slot]) {
+                        presetData.fx[fxType].modsources[slot].amount = amount;
+                    }
+
+                    // Update display
+                    const slotElement = e.target.closest('.mod-slot');
+                    const display = slotElement?.querySelector('.mod-amount-val');
+                    if (display) {
+                        const amountText = (amount >= 0 ? '+' : '') + (amount / 10).toFixed(1) + '%';
+                        display.textContent = amountText;
+                    }
+                });
+            });
+
+            // Remove buttons
+            document.querySelectorAll('.fx-mod-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const slot = parseInt(e.target.dataset.slot);
+                    const fxType = e.target.dataset.fxType;
+
+                    if (presetData.fx && presetData.fx[fxType] && presetData.fx[fxType].modsources) {
+                        presetData.fx[fxType].modsources.splice(slot, 1);
+                        renderFxModSlots(fxType);
+                    }
+                });
+            });
+        }
+
+        function addFxModSlot(fxType) {
+            if (!presetData.fx || !presetData.fx[fxType]) return;
+
+            if (!presetData.fx[fxType].modsources) presetData.fx[fxType].modsources = [];
+
+            if (presetData.fx[fxType].modsources.length >= 9) {
+                setStatus(`Maximum 9 modulation slots for ${fxType}`, 'error');
+                return;
+            }
+
+            const newSlot = {
+                dest: 'none',
+                src: 'velocity',
+                slot: presetData.fx[fxType].modsources.length.toString(),
+                amount: '400'
+            };
+
+            presetData.fx[fxType].modsources.push(newSlot);
+            renderFxModSlots(fxType);
+        }
 
         function updateModSlotAppearance(slotElement) {
             const slotIndex = slotElement.dataset.slot;
@@ -1898,7 +2659,22 @@
             };
         }
 
+        function validateFxModDestination(fxType, destValue, currentSlotIndex) {
+            if (!presetData.fx || !presetData.fx[fxType]) return { valid: true, count: 0 };
 
+            const modsources = presetData.fx[fxType].modsources || [];
+
+            // Count how many slots already target this destination (excluding current slot)
+            const count = modsources.filter((mod, index) =>
+                mod.dest === destValue && index !== currentSlotIndex
+            ).length;
+
+            return {
+                valid: count < 3,
+                count: count,
+                remaining: 3 - count
+            };
+        }
 
         function renderModSlots(padData) {
             const container = document.getElementById('modSlotContainer');
@@ -2162,6 +2938,21 @@
                 }
             });
 
+            // FX Modal controls
+            document.getElementById('fxBtn').addEventListener('click', openFxModal);
+            document.getElementById('closeFxModal').addEventListener('click', closeFxModal);
+            document.getElementById('fxModal').addEventListener('click', (e) => {
+                if (e.target.id === 'fxModal') closeFxModal();
+            });
+
+            // FX modulation add buttons
+            document.getElementById('addDelayModSlotBtn').addEventListener('click', () => addFxModSlot('delay'));
+            document.getElementById('addReverbModSlotBtn').addEventListener('click', () => addFxModSlot('reverb'));
+
+            // Setup FX parameter listeners
+            setupFxParameterListeners();
+
+
             setupParameterListeners();
             setupDragDrop();
 
@@ -2270,17 +3061,17 @@
             const slicersyncParam = document.getElementById('slicersync')?.closest('.param');
 
             // Reset all to visible and fully opaque
-            [samstartParam, samlenParam, loopstartParam, loopendParam, loopfadeamtParam, 
-             loopmodesParam, loopmode, actsliceParam, slicestepmode, reverseParam,
-             quantsizeParam, synctypeParam, beatcountParam, playthruParam, 
-             slicerquantsizeParam, slicersyncParam].forEach(param => {
-                if (param) {
-                    param.style.opacity = '1';
-                }
-            });
-        
+            [samstartParam, samlenParam, loopstartParam, loopendParam, loopfadeamtParam,
+                loopmodesParam, loopmode, actsliceParam, slicestepmode, reverseParam,
+                quantsizeParam, synctypeParam, beatcountParam, playthruParam,
+                slicerquantsizeParam, slicersyncParam].forEach(param => {
+                    if (param) {
+                        param.style.opacity = '1';
+                    }
+                });
+
             // Apply greying based on cellmode
-            switch(cellmode) {
+            switch (cellmode) {
                 case '0': // Sample mode - grey out slice and clip specific
                     if (actsliceParam) actsliceParam.style.opacity = greyValue;
                     if (slicestepmode) slicestepmode.style.opacity = greyValue;
@@ -2292,7 +3083,7 @@
                     if (slicerquantsizeParam) slicerquantsizeParam.style.opacity = greyValue;
                     if (slicersyncParam) slicersyncParam.style.opacity = greyValue;
                     break;
-            
+
                 case '1': // Clip mode - grey out sample/loop and slice specific
                     if (samstartParam) samstartParam.style.opacity = greyValue;
                     if (samlenParam) samlenParam.style.opacity = greyValue;
@@ -2308,7 +3099,7 @@
                     if (slicerquantsizeParam) slicerquantsizeParam.style.opacity = greyValue;
                     if (slicersyncParam) slicersyncParam.style.opacity = greyValue;
                     break;
-            
+
                 case '2': // Slice mode - grey out sample-specific and clip-specific
                     if (samstartParam) samstartParam.style.opacity = greyValue;
                     if (samlenParam) samlenParam.style.opacity = greyValue;
@@ -2320,7 +3111,7 @@
                     if (quantsizeParam) quantsizeParam.style.opacity = greyValue;
                     if (synctypeParam) synctypeParam.style.opacity = greyValue;
                     break;
-            
+
                 case '3': // Granular mode - grey out slice-specific and clip-specific
                     if (actsliceParam) actsliceParam.style.opacity = greyValue;
                     if (slicestepmode) slicestepmode.style.opacity = greyValue;
@@ -2333,7 +3124,7 @@
                     if (slicersyncParam) slicersyncParam.style.opacity = greyValue;
                     break;
             }
-        
+
             // Additional: grey out loop params when Loop Modes = None (for Sample/Granular)
             if ((cellmode === '0' || cellmode === '3') && loopmodes === '0') {
                 if (loopstartParam) loopstartParam.style.opacity = greyValue;
@@ -2594,6 +3385,83 @@
                 });
         }
 
+        // ========================================
+        // FX PARAMETER LISTENERS
+        // ========================================
+
+        function setupFxParameterListeners() {
+            // Delay sliders
+            ['delay', 'feedback', 'cutoff', 'filtquality'].forEach(param => {
+                const slider = document.getElementById('fx-' + param);
+                const display = document.getElementById('fx-' + param + '-val');
+
+                if (slider && display) {
+                    slider.addEventListener('input', () => {
+                        updateFxParamDisplay(param, slider.value);
+                        if (presetData.fx && presetData.fx.delay) {
+                            presetData.fx.delay.params[param] = slider.value;
+                        }
+                    });
+                }
+            });
+
+            // Delay dropdowns
+            ['delaymustime', 'dealybeatsync', 'filtenable', 'delaypingpong'].forEach(param => {
+                const select = document.getElementById('fx-' + param);
+                if (select) {
+                    select.addEventListener('change', () => {
+                        if (presetData.fx && presetData.fx.delay) {
+                            presetData.fx.delay.params[param] = select.value;
+                        }
+                    });
+                }
+            });
+
+            // Reverb sliders
+            ['decay', 'predelay', 'damping'].forEach(param => {
+                const slider = document.getElementById('fx-' + param);
+                const display = document.getElementById('fx-' + param + '-val');
+
+                if (slider && display) {
+                    slider.addEventListener('input', () => {
+                        updateFxParamDisplay(param, slider.value);
+                        if (presetData.fx && presetData.fx.reverb) {
+                            presetData.fx.reverb.params[param] = slider.value;
+                        }
+                    });
+                }
+            });
+
+            // EQ sliders (all 4 bands)
+            ['eqgain', 'eqcutoff', 'eqres', 'eqgain2', 'eqcutoff2', 'eqres2',
+                'eqgain3', 'eqcutoff3', 'eqres3', 'eqgain4', 'eqcutoff4', 'eqres4'].forEach(param => {
+                    const slider = document.getElementById('fx-' + param);
+                    const display = document.getElementById('fx-' + param + '-val');
+
+                    if (slider && display) {
+                        slider.addEventListener('input', () => {
+                            updateFxParamDisplay(param, slider.value);
+                            if (presetData.fx && presetData.fx.eq) {
+                                presetData.fx.eq.params[param] = slider.value;
+                            }
+                        });
+                    }
+                });
+
+            // EQ dropdowns (all 4 bands)
+            ['eqtype', 'eqenable', 'eqtype2', 'eqenable2',
+                'eqtype3', 'eqenable3', 'eqtype4', 'eqenable4'].forEach(param => {
+                    const select = document.getElementById('fx-' + param);
+                    if (select) {
+                        select.addEventListener('change', () => {
+                            if (presetData.fx && presetData.fx.eq) {
+                                presetData.fx.eq.params[param] = select.value;
+                            }
+                        });
+                    }
+                });
+        }
+
         function parseDisplayValue(param, text) {
             text = text.trim().replace(/[^\d.-]/g, '');
             const val = parseFloat(text);
@@ -2737,9 +3605,9 @@
 
             if (!padData) return;
 
-            // IMPORTANT: Set currentEditingPad AFTER loading params
+            // Temporarily null to prevent writes during load
             const tempCurrentPad = currentEditingPad;
-            currentEditingPad = null; // Temporarily null to prevent writes during load
+            currentEditingPad = null;
 
             document.getElementById('modalTitle').textContent =
                 `Pad ${pad.dataset.padnum} - ${padData.filename || 'Empty'}`;
@@ -2749,12 +3617,25 @@
             // NOW set the current editing pad
             currentEditingPad = pad;
 
-            renderModSlots(padData);
-
+            // Show modal
             document.getElementById('editModal').classList.add('show');
+
+            // Reset tabs to default (Main active)
+            const editModal = document.getElementById('editModal');
+            const tabBtns = editModal.querySelectorAll('.tab-btn');
+            const tabContents = editModal.querySelectorAll('.tab-content');
+
+            // Remove all active classes
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            // Activate first tab (Main)
+            tabBtns[0].classList.add('active');
+            tabContents[0].classList.add('active');
+
             drawEnvelope();
             updateTabVisibility();
-            updateLFOParameterVisibility();
+            updateLFOParameterVisibility();  
             updatePosConditionalVisibility();
         }
 
@@ -2896,6 +3777,8 @@
                     presetData.pads[row][col] = padData;
                 });
 
+
+
                 // Parse asset cells (multi-samples)
                 const assetNodes = xmlDoc.querySelectorAll('cell[type="asset"]');
                 assetNodes.forEach((asset, index) => {
@@ -2928,39 +3811,54 @@
                     }
                 }
 
+                // Initialize FX structure BEFORE parsing
+                if (!presetData.fx) {
+                    presetData.fx = createEmptyFXData();
+                }
+
                 // Parse FX cells (layer 3)
                 const fxCells = xmlDoc.querySelectorAll('cell[layer="3"]');
-                if (!presetData.fx) presetData.fx = {};
 
                 fxCells.forEach(cell => {
                     const row = parseInt(cell.getAttribute('row'));
                     const type = cell.getAttribute('type');
 
-                    const fxData = {
-                        type: type,
-                        params: {},
-                        modsources: []
-                    };
+                    if (type === 'delay' || type === 'reverb' || type === 'eq') {
+                        // Keep existing structure, just update it
+                        if (!presetData.fx[type]) {
+                            presetData.fx[type] = {
+                                type: type,
+                                params: {},
+                                modsources: []
+                            };
+                        }
 
-                    const params = cell.querySelector('params');
-                    if (params) {
-                        Array.from(params.attributes).forEach(attr => {
-                            fxData.params[attr.name] = attr.value;
+                        const params = cell.querySelector('params');
+                        if (params) {
+                            Array.from(params.attributes).forEach(attr => {
+                                presetData.fx[type].params[attr.name] = attr.value;
+                            });
+                        }
+
+                        // Clear existing modsources and load from XML
+                        presetData.fx[type].modsources = [];
+
+                        cell.querySelectorAll('modsource').forEach(mod => {
+                            const modSource = {
+                                dest: mod.getAttribute('dest'),
+                                src: mod.getAttribute('src'),
+                                slot: mod.getAttribute('slot'),
+                                amount: mod.getAttribute('amount')
+                            };
+
+                            const mchan = mod.getAttribute('mchan');
+                            const ccnum = mod.getAttribute('ccnum');
+                            if (mchan !== null) modSource.mchan = mchan;
+                            if (ccnum !== null) modSource.ccnum = ccnum;
+
+                            presetData.fx[type].modsources.push(modSource);
                         });
                     }
-
-                    cell.querySelectorAll('modsource').forEach(mod => {
-                        fxData.modsources.push({
-                            dest: mod.getAttribute('dest'),
-                            src: mod.getAttribute('src'),
-                            slot: mod.getAttribute('slot'),
-                            amount: mod.getAttribute('amount'),
-                            mchan: mod.getAttribute('mchan') || undefined,
-                            ccnum: mod.getAttribute('ccnum') || undefined
-                        });
-                    });
-
-                    presetData.fx[row] = fxData;
                 });
 
                 const songCell = xmlDoc.querySelector('cell[type="song"]');
@@ -3024,8 +3922,8 @@
                         );
 
                         activeModSlots.forEach(mod => {
-                            xml += `            <modsource dest="${mod.dest}" src="${mod.src}" slot="${mod.slot}" amount="${mod.amount}"/>\n`;
-                                            
+                            xml += `            <modsource dest="${mod.dest}" src="${mod.src}"`;
+
                             // Add MIDI CC attributes if present
                             if (mod.mchan !== undefined) {
                                 xml += ` mchan="${mod.mchan}"`;
@@ -3056,43 +3954,64 @@
             }
 
             // Layer 3 - FX
-            const fxDefaults = [
-                { type: 'delay', params: 'delay="400" delaymustime="6" feedback="400" cutoff="120" filtquality="1000" dealybeatsync="1" filtenable="1" delaypingpong="1"' },
-                { type: 'reverb', params: 'decay="600" predelay="40" damping="500"' },
-                { type: 'eq', params: 'eqactband="0" eqgain="0" eqcutoff="200" eqres="400" eqenable="1" eqtype="0" eqgain2="0" eqcutoff2="400" eqres2="400" eqenable2="1" eqtype2="0" eqgain3="0" eqcutoff3="600" eqres3="400" eqenable3="1" eqtype3="0" eqgain4="0" eqcutoff4="800" eqres4="400" eqenable4="1" eqtype4="0"' },
-                { type: 'null', params: '' },
-                { type: 'null', params: '' }
-            ];
+            const fxTypes = ['delay', 'reverb', 'eq'];
+            const fxDefaults = createEmptyFXData();
 
             for (let i = 0; i < 5; i++) {
-                const fxData = data.fx?.[i];
-                const defaults = fxDefaults[i];
+                let fxType = null;
+                let fxData = null;
 
-                if (fxData) {
-                    // Use loaded FX data
-                    xml += `        <cell row="${i}" layer="3" type="${fxData.type}">\n`;
-                    xml += '            <params';
-                    for (let [key, value] of Object.entries(fxData.params)) {
-                        xml += ` ${key}="${value}"`;
-                    }
-                    xml += '/>\n';
-
-                    // Add FX modsources
-                    if (fxData.modsources?.length > 0) {
-                        fxData.modsources.forEach(mod => {
-                            xml += `            <modsource dest="${mod.dest}" src="${mod.src}"`;
-                            if (mod.mchan) xml += ` mchan="${mod.mchan}"`;
-                            if (mod.ccnum) xml += ` ccnum="${mod.ccnum}"`;
-                            xml += ` slot="${mod.slot}" amount="${mod.amount}"/>\n`;
-                        });
-                    }
-                    xml += '        </cell>\n';
+                if (i === 0) {
+                    fxType = 'delay';
+                    fxData = presetData.fx?.delay || fxDefaults.delay;
+                } else if (i === 1) {
+                    fxType = 'reverb';
+                    fxData = presetData.fx?.reverb || fxDefaults.reverb;
+                } else if (i === 2) {
+                    fxType = 'eq';
+                    fxData = presetData.fx?.eq || fxDefaults.eq;
                 } else {
-                    // Use defaults
-                    xml += `        <cell row="${i}" layer="3" type="${defaults.type}">\n`;
-                    xml += `            <params${defaults.params ? ' ' + defaults.params : ''}/>\n`;
+                    // Null FX for slots 3 and 4
+                    xml += `        <cell row="${i}" layer="3" type="null">\n`;
+                    xml += '            <params/>\n';
                     xml += '        </cell>\n';
+                    continue;
                 }
+
+                xml += `        <cell row="${i}" layer="3" type="${fxType}">\n`;
+                xml += '            <params';
+                for (let [key, value] of Object.entries(fxData.params)) {
+                    xml += ` ${key}="${value}"`;
+                }
+                xml += '/>\n';
+
+                // Add FX modsources (filter out 'none')
+                if (fxData.modsources?.length > 0) {
+                    const activeModSlots = fxData.modsources.filter(mod =>
+                        mod.src !== 'none' && mod.dest !== 'none' && mod.src && mod.dest
+                    );
+
+                    // Group by destination and assign slot numbers 0-2 per destination
+                    const destGroups = {};
+                    activeModSlots.forEach(mod => {
+                        if (!destGroups[mod.dest]) {
+                            destGroups[mod.dest] = [];
+                        }
+                        destGroups[mod.dest].push(mod);
+                    });
+
+                    // Write with corrected slot numbers
+                    Object.values(destGroups).forEach(group => {
+                        group.forEach((mod, index) => {
+                            xml += `            <modsource dest="${mod.dest}" src="${mod.src}"`;
+                            if (mod.mchan !== undefined) xml += ` mchan="${mod.mchan}"`;
+                            if (mod.ccnum !== undefined) xml += ` ccnum="${mod.ccnum}"`;
+                            xml += ` slot="${index}" amount="${mod.amount}"/>\n`;  // Use index (0-2) per dest
+                        });
+                    });
+                }
+
+                xml += '        </cell>\n';
             }
 
             // Asset cells - preserve multi-sample references
