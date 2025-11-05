@@ -470,6 +470,12 @@
             border-bottom-color: #4a9eff;
         }
 
+        .tab-btn.greyed {
+            opacity: 0.5;
+            /* cursor: not-allowed; */
+            /* pointer-events: none; */
+        }
+
         .tab-content {
             display: none;
         }
@@ -477,7 +483,7 @@
         .tab-content.active {
             display: block;
         }
-
+        
         /* dropdown menu styling */
 
         .select {
@@ -695,6 +701,15 @@
                 <button class="close-btn" id="closeModal">✔</button>
             </div>
 
+            <div class="modal-header">
+                <h2 id="modalTitle">Edit Pad</h2>
+                <button class="close-btn" id="closeModal">×</button>
+            </div>
+
+            <!-- Status Bar / console -->
+            <div class="status-bar" id="editModalStatusBar"></div>
+
+            
             <!-- Tabs -->
             <div class="modal-tabs">
                 <button class="tab-btn active" data-tab="main">Main</button>
@@ -1344,6 +1359,9 @@
                 <h2>Global FX Settings</h2>
                 <button class="close-btn" id="closeFxModal">×</button>
             </div>
+
+            <!-- Status Bar / console -->
+            <div class="status-bar" id="fxModalStatusBar"></div>
 
             <!-- FX Tabs -->
             <div class="modal-tabs">
@@ -3217,7 +3235,14 @@
         function updateEQConditionalVisibility() {
             // Check if Bitbox Micro mode
             const isMicroMode = currentMode === 'micro';
-
+            
+            // Get EQ tab button
+            const fxModal = document.getElementById('fxModal');
+            const eqTabBtn = fxModal?.querySelector('[data-tab="eq"]');
+            
+            // Get all EQ section headers
+            const eqHeaders = fxModal?.querySelectorAll('#tab-eq .param-section h3');
+            
             // Get all EQ parameters
             const eqParams = [];
             for (let i = 1; i <= 4; i++) {
@@ -3230,21 +3255,33 @@
                     document.getElementById(`fx-eqres${suffix}`)?.closest('.param')
                 );
             }
-
-            // Reset all to visible
+            
+            // Reset everything to normal
+            if (eqTabBtn) {
+                eqTabBtn.classList.remove('greyed');
+            }
+            if (eqHeaders) {
+                eqHeaders.forEach(h => h.style.opacity = '1');
+            }
             eqParams.forEach(param => {
                 if (param) param.style.opacity = '1';
             });
-
+            
             // If Micro mode, grey out entire EQ tab
             if (isMicroMode) {
+                if (eqTabBtn) {
+                    eqTabBtn.classList.add('greyed');
+                }
+                if (eqHeaders) {
+                    eqHeaders.forEach(h => h.style.opacity = greyValue);
+                }
                 eqParams.forEach(param => {
                     if (param) param.style.opacity = greyValue;
                 });
-                return; // Don't process individual bands if entire EQ is disabled
+                return; // Don't process individual bands
             }
-
-            // Process each band individually
+            
+            // Process each band individually (only if not Micro mode)
             for (let i = 1; i <= 4; i++) {
                 const suffix = i === 1 ? '' : i.toString();
                 const typeSelect = document.getElementById(`fx-eqtype${suffix}`);
@@ -3252,10 +3289,10 @@
                 const gainParam = document.getElementById(`fx-eqgain${suffix}`)?.closest('.param');
                 const cutoffParam = document.getElementById(`fx-eqcutoff${suffix}`)?.closest('.param');
                 const resParam = document.getElementById(`fx-eqres${suffix}`)?.closest('.param');
-
-                // Always grey out Enable (per your note)
+                
+                // Always grey out Enable
                 if (enableParam) enableParam.style.opacity = greyValue;
-
+                
                 // If Type is "None", grey out Gain, Frequency, Q
                 if (typeSelect?.value === '0') {
                     if (gainParam) gainParam.style.opacity = greyValue;
@@ -3787,6 +3824,10 @@
 
             // NOW set the current editing pad
             currentEditingPad = pad;
+
+            // FORCE render modulation slots with fresh data.
+            // Call renderModSlots(padData) right before showing the modal to ensure fresh rendering.
+            renderModSlots(padData);
 
             // Show modal
             document.getElementById('editModal').classList.add('show');
@@ -4404,9 +4445,40 @@
         }
 
         function setStatus(message, type = '') {
-            const bar = document.getElementById('statusBar');
-            bar.textContent = message;
-            bar.className = 'status-bar ' + type;
+            // Check which context we're in
+            let statusBar;
+
+            // Check if edit modal is open
+            const editModal = document.getElementById('editModal');
+            if (editModal && editModal.classList.contains('show')) {
+                statusBar = document.getElementById('editModalStatusBar');
+            }
+
+            // Check if FX modal is open
+            const fxModal = document.getElementById('fxModal');
+            if (fxModal && fxModal.classList.contains('show')) {
+                statusBar = document.getElementById('fxModalStatusBar');
+            }
+
+            // Fallback to main status bar
+            if (!statusBar) {
+                statusBar = document.getElementById('statusBar');
+            }
+
+            if (statusBar) {
+                statusBar.textContent = message;
+                statusBar.className = 'status-bar ' + type;
+
+                // Auto-clear after 5 seconds for success/error messages
+                if (type === 'success' || type === 'error') {
+                    setTimeout(() => {
+                        if (statusBar.textContent === message) {
+                            statusBar.textContent = '';
+                            statusBar.className = 'status-bar';
+                        }
+                    }, 5000);
+                }
+            }
         }
     </script>
 </body>
