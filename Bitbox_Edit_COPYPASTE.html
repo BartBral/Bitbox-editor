@@ -892,28 +892,28 @@
                         <div class="param">
                             <label class="param-label">Sample Start</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="samstart" min="0" max="100000" value="0">
+                                <input type="range" class="slider" id="samstart" min="0" max="4294967295" value="0">
                                 <span class="param-value" id="samstart-val">0</span>
                             </div>
                         </div>
                         <div class="param">
                             <label class="param-label">Sample Length</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="samlen" min="0" max="100000" value="0">
+                                <input type="range" class="slider" id="samlen" min="0" max="4294967295" value="0">
                                 <span class="param-value" id="samlen-val">0</span>
                             </div>
                         </div>
                         <div class="param">
                             <label class="param-label">Loop Start</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="loopstart" min="0" max="100000" value="0">
+                                <input type="range" class="slider" id="loopstart" min="0" max="4294967295" value="0">
                                 <span class="param-value" id="loopstart-val">0</span>
                             </div>
                         </div>
                         <div class="param">
                             <label class="param-label">Loop End</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="loopend" min="0" max="100000" value="0">
+                                <input type="range" class="slider" id="loopend" min="0" max="4294967295" value="0">
                                 <span class="param-value" id="loopend-val">0</span>
                             </div>
                         </div>
@@ -1914,24 +1914,24 @@
 
             loadFxParamsToModal();
 
-            // Show the modal
             document.getElementById('fxModal').classList.add('show');
 
-            // Reset tabs to default (Delay active)
+            // Reset tabs
             const fxModal = document.getElementById('fxModal');
             const tabBtns = fxModal.querySelectorAll('.tab-btn');
             const tabContents = fxModal.querySelectorAll('.tab-content');
 
-            // Remove all active classes
             tabBtns.forEach(b => b.classList.remove('active'));
             tabContents.forEach(c => c.classList.remove('active'));
 
-            // Activate first tab (Delay)
             tabBtns[0].classList.add('active');
             tabContents[0].classList.add('active');
 
-            // Setup tab switching
             setupFxModalTabs();
+
+            // Apply conditional visibility
+            updateDelayConditionalVisibility();
+            updateEQConditionalVisibility();
         }
 
         function closeFxModal() {
@@ -2029,12 +2029,13 @@
                 tempo: '120',
                 fx: createEmptyFXData()
             };
-
+        
             assetCells = [];
-
+        
             for (let row = 0; row < 4; row++) {
                 presetData.pads[row] = {};
                 for (let col = 0; col < 4; col++) {
+                    // IMPORTANT: Call function fresh each time, don't reuse reference
                     presetData.pads[row][col] = createEmptyPadData();
                 }
             }
@@ -2470,13 +2471,17 @@
 
             const modsources = presetData.fx[fxType].modsources || [];
 
-            // Render existing mod slots
             modsources.forEach((mod, index) => {
                 container.innerHTML += createFxModSlotHTML(mod, index, fxType);
             });
 
-            // Setup event listeners for all slots
             setupFxModSlotListeners();
+
+            // Apply initial appearance to all slots
+            document.querySelectorAll('.fx-mod-source').forEach(sourceSelect => {
+                const slotElement = sourceSelect.closest('.mod-slot');
+                if (slotElement) updateFxModSlotAppearance(slotElement);
+            });
         }
 
         function setupFxModSlotListeners() {
@@ -2496,8 +2501,12 @@
                     // Update source
                     presetData.fx[fxType].modsources[slot].src = newSource;
 
-                    // Show/hide MIDI CC config
+                    // appearance updates after source changes
                     const slotElement = e.target.closest('.mod-slot');
+                    if (slotElement) updateFxModSlotAppearance(slotElement);
+
+                    // Show/hide MIDI CC config
+                    // const slotElement = e.target.closest('.mod-slot');
                     const midiccConfig = slotElement?.nextElementSibling;
                     if (midiccConfig && midiccConfig.classList.contains('mod-midicc-config')) {
                         if (newSource === 'midicc') {
@@ -2558,6 +2567,11 @@
                     if (presetData.fx && presetData.fx[fxType] && presetData.fx[fxType].modsources[slot]) {
                         presetData.fx[fxType].modsources[slot].dest = newDest;
                     }
+
+                    // In destination dropdown listener, after updating data:
+                    const slotElement = e.target.closest('.mod-slot');
+                    if (slotElement) updateFxModSlotAppearance(slotElement);
+
                 });
             });
 
@@ -2617,10 +2631,9 @@
             renderFxModSlots(fxType);
         }
 
-        function updateModSlotAppearance(slotElement) {
-            const slotIndex = slotElement.dataset.slot;
-            const sourceSelect = slotElement.querySelector('.mod-source');
-            const destSelect = slotElement.querySelector('.mod-dest');
+        function updateFxModSlotAppearance(slotElement) {
+            const sourceSelect = slotElement.querySelector('.fx-mod-source');
+            const destSelect = slotElement.querySelector('.fx-mod-dest');
 
             if (!sourceSelect || !destSelect) return;
 
@@ -2629,7 +2642,7 @@
             // Update opacity
             slotElement.style.opacity = isActive ? '1' : '0.5';
 
-            // Optionally add/remove a class for more styling control
+            // Add/remove inactive class
             if (isActive) {
                 slotElement.classList.remove('inactive');
             } else {
@@ -2899,6 +2912,11 @@
                     currentMode = btn.dataset.mode;
                     createPadGrid();
                     updatePadDisplay();
+
+                    // If FX modal is open, update EQ visibility
+                    if (document.getElementById('fxModal').classList.contains('show')) {
+                        updateEQConditionalVisibility();
+                    }
                 });
             });
 
@@ -3130,6 +3148,95 @@
                 if (loopstartParam) loopstartParam.style.opacity = greyValue;
                 if (loopendParam) loopendParam.style.opacity = greyValue;
                 if (loopfadeamtParam) loopfadeamtParam.style.opacity = greyValue;
+            }
+        }
+
+        // ========================================
+        // FX CONDITIONAL VISIBILITY
+        // ========================================
+
+        function updateDelayConditionalVisibility() {
+            const beatSync = document.getElementById('fx-dealybeatsync')?.value;
+            const filterEnable = document.getElementById('fx-filtenable')?.value;
+
+            // Delay time parameters
+            const delayMsParam = document.getElementById('fx-delay')?.closest('.param');
+            const delaySyncParam = document.getElementById('fx-delaymustime')?.closest('.param');
+
+            // Filter parameters
+            const cutoffParam = document.getElementById('fx-cutoff')?.closest('.param');
+            const filtQualityParam = document.getElementById('fx-filtquality')?.closest('.param');
+
+            // Reset all to visible
+            [delayMsParam, delaySyncParam, cutoffParam, filtQualityParam].forEach(param => {
+                if (param) param.style.opacity = '1';
+            });
+
+            // Apply greying based on Beat Sync
+            if (beatSync === '1') {
+                // Beat Sync ON - grey out ms time
+                if (delayMsParam) delayMsParam.style.opacity = greyValue;
+            } else {
+                // Beat Sync OFF - grey out sync time
+                if (delaySyncParam) delaySyncParam.style.opacity = greyValue;
+            }
+
+            // Apply greying based on Filter Enable
+            if (filterEnable === '0') {
+                // Filter OFF - grey out filter params
+                if (cutoffParam) cutoffParam.style.opacity = greyValue;
+                if (filtQualityParam) filtQualityParam.style.opacity = greyValue;
+            }
+        }
+
+        function updateEQConditionalVisibility() {
+            // Check if Bitbox Micro mode
+            const isMicroMode = currentMode === 'micro';
+
+            // Get all EQ parameters
+            const eqParams = [];
+            for (let i = 1; i <= 4; i++) {
+                const suffix = i === 1 ? '' : i.toString();
+                eqParams.push(
+                    document.getElementById(`fx-eqtype${suffix}`)?.closest('.param'),
+                    document.getElementById(`fx-eqenable${suffix}`)?.closest('.param'),
+                    document.getElementById(`fx-eqgain${suffix}`)?.closest('.param'),
+                    document.getElementById(`fx-eqcutoff${suffix}`)?.closest('.param'),
+                    document.getElementById(`fx-eqres${suffix}`)?.closest('.param')
+                );
+            }
+
+            // Reset all to visible
+            eqParams.forEach(param => {
+                if (param) param.style.opacity = '1';
+            });
+
+            // If Micro mode, grey out entire EQ tab
+            if (isMicroMode) {
+                eqParams.forEach(param => {
+                    if (param) param.style.opacity = greyValue;
+                });
+                return; // Don't process individual bands if entire EQ is disabled
+            }
+
+            // Process each band individually
+            for (let i = 1; i <= 4; i++) {
+                const suffix = i === 1 ? '' : i.toString();
+                const typeSelect = document.getElementById(`fx-eqtype${suffix}`);
+                const enableParam = document.getElementById(`fx-eqenable${suffix}`)?.closest('.param');
+                const gainParam = document.getElementById(`fx-eqgain${suffix}`)?.closest('.param');
+                const cutoffParam = document.getElementById(`fx-eqcutoff${suffix}`)?.closest('.param');
+                const resParam = document.getElementById(`fx-eqres${suffix}`)?.closest('.param');
+
+                // Always grey out Enable (per your note)
+                if (enableParam) enableParam.style.opacity = greyValue;
+
+                // If Type is "None", grey out Gain, Frequency, Q
+                if (typeSelect?.value === '0') {
+                    if (gainParam) gainParam.style.opacity = greyValue;
+                    if (cutoffParam) cutoffParam.style.opacity = greyValue;
+                    if (resParam) resParam.style.opacity = greyValue;
+                }
             }
         }
 
@@ -3417,6 +3524,19 @@
                 }
             });
 
+            // Add after Delay dropdowns section:
+            ['dealybeatsync', 'filtenable'].forEach(param => {
+                const select = document.getElementById('fx-' + param);
+                if (select) {
+                    select.addEventListener('change', () => {
+                        if (presetData.fx && presetData.fx.delay) {
+                            presetData.fx.delay.params[param] = select.value;
+                        }
+                        updateDelayConditionalVisibility(); // ADD THIS
+                    });
+                }
+            });
+
             // Reverb sliders
             ['decay', 'predelay', 'damping'].forEach(param => {
                 const slider = document.getElementById('fx-' + param);
@@ -3460,6 +3580,20 @@
                         });
                     }
                 });
+
+            // Add after EQ dropdowns section:
+            ['eqtype', 'eqtype2', 'eqtype3', 'eqtype4'].forEach(param => {
+                const select = document.getElementById('fx-' + param);
+                if (select) {
+                    select.addEventListener('change', () => {
+                        if (presetData.fx && presetData.fx.eq) {
+                            presetData.fx.eq.params[param] = select.value;
+                        }
+                        updateEQConditionalVisibility(); // ADD THIS
+                    });
+                }
+            });
+
         }
 
         function parseDisplayValue(param, text) {
@@ -3502,6 +3636,11 @@
                 case 'samlen':
                 case 'loopstart':
                 case 'loopend':
+                    // Parse integer, remove commas and "samples" text
+                    const cleaned = text.replace(/[,\s]/g, '').replace(/samples?/i, '');
+                    const num = parseInt(cleaned, 10);
+                    if (isNaN(num) || num < 0 || num > 4294967295) return null;
+                    return num;
                 case 'actslice':
                     text = val.toString();
                     break;
@@ -3514,9 +3653,9 @@
                 case 'beatcount':
                     const trimmed = text.trim();
                     if (trimmed.toLowerCase() === 'auto') return 0;
-                    const num = parseInt(trimmed, 10);
-                    if (isNaN(num) || num < 0 || num > 512) return null;
-                    return num;
+                    const num2 = parseInt(trimmed, 10);
+                    if (isNaN(num2) || num2 < 0 || num2 > 512) return null;
+                    return num2;
             }
         }
 
@@ -3553,6 +3692,13 @@
                     } else {
                         text = val.toString();
                     }
+                    break;
+                case 'samstart':
+                case 'samlen':
+                case 'loopstart':
+                case 'loopend':
+                    // Display as sample count, not percentage
+                    text = parseInt(val).toLocaleString() + ' samples';
                     break;
                 default:
                     text = (val / 10).toFixed(1) + '%';
