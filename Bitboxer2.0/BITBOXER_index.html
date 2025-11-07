@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- ============================================
+         META INFORMATION
+         ============================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BITBOXER - The essential preset editor for 1010music Bitbox Micro and mk2">
+    <title>BITBOXER - Bitbox Preset Editor</title>
+
+    <!-- ============================================
+         STYLESHEETS
+         ============================================ -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <!-- ============================================
+         MAIN CONTAINER
+         Wraps all content and provides consistent padding/background
+         ============================================ -->
+    <div class="container">
+
+        <!-- ============================================
+             HEADER SECTION
+             Contains app title and mode toggle buttons
+             ============================================ -->
+        <div class="header">
+            <!-- App Title (updated dynamically with project name) -->
+            <h1>BITBOXER</h1>
+
+            <!-- Mode Toggle: Switch between Bitbox Micro (8 pads) and mk2 (16 pads) -->
+            <div class="mode-toggle">
+                <button class="mode-btn active" data-mode="micro">Bitbox Micro</button>
+                <button class="mode-btn" data-mode="mk2">Bitbox mk2</button>
+            </div>
+        </div>
+
+        <!-- ============================================
+             MAIN CONTENT GRID
+             Two-column layout: pad grid on left, sidebar on right
+             ============================================ -->
+        <div class="main-content">
+
+            <!-- ============================================
+                 LEFT COLUMN: PAD AREA
+                 Contains the 4x4 pad grid and status bar
+                 ============================================ -->
+            <div class="pad-area">
+                <!-- Pad Grid Container (populated dynamically by JavaScript) -->
+                <div class="pad-grid" id="padGrid"></div>
+
+                <!-- Status Bar: Shows user feedback and instructions -->
+                <div class="status-bar" id="statusBar">
+                    Ready. Click to select, double-click to edit, right-click for options.
+                </div>
+            </div>
+
+            <!-- ============================================
+                 RIGHT COLUMN: SIDEBAR
+                 Contains control panels for file ops, FX, and pad operations
+                 ============================================ -->
+            <div class="sidebar">
+
+                <!-- ============================================
+                     FILE OPERATIONS PANEL
+                     Load, save, and create presets
+                     ============================================ -->
+                <div class="panel">
+                    <h3>File Operations</h3>
+                    <div class="controls">
+                        <!-- Load Preset Button: Triggers hidden file input -->
+                        <button class="btn btn-primary" id="loadBtn">Load Preset</button>
+
+                        <!-- Hidden File Input: Accepts .xml files -->
+                        <input type="file" id="fileInput" accept=".xml">
+
+                        <!-- Save Preset Button: Downloads current preset as XML -->
+                        <button class="btn btn-primary" id="saveBtn">Save Preset</button>
+
+                        <!-- New Preset Button: Creates empty preset -->
+                        <button class="btn" id="newPresetBtn">New Preset</button>
+                    </div>
+                </div>
+
+                <!-- ============================================
+                     FX OPERATIONS PANEL
+                     Access global FX settings (Delay, Reverb, EQ)
+                     ============================================ -->
+                <div class="panel">
+                    <h3>Edit effects</h3>
+                    <div class="controls">
+                        <!-- FX Settings Button: Opens FX modal -->
+                        <button class="btn" id="fxBtn">FX Settings</button>
+                    </div>
+                </div>
+
+                <!-- ============================================
+                     PAD OPERATIONS PANEL
+                     Operations for selected pads
+                     ============================================ -->
+                <div class="panel">
+                    <h3>Pad Operations</h3>
+                    <div class="controls">
+                        <!-- Export Selected: Exports selected pads to JSON/ZIP -->
+                        <button class="btn" id="exportPadBtn" disabled>Export Selected</button>
+
+                        <!-- Copy: Copies selected pads to clipboard -->
+                        <button class="btn" id="copyPadBtn" disabled>Copy</button>
+
+                        <!-- Paste: Pastes clipboard to selected pads -->
+                        <button class="btn" id="pastePadBtn" disabled>Paste</button>
+
+                        <!-- Delete: Clears selected pads -->
+                        <button class="btn" id="deletePadBtn" disabled>Delete</button>
+                    </div>
+                </div>
+
+                <!-- ============================================
+                     QUICK GUIDE PANEL
+                     User instructions for common operations
+                     ============================================ -->
+                <div class="panel info-panel">
+                    <h3>Quick Guide</h3>
+                    <p><strong>Click:</strong> Select pad</p>
+                    <p><strong>Ctrl+Click:</strong> Multi-select</p>
+                    <p><strong>Double-click:</strong> Edit parameters</p>
+                    <p><strong>Right-click:</strong> Context menu</p>
+                    <p><strong>Drag:</strong> Move/swap pads</p>
+                    <p><strong>Drop files:</strong> Load XML/SFZ/WAV</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         CONTEXT MENU (Right-click menu)
+         Shows when right-clicking a pad
+         ============================================ -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-item" id="contextEdit">Edit Pad</div>
+        <div class="context-item" id="contextExport">Export Pad</div>
+        <div class="context-item" id="contextCopy">Copy</div>
+        <div class="context-item" id="contextPaste">Paste</div>
+        <div class="context-item" id="contextDelete">Delete</div>
+    </div>
+
+    <!-- ============================================
+         EDIT MODAL
+         Modal window for editing pad parameters
+         Opened by double-clicking a pad
+         ============================================ -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+
+            <!-- ============================================
+                 MODAL HEADER
+                 Shows pad number/name and close button
+                 ============================================ -->
+            <div class="modal-header">
+                <h2 id="modalTitle">Edit Pad</h2>
+                            <div></div>
+                            <!-- Cell Mode: Determines pad behavior (Sample/Clip/Slicer/Granular) -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Cell Mode</label>
+                                </div>
+                                <select class="select" id="cellmode">
+                                    <option value="0">Sample</option>
+                                    <option value="1">Clip</option>
+                                    <option value="2">Slicer</option>
+                                    <option value="3">Granular</option>
+                                </select>
+                            </div>
+
+
+                <!-- Close Button: Saves changes and closes modal -->
+                <button class="close-btn" id="closeModal">✓</button>
+            </div>
+
+            <!-- ============================================
+                 TAB NAVIGATION
+                 Switch between different parameter sections
+                 ============================================ -->
+            <div class="modal-tabs">
+                <button class="tab-btn active" data-tab="main">Main</button>
+                <button class="tab-btn" data-tab="env">Env</button>
+                <button class="tab-btn" data-tab="lfo">LFO</button>
+                <button class="tab-btn" data-tab="pos">Pos</button>
+                <button class="tab-btn" data-tab="gran">Gran</button>
+                <button class="tab-btn" data-tab="config">Config</button>
+                <button class="tab-btn" data-tab="mod">Mod</button>
+            </div>
+
+            <!-- ============================================
+                 TAB 1: MAIN PARAMETERS
+                 Core sound parameters (level, pitch, filter, etc.)
+                 ============================================ -->
+            <div class="tab-content active" id="tab-main">
+                <div class="param-section">
+                    <h3>Main Parameters</h3>
+                    <div class="param-grid">
+
+                        
+
+                        <!-- Level: Volume control (-96dB to +12dB) -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Level</label>
+                                <span class="param-value" id="gaindb-val">0.0 dB</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="gaindb" min="-96000" max="12000" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Pan: Stereo position (Left-Center-Right) -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Panning</label>
+                                <span class="param-value" id="panpos-val">Center</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="panpos" min="-1000" max="1000" value="0">
+                            </div>
+                        </div>
+
+
+                        <!-- Pitch: Transpose in semitones (-24 to +24) -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Pitch</label>
+                                <span class="param-value" id="pitch-val">0.00 st</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="pitch" min="-24000" max="24000" value="0">
+                            </div>
+                        </div>
+
+                        
+                        <div class="dropdown-container-dual">
+
+                            <div>
+                                <!-- empty container-->
+                            </div>
+
+                            <div>
+                                <!-- empty container-->
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="line-container">
+                            <!-- empty line -->
+                        </div>
+                    
+                    <div class="param-grid">
+
+                        <!-- Filter: Cutoff frequency control -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Filter Frequency</label>
+                                <span class="param-value" id="dualfilcutoff-val">0.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="dualfilcutoff" min="-1000" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Resonance: Filter emphasis -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Filter Resonance</label>
+                                <span class="param-value" id="res-val">50.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="res" min="0" max="1000" value="500">
+                            </div>
+                        </div>
+                    </div>
+                        
+                        <div class="line-container">
+                            <!-- line -->
+                        </div>
+                
+                    <div class="param-grid">
+                        <!-- FX1 Send: Amount sent to Delay -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">FX1 Send - Delay</label>
+                                <span class="param-value" id="fx1send-val">0.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx1send" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <!-- FX2 Send: Amount sent to Reverb -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">FX2 Send - Reverb</label>
+                                <span class="param-value" id="fx2send-val">0.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx2send" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="line-container">
+                    <!--  line -->
+                </div>
+                    
+            </div>
+
+            <!-- ============================================
+                 TAB 2: ENVELOPE PARAMETERS
+                 ADSR envelope controls with visual representation
+                 ============================================ -->
+            <div class="tab-content" id="tab-env">
+                <div class="param-section">
+                    <h3>Envelope</h3>
+
+                    <!-- Envelope Visualization Canvas -->
+                    <canvas class="envelope-viz" id="envelopeCanvas"></canvas>
+
+                    <div class="param-grid">
+
+                        <!-- Attack: Time to reach peak (0-100%) -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Attack</label>
+                                <span class="param-value" id="envattack-val">0.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="envattack" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Decay: Time to reach sustain level (0-100%) -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Decay</label>
+                                <span class="param-value" id="envdecay-val">0.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="envdecay" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Sustain: Level while note is held (0-100%) -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Sustain</label>
+                                <span class="param-value" id="envsus-val">100.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="envsus" min="0" max="1000" value="1000">
+                            </div>
+                        </div>
+
+                        <!-- Release: Fade out time after note release (0-100%) -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Release</label>
+                                <span class="param-value" id="envrel-val">20.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="envrel" min="0" max="1000" value="200">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="line-container">
+                            <!-- line -->
+                </div>
+            </div>
+
+            <!-- ============================================
+                 TAB 3: LFO PARAMETERS
+                 Low Frequency Oscillator for modulation
+                 ============================================ -->
+            <div class="tab-content" id="tab-lfo">
+                <div class="param-section">
+                    <h3>LFO Parameters</h3>
+                    <div class="param-grid">
+
+                        <div class="dropdown-container-dual">
+                            <!-- LFO Wave: Shape of the oscillator -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">LFO Wave</label>
+                                </div>
+                                <select class="select" id="lfowave">
+                                    <option value="0">Saw Up</option>
+                                    <option value="1">Saw Down</option>
+                                    <option value="2">Triangle</option>
+                                    <option value="3">Positive Triangle</option>
+                                    <option value="4">Sine</option>
+                                    <option value="5">Positive Sine</option>
+                                    <option value="6">Square</option>
+                                    <option value="7">Positive Square</option>
+                                    <option value="8">Random</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <!-- empty container -->
+                            </div>
+                        </div>
+                        
+                        <div class="dropdown-container-dual">
+
+                            <!-- LFO Key Trigger: Restart LFO on each note -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">LFO Key Trigger</label>
+                                </div>
+                                <select class="select" id="lfokeytrig">
+                                    <option value="0">Off</option>
+                                    <option value="1">On</option>
+                                </select>
+                            </div>
+                            <div>
+                                <!-- empty container -->
+                            </div>
+                        </div>
+
+                        <!-- LFO Rate: Speed in Hz (0.1-12 Hz) -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">LFO Rate</label>
+                                <span class="param-value" id="lforate-val">10.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="lforate" min="0" max="1000" value="100">
+                            </div>
+                        </div>
+
+                        
+                        
+                        <div class="dropdown-container-dual">
+
+                            <!-- LFO Beat Sync: Sync to tempo instead of Hz -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">LFO Beat Sync</label>
+                                </div>
+                                <select class="select" id="lfobeatsync">
+                                    <option value="0">Off</option>
+                                    <option value="1">On</option>
+                                </select>
+                            </div>
+
+                            <!-- LFO Rate Beat Sync: Musical divisions when synced -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">LFO Rate Beat Sync</label>
+                                </div>
+                                <select class="select" id="lforatebeatsync">
+                                    <option value="0">8 bars</option>
+                                    <option value="1">4 bars</option>
+                                    <option value="2">2 bars</option>
+                                    <option value="3">1 bar</option>
+                                    <option value="4">1/2</option>
+                                    <option value="5">1/2T</option>
+                                    <option value="6">1/4</option>
+                                    <option value="7">1/4T</option>
+                                    <option value="8">1/8</option>
+                                    <option value="9">1/8T</option>
+                                    <option value="10">1/16</option>
+                                    <option value="11">1/16T</option>
+                                    <option value="12">1/32</option>
+                                    <option value="13">1/32T</option>
+                                    <option value="14">1/64</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- LFO Depth: Modulation intensity (0-100%) -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">LFO Depth</label>
+                                <span class="param-value" id="lfoamount-val">100.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="lfoamount" min="0" max="1000" value="1000">
+                            </div>
+                        </div>
+
+
+
+                    </div>
+                </div>
+                <div class="line-container">
+                            <!-- line -->
+                </div>
+            </div>
+
+            <!-- ============================================
+                 TAB 4: POSITION & LOOP PARAMETERS
+                 Sample playback position and loop controls
+                 ============================================ -->
+            <div class="tab-content" id="tab-pos">
+                <div class="param-section">
+                    <h3>Position & Loop</h3>
+                    <div class="param-grid">
+
+                        <!-- Sample Start: Starting position in samples -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Sample Start</label>
+                                <span class="param-value" id="samstart-val">0</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="samstart" min="0" max="4294967295" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Sample Length: Length of playback region -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Sample Length</label>
+                                <span class="param-value" id="samlen-val">0</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="samlen" min="0" max="4294967295" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Loop Start: Loop beginning position -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Loop Start</label>
+                                <span class="param-value" id="loopstart-val">0</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="loopstart" min="0" max="4294967295" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Loop End: Loop ending position -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Loop End</label>
+                                <span class="param-value" id="loopend-val">0</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="loopend" min="0" max="4294967295" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Loop Fade Amount: Crossfade at loop points -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Loop Fade Amount</label>
+                                <span class="param-value" id="loopfadeamt-val">0.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="loopfadeamt" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="dropdown-container-dual">
+
+                            <!-- Loop Modes: Forward/Bidirectional/Off -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Loop Modes</label>
+                                </div>
+                                <select class="select" id="loopmodes">
+                                    <option value="1" selected>Forward</option>
+                                    <option value="2">Bidirect</option>
+                                    <option value="0">Off</option>
+                                </select>
+                            </div>
+
+                            <!-- Reverse: Play sample backwards -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Play direction</label>
+                                </div>
+                                <select class="select" id="reverse">
+                                    <option value="0">Normal</option>
+                                    <option value="1">Reverse</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="dropdown-container-dual">
+
+                            <!-- Quant Size: Quantization grid (Clip mode) -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Quant Size</label>
+                                </div>
+                                <select class="select" id="quantsize">
+                                    <option value="0">8 bars</option>
+                                    <option value="1">4 bars</option>
+                                    <option value="2">2 bars</option>
+                                    <option value="3">1 bar</option>
+                                    <option value="4">1/2</option>
+                                    <option value="5">1/4</option>
+                                    <option value="6">1/8</option>
+                                    <option value="7">1/16</option>
+                                    <option value="8">1/32</option>
+                                    <option value="9">1/64</option>
+                                    <option value="10">none</option>
+                                </select>
+                            </div>
+
+                            <!-- Sync Type: Time stretching mode (Clip mode) -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Sync Type</label>
+                                </div>
+                                <select class="select" id="synctype">
+                                    <option value="0">Slice</option>
+                                    <option value="1">1 bar</option>
+                                    <option value="2">1/2</option>
+                                    <option value="3">1/4</option>
+                                    <option value="4">1/8</option>
+                                    <option value="5">1/16</option>
+                                    <option value="6">none</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Beat Count: Number of beats in sample (Clip/Slicer mode) -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Beat Count</label>
+                                <span class="param-value" id="beatcount-val">Auto</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="beatcount" min="0" max="512" value="0">
+                            </div>
+                        </div>
+
+                        
+
+                        
+                        <div class="dropdown-container-dual">
+
+                            <!-- Loop Mode: Enable looping in Slicer mode -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Loop Mode</label>
+                                </div>
+                                <select class="select" id="loopmode">
+                                    <option value="0">Off</option>
+                                    <option value="1">On</option>
+                                </select>
+                            </div>
+
+                            <!-- Play Thru: Play entire sample (Slicer mode) -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Play Thru</label>
+                                </div>
+                                <select class="select" id="playthru">
+                                    <option value="0">Off</option>
+                                    <option value="1">On</option>
+                                </select>
+                            </div>
+
+                        </div>    
+
+                        <!-- Active Slice: Current slice number (Slicer mode) -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Active Slice</label>
+                                <span class="param-value" id="actslice-val">1</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="actslice" min="1" max="512" value="1">
+                            </div>
+                        </div>
+
+                        <div class="dropdown-container-dual">
+
+                            <!-- Slicer Quantize: Slice trigger quantization (Slicer mode) -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Slicer Quantize</label>
+                                </div>
+                                <select class="select" id="slicerquantsize">
+                                    <option value="0">2 bars</option>
+                                    <option value="1">1 bar</option>
+                                    <option value="2">1/2</option>
+                                    <option value="3">1/2T</option>
+                                    <option value="4">1/4</option>
+                                    <option value="5">1/4T</option>
+                                    <option value="6">1/8</option>
+                                    <option value="7">1/8T</option>
+                                    <option value="8">1/16</option>
+                                    <option value="9">1/16T</option>
+                                    <option value="10">1/32</option>
+                                    <option value="11">1/32T</option>
+                                    <option value="12">1/64</option>
+                                    <option value="13">none</option>
+                                </select>
+                            </div>
+                        
+                            <!-- Slicer Sync: Sync slices to tempo (Slicer mode) -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Slicer Sync</label>
+                                </div>
+                                <select class="select" id="slicersync">
+                                    <option value="0">Off</option>
+                                    <option value="1">On</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <div class="dropdown-container-dual">
+
+                            <!-- Slice Seq: Slice playback order (Slicer mode) -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Slice Seq:</label>
+                                </div>
+                                <select class="select" id="slicestepmode">
+                                    <option value="0">None</option>
+                                    <option value="1">Forward</option>
+                                    <option value="2">Backwards</option>
+                                    <option value="3">Random</option>
+                                    <option value="4">Stagger</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+
+                    </div>
+                </div>
+                <div class="line-container">
+                            <!-- line -->
+                </div>
+            </div>
+
+            <!-- ============================================
+                 TAB 5: GRANULAR PARAMETERS
+                 Granular synthesis controls
+                 ============================================ -->
+            <div class="tab-content" id="tab-gran">
+                <div class="param-section">
+                    <h3>Granular Parameters</h3>
+                    <div class="param-grid">
+
+                        <!-- Grain Size: Length of each grain -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Grain Size</label>
+                                <span class="param-value" id="grainsizeperc-val">30.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="grainsizeperc" min="0" max="1000" value="300">
+                            </div>
+                        </div>
+
+                        <!-- Grain Scatter: Randomness in grain position -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Grain Scatter</label>
+                                <span class="param-value" id="grainscat-val">0.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="grainscat" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Grain Pan Random: Stereo randomization -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Grain Pan Random</label>
+                                <span class="param-value" id="grainpanrnd-val">0.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="grainpanrnd" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Grain Density: Number of grains per second -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Grain Density</label>
+                                <span class="param-value" id="graindensity-val">60.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="graindensity" min="0" max="1000" value="600">
+                            </div>
+                        </div>
+
+                        <!-- Grain Read Speed: Playback speed of grains -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Grain Read Speed</label>
+                                <span class="param-value" id="grainreadspeed-val">100.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="grainreadspeed" min="0" max="2000" value="1000">
+                            </div>
+                        </div>
+
+                        <!-- Grain Source Window: Sample region for grains -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Grain Source Window</label>
+                                <span class="param-value" id="gainssrcwin-val">0.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="gainssrcwin" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="line-container">
+                            <!-- line -->
+                </div>
+            </div>
+
+            <!-- ============================================
+                 TAB 6: CONFIGURATION
+                 Advanced pad settings
+                 ============================================ -->
+            <div class="tab-content" id="tab-config">
+                <div class="param-section">
+                    <h3>Configuration</h3>
+                    <div class="param-grid">
+
+                        <div class="dropdown-container-dual">
+                            <!-- Launch Mode: How pad triggers -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Launch Mode</label>
+                                </div>
+                                <select class="select" id="samtrigtype">
+                                    <option value="0">Gate</option>
+                                    <option value="1">Trigger</option>
+                                    <option value="2">Toggle</option>
+                                </select>
+                            </div>
+
+                            <div> <!-- empty container --></div>
+
+                        </div>
+                        
+                        <div class="dropdown-container-dual">
+
+                            <!-- Poly Mode: Voice polyphony -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Poly Mode</label>
+                                </div>
+                                <select class="select" id="polymode">
+                                    <option value="0">Mono</option>
+                                    <option value="1">Poly 2</option>
+                                    <option value="2">Poly 4</option>
+                                    <option value="3">Poly 6</option>
+                                    <option value="4">Poly 8</option>
+                                    <option value="5">Poly X</option>
+                                </select>
+                            </div>
+
+                            <!-- Excl Group: Exclusive group (choke group) -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Excl Group:</label>
+                                </div>
+                                <select class="select" id="chokegrp">
+                                    <option value="0">Excl X (Off)</option>
+                                    <option value="1">Excl A</option>
+                                    <option value="2">Excl B</option>
+                                    <option value="3">Excl C</option>
+                                    <option value="4">Excl D</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        
+
+                        
+
+                        <div class="dropdown-container-dual">
+
+                            <!-- Root Note: MIDI note for pitch reference -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Root Note</label>
+                                </div>
+                                <select class="select" id="rootnote">
+                                    <option value="0">Off</option>
+                                    <option value="1">C-1 (0)</option>
+                                    <option value="2">C#-1 (1)</option>
+                                    <option value="3">D-1 (2)</option>
+                                    <option value="4">D#-1 (3)</option>
+                                    <option value="5">E-1 (4)</option>
+                                    <option value="6">F-1 (5)</option>
+                                    <option value="7">F#-1 (6)</option>
+                                    <option value="8">G-1 (7)</option>
+                                    <option value="9">G#-1 (8)</option>
+                                    <option value="10">A-1 (9)</option>
+                                    <option value="11">A#-1 (10)</option>
+                                    <option value="12">B-1 (11)</option>
+                                    <option value="13">C0 (12)</option>
+                                    <option value="14">C#0 (13)</option>
+                                    <option value="15">D0 (14)</option>
+                                    <option value="16">D#0 (15)</option>
+                                    <option value="17">E0 (16)</option>
+                                    <option value="18">F0 (17)</option>
+                                    <option value="19">F#0 (18)</option>
+                                    <option value="20">G0 (19)</option>
+                                    <option value="21">G#0 (20)</option>
+                                    <option value="22">A0 (21)</option>
+                                    <option value="23">A#0 (22)</option>
+                                    <option value="24">B0 (23)</option>
+                                    <option value="25">C1 (24)</option>
+                                    <option value="26">C#1 (25)</option>
+                                    <option value="27">D1 (26)</option>
+                                    <option value="28">D#1 (27)</option>
+                                    <option value="29">E1 (28)</option>
+                                    <option value="30">F1 (29)</option>
+                                    <option value="31">F#1 (30)</option>
+                                    <option value="32">G1 (31)</option>
+                                    <option value="33">G#1 (32)</option>
+                                    <option value="34">A1 (33)</option>
+                                    <option value="35">A#1 (34)</option>
+                                    <option value="36">B1 (35)</option>
+                                    <option value="37">C2 (36)</option>
+                                    <option value="38">C#2 (37)</option>
+                                    <option value="39">D2 (38)</option>
+                                    <option value="40">D#2 (39)</option>
+                                    <option value="41">E2 (40)</option>
+                                    <option value="42">F2 (41)</option>
+                                    <option value="43">F#2 (42)</option>
+                                    <option value="44">G2 (43)</option>
+                                    <option value="45">G#2 (44)</option>
+                                    <option value="46">A2 (45)</option>
+                                    <option value="47">A#2 (46)</option>
+                                    <option value="48">B2 (47)</option>
+                                    <option value="49">C3 (48)</option>
+                                    <option value="50">C#3 (49)</option>
+                                    <option value="51">D3 (50)</option>
+                                    <option value="52">D#3 (51)</option>
+                                    <option value="53">E3 (52)</option>
+                                    <option value="54">F3 (53)</option>
+                                    <option value="55">F#3 (54)</option>
+                                    <option value="56">G3 (55)</option>
+                                    <option value="57">G#3 (56)</option>
+                                    <option value="58">A3 (57)</option>
+                                    <option value="59">A#3 (58)</option>
+                                    <option value="60">B3 (59)</option>
+                                    <option value="61">C4 (60)</option>
+                                    <option value="62">C#4 (61)</option>
+                                    <option value="63">D4 (62)</option>
+                                    <option value="64">D#4 (63)</option>
+                                    <option value="65">E4 (64)</option>
+                                    <option value="66">F4 (65)</option>
+                                    <option value="67">F#4 (66)</option>
+                                    <option value="68">G4 (67)</option>
+                                    <option value="69">G#4 (68)</option>
+                                    <option value="70">A4 (69)</option>
+                                    <option value="71">A#4 (70)</option>
+                                    <option value="72">B4 (71)</option>
+                                    <option value="73">C5 (72)</option>
+                                    <option value="74">C#5 (73)</option>
+                                    <option value="75">D5 (74)</option>
+                                    <option value="76">D#5 (75)</option>
+                                    <option value="77">E5 (76)</option>
+                                    <option value="78">F5 (77)</option>
+                                    <option value="79">F#5 (78)</option>
+                                    <option value="80">G5 (79)</option>
+                                    <option value="81">G#5 (80)</option>
+                                    <option value="82">A5 (81)</option>
+                                    <option value="83">A#5 (82)</option>
+                                    <option value="84">B5 (83)</option>
+                                    <option value="85">C6 (84)</option>
+                                    <option value="86">C#6 (85)</option>
+                                    <option value="87">D6 (86)</option>
+                                    <option value="88">D#6 (87)</option>
+                                    <option value="89">E6 (88)</option>
+                                    <option value="90">F6 (89)</option>
+                                    <option value="91">F#6 (90)</option>
+                                    <option value="92">G6 (91)</option>
+                                    <option value="93">G#6 (92)</option>
+                                    <option value="94">A6 (93)</option>
+                                    <option value="95">A#6 (94)</option>
+                                    <option value="96">B6 (95)</option>
+                                    <option value="97">C7 (96)</option>
+                                    <option value="98">C#7 (97)</option>
+                                    <option value="99">D7 (98)</option>
+                                    <option value="100">D#7 (99)</option>
+                                    <option value="101">E7 (100)</option>
+                                    <option value="102">F7 (101)</option>
+                                    <option value="103">F#7 (102)</option>
+                                    <option value="104">G7 (103)</option>
+                                    <option value="105">G#7 (104)</option>
+                                    <option value="106">A7 (105)</option>
+                                    <option value="107">A#7 (106)</option>
+                                    <option value="108">B7 (107)</option>
+                                    <option value="109">C8 (108)</option>
+                                    <option value="110">C#8 (109)</option>
+                                    <option value="111">D8 (110)</option>
+                                    <option value="112">D#8 (111)</option>
+                                    <option value="113">E8 (112)</option>
+                                    <option value="114">F8 (113)</option>
+                                    <option value="115">F#8 (114)</option>
+                                    <option value="116">G8 (115)</option>
+                                    <option value="117">G#8 (116)</option>
+                                    <option value="118">A8 (117)</option>
+                                    <option value="119">A#8 (118)</option>
+                                    <option value="120">B8 (119)</option>
+                                    <option value="121">C9 (120)</option>
+                                    <option value="122">C#9 (121)</option>
+                                    <option value="123">D9 (122)</option>
+                                    <option value="124">D#9 (123)</option>
+                                    <option value="125">E9 (124)</option>
+                                    <option value="126">F9 (125)</option>
+                                    <option value="127">F#9 (126)</option>
+                                    <option value="128">G9 (127)</option>
+                                </select>
+                            </div>
+
+                            <!-- MIDI Channel: MIDI input channel -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">MIDI Channel</label>
+                                </div>
+                                <select class="select" id="midimode">
+                                    <option value="0">None</option>
+                                    <option value="1">Ch 1 (omni)</option>
+                                    <option value="2">Ch 2</option>
+                                    <option value="3">Ch 3</option>
+                                    <option value="4">Ch 4</option>
+                                    <option value="5">Ch 5</option>
+                                    <option value="6">Ch 6</option>
+                                    <option value="7">Ch 7</option>
+                                    <option value="8">Ch 8</option>
+                                    <option value="9">Ch 9</option>
+                                    <option value="10">Ch 10</option>
+                                    <option value="11">Ch 11</option>
+                                    <option value="12">Ch 12</option>
+                                    <option value="13">Ch 13</option>
+                                    <option value="14">Ch 14</option>
+                                    <option value="15">Ch 15</option>
+                                    <option value="16">Ch 16</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Legato Mode: Smooth note transitions -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Legato Mode</label>
+                            </div>
+                            <select class="select" id="legatomode">
+                                <option value="0">Off</option>
+                                <option value="1">On</option>
+                            </select>
+                        </div>
+
+                        <!-- Interp Quality: Sample interpolation quality -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Interp Quality</label>
+                            </div>
+                            <select class="select" id="interpqual">
+                                <option value="0">Normal</option>
+                                <option value="1">High Quality</option>
+                            </select>
+                        </div>
+
+                        <!-- Output Bus: Audio routing -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Output Bus</label>
+                            </div>
+                            <select class="select" id="outputbus">
+                                <option value="0">Out1/2</option>
+                                <option value="1">Out3/4</option>
+                                <option value="2">Out5/6</option>
+                                <option value="3">Out7/8</option>
+                                <option value="4">Out1</option>
+                                <option value="5">Out2</option>
+                                <option value="6">Out3</option>
+                                <option value="7">Out4</option>
+                                <option value="8">Out5</option>
+                                <option value="9">Out6</option>
+                                <option value="10">Out7</option>
+                                <option value="11">Out8</option>
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="line-container">
+                            <!-- line -->
+                </div>
+            </div>
+
+            <!-- ============================================
+                 TAB 7: MODULATION
+                 Modulation matrix for parameter automation
+                 ============================================ -->
+            <div class="tab-content" id="tab-mod">
+                <div class="param-section">
+                    <h3>Modulation Sources</h3>
+                    <!-- Modulation slots container (populated dynamically) -->
+                    <div id="modSlotContainer" class="mod-slot-container"></div>
+                    <!-- Add Modulation Button: Creates new mod slot -->
+                    <button class="btn" id="addModSlotBtn" style="margin-top: 10px;">+ Add Modulation</button>
+                </div>
+                <div class="line-container">
+                            <!-- line -->
+                </div>
+            </div>
+            
+            <!-- Status Bar for Edit Modal -->
+            <div class="status-bar" id="editModalStatusBar"></div>
+
+        </div>
+    </div>
+
+    <!-- ============================================
+         FX MODAL
+         Modal window for global FX settings (Delay, Reverb, EQ)
+         ============================================ -->
+    <div class="modal" id="fxModal">
+        <div class="modal-content">
+
+            <!-- ============================================
+                 FX MODAL HEADER
+                 ============================================ -->
+            <div class="modal-header">
+                <h2>Global FX Settings</h2>
+                <button class="close-btn" id="closeFxModal">✓</button>
+            </div>
+
+            <!-- ============================================
+                 FX TAB NAVIGATION
+                 ============================================ -->
+            <div class="modal-tabs">
+                <button class="tab-btn active" data-tab="delay">Delay</button>
+                <button class="tab-btn" data-tab="reverb">Reverb</button>
+                <button class="tab-btn" data-tab="eq">EQ</button>
+            </div>
+
+            <!-- ============================================
+                 FX TAB 1: DELAY
+                 Delay/Echo effect with optional filter
+                 ============================================ -->
+            <div class="tab-content active" id="tab-delay">
+                <div class="param-section">
+                    <h3>Delay Parameters</h3>
+                    <div class="param-grid">
+
+                        <!-- Delay Time (ms): Delay time in milliseconds -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Delay Time (ms)</label>
+                                <span class="param-value" id="fx-delay-val">40.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-delay" min="0" max="1000" value="400">
+                            </div>
+                        </div>
+
+                        <div class="dropdown-container-dual">
+                            <!-- Beat Sync: Sync delay time to tempo -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Beat Sync</label>
+                                </div>
+                                <select class="select" id="fx-dealybeatsync">
+                                    <option value="0">Manual Frequency</option>
+                                    <option value="1" selected>Synced to the Beat</option>
+                                </select>
+                            </div>
+
+                            <!-- Delay Time (sync): Musical divisions when synced -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Delay Time (sync)</label>
+                                </div>
+                                <select class="select" id="fx-delaymustime">
+                                    <option value="0">1/64</option>
+                                    <option value="1">1/32</option>
+                                    <option value="2">1/16</option>
+                                    <option value="3">1/8T</option>
+                                    <option value="4">1/16D</option>
+                                    <option value="5">1/8</option>
+                                    <option value="6">1/4T</option>
+                                    <option value="7" selected>1/8D</option>
+                                    <option value="8">1/4</option>
+                                    <option value="9">1/2T</option>
+                                    <option value="10">1/2</option>
+                                    <option value="11">1 bar</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Feedback: Amount of signal fed back -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Feedback</label>
+                                <span class="param-value" id="fx-feedback-val">40.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-feedback" min="0" max="1000" value="400">
+                            </div>
+                        </div>
+
+                        
+
+                        <div class="dropdown-container-dual">
+                            <!-- Ping Pong: Stereo ping-pong delay -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Ping Pong</label>
+                                </div>
+                                <select class="select" id="fx-delaypingpong">
+                                    <option value="0">Off</option>
+                                    <option value="1" selected>Stereo ping-pong delay</option>
+                                </select>
+                            </div>
+
+                            <div> 
+                                <!-- empty container --> 
+                            </div>
+                        </div>
+
+                        <div class="dropdown-container-dual">
+
+                            <!-- Filter Enable: Enable/disable delay filter -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Filter Enable</label>
+                                </div>
+                                <select class="select" id="fx-filtenable">
+                                    <option value="0">Filter Off</option>
+                                    <option value="1" selected>Filter On</option>
+                                </select>
+                            </div>
+
+                            <div> 
+                                <!-- empty container --> 
+                            </div>
+                        </div>
+
+                        
+                        <div class="param">
+                            <!-- empty container --> 
+                        </div>
+
+                        <!-- Cutoff: Filter cutoff frequency -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Filter Cutoff</label>
+                                <span class="param-value" id="fx-cutoff-val">12.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-cutoff" min="0" max="1000" value="120">
+                            </div>
+                        </div>
+
+                        <!-- Filter Quality: Filter resonance -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Filter Resonance (Q)</label>
+                                <span class="param-value" id="fx-filtquality-val">100.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-filtquality" min="0" max="1000" value="1000">
+                            </div>
+                        </div>
+
+                        
+
+
+
+                        
+
+                    </div>
+                </div>
+
+                <!-- Delay Modulation Section -->
+                <div class="param-section">
+                    <h3>Delay Modulation</h3>
+                    <div id="fxDelayModContainer" class="mod-slot-container"></div>
+                    <button class="btn" id="addDelayModSlotBtn" style="margin-top: 10px;">+ Add Modulation</button>
+                </div>
+            </div>
+
+            <!-- ============================================
+                 FX TAB 2: REVERB
+                 Reverb effect parameters
+                 ============================================ -->
+            <div class="tab-content" id="tab-reverb">
+                <div class="param-section">
+                    <h3>Reverb Parameters</h3>
+                    <div class="param-grid">
+
+                        <!-- Decay: Reverb tail length -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Decay</label>
+                                <span class="param-value" id="fx-decay-val">60.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-decay" min="0" max="1000" value="600">
+                            </div>
+                        </div>
+
+                        <!-- Pre-delay: Time before reverb starts -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Pre-delay</label>
+                                <span class="param-value" id="fx-predelay-val">4.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-predelay" min="0" max="1000" value="40">
+                            </div>
+                        </div>
+
+                        <!-- Damping: High frequency absorption -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Damping</label>
+                                <span class="param-value" id="fx-damping-val">50.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-damping" min="0" max="1000" value="500">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Reverb Modulation Section -->
+                <div class="param-section">
+                    <h3>Reverb Modulation</h3>
+                    <div id="fxReverbModContainer" class="mod-slot-container"></div>
+                    <button class="btn" id="addReverbModSlotBtn" style="margin-top: 10px;">+ Add Modulation</button>
+                </div>
+            </div>
+
+            <!-- ============================================
+                 FX TAB 3: EQ
+                 4-band parametric equalizer (Bitbox mk2 only)
+                 ============================================ -->
+            <div class="tab-content" id="tab-eq">
+
+                <!-- EQ Band 1 -->
+                <div class="param-section">
+                    <h3>EQ Band 1</h3>
+                    <div class="param-grid">
+
+                        <div class="dropdown-container-dual">
+                        <!-- Type: Filter type for band 1 -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Type</label>
+                            </div>
+                            <select class="select" id="fx-eqtype">
+                                <option value="0">None</option>
+                                <option value="1" selected>Low Cut</option>
+                                <option value="2">Low Shelf</option>
+                                <option value="3">Parametric</option>
+                                <option value="4">High Shelf</option>
+                                <option value="5">High Cut</option>
+                            </select>
+                        </div>
+
+                        <!-- Enable: Band on/off -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Enable</label>
+                            </div>
+                            <select class="select" id="fx-eqenable">
+                                <option value="0">Off</option>
+                                <option value="1" selected>On</option>
+                            </select>
+                        </div>
+</div>
+
+                        <!-- Gain: Boost/cut in dB -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Gain</label>
+                                <span class="param-value" id="fx-eqgain-val">0.0 dB</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqgain" min="-24000" max="24000" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Frequency: Center frequency -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Frequency</label>
+                                <span class="param-value" id="fx-eqcutoff-val">20.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqcutoff" min="0" max="1000" value="200">
+                            </div>
+                        </div>
+
+                        <!-- Q / Width: Filter bandwidth -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Q / Width</label>
+                                <span class="param-value" id="fx-eqres-val">40.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqres" min="0" max="1000" value="400">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- EQ Band 2 -->
+                <div class="param-section">
+                    <h3>EQ Band 2</h3>
+                    <div class="param-grid">
+
+                        <div class="dropdown-container-dual">
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Type</label>
+                            </div>
+                            <select class="select" id="fx-eqtype2">
+                                <option value="0">None</option>
+                                <option value="1">Low Cut</option>
+                                <option value="2">Low Shelf</option>
+                                <option value="3" selected>Parametric</option>
+                                <option value="4">High Shelf</option>
+                                <option value="5">High Cut</option>
+                            </select>
+                        </div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Enable</label>
+                            </div>
+                            <select class="select" id="fx-eqenable2">
+                                <option value="0">Off</option>
+                                <option value="1" selected>On</option>
+                            </select>
+                        </div>
+</div>
+                        
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Gain</label>
+                                <span class="param-value" id="fx-eqgain2-val">0.0 dB</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqgain2" min="-24000" max="24000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Frequency</label>
+                                <span class="param-value" id="fx-eqcutoff2-val">40.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqcutoff2" min="0" max="1000" value="400">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Q / Width</label>
+                                <span class="param-value" id="fx-eqres2-val">40.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqres2" min="0" max="1000" value="400">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- EQ Band 3 -->
+                <div class="param-section">
+                    <h3>EQ Band 3</h3>
+                    <div class="param-grid">
+
+                        <div class="dropdown-container-dual">
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Type</label>
+                            </div>
+                            <select class="select" id="fx-eqtype3">
+                                <option value="0">None</option>
+                                <option value="1">Low Cut</option>
+                                <option value="2">Low Shelf</option>
+                                <option value="3" selected>Parametric</option>
+                                <option value="4">High Shelf</option>
+                                <option value="5">High Cut</option>
+                            </select>
+                        </div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Enable</label>
+                            </div>
+                            <select class="select" id="fx-eqenable3">
+                                <option value="0">Off</option>
+                                <option value="1" selected>On</option>
+                            </select>
+                        </div>
+</div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Gain</label>
+                                <span class="param-value" id="fx-eqgain3-val">0.0 dB</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqgain3" min="-24000" max="24000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Frequency</label>
+                                <span class="param-value" id="fx-eqcutoff3-val">60.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqcutoff3" min="0" max="1000" value="600">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Q / Width</label>
+                                <span class="param-value" id="fx-eqres3-val">40.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqres3" min="0" max="1000" value="400">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- EQ Band 4 -->
+                <div class="param-section">
+                    <h3>EQ Band 4</h3>
+                    <div class="param-grid">
+
+                        <div class="dropdown-container-dual">
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Type</label>
+                                </div>
+                                <select class="select" id="fx-eqtype4">
+                                    <option value="0">None</option>
+                                    <option value="1">Low Cut</option>
+                                    <option value="2">Low Shelf</option>
+                                    <option value="3">Parametric</option>
+                                    <option value="4" selected>High Shelf</option>
+                                    <option value="5">High Cut</option>
+                                </select>
+                            </div>
+
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Enable</label>
+                                </div>
+                                <select class="select" id="fx-eqenable4">
+                                    <option value="0">Off</option>
+                                    <option value="1" selected>On</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Gain</label>
+                                <span class="param-value" id="fx-eqgain4-val">0.0 dB</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqgain4" min="-24000" max="24000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Frequency</label>
+                                <span class="param-value" id="fx-eqcutoff4-val">80.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqcutoff4" min="0" max="1000" value="800">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Q / Width</label>
+                                <span class="param-value" id="fx-eqres4-val">40.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqres4" min="0" max="1000" value="400">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Status Bar for FX Modal -->
+            <div class="status-bar" id="fxModalStatusBar"></div>
+
+        </div>
+    </div>
+
+    <!-- ============================================
+         JAVASCRIPT FILES
+         Load order is CRITICAL - do not change!
+         ============================================ -->
+
+    <!-- 1. Third-party library: ZIP/GZIP compression -->
+    <script src="js/lib/fflate.js"></script>
+
+    <!-- 2. Configuration: Constants and modulation definitions -->
+    <script src="js/config.js"></script>
+
+    <!-- 3. Data Structures: Data models and factory functions -->
+    <script src="js/data-structures.js"></script>
+
+    <!-- 4. Utilities: Helper functions and formatters -->
+    <script src="js/utils.js"></script>
+
+    <!-- 5. UI Controller: UI state management and interactions -->
+    <script src="js/ui-controller.js"></script>
+
+    <!-- 6. XML Handler: XML import/export logic -->
+    <script src="js/xml-handler.js"></script>
+
+    <!-- 7. Pad Editor: Pad editing and modulation -->
+    <script src="js/pad-editor.js"></script>
+
+    <!-- 8. FX Editor: FX editing and modulation -->
+    <script src="js/fx-editor.js"></script>
+
+    <!-- 9. Main: Application initialization (MUST BE LAST) -->
+    <script src="js/main.js"></script>
+
+</body>
+
+</html>

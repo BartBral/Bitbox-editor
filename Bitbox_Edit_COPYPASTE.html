@@ -876,7 +876,7 @@
                     <div class="param-grid">
 
                         <div class="param">
-                             <label class="param-label">LFO Wave</label>
+                            <label class="param-label">LFO Wave</label>
                             <div class="dropdown-container-1">
                                
                                 <select class="select" id="lfowave">
@@ -1136,46 +1136,64 @@
                 <div class="param-section">
                     <h3>Granular Parameters</h3>
                     <div class="param-grid">
+                        
                         <div class="param">
-                            <label class="param-label">Grain Size</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="grainsizeperc" min="0" max="1000" value="300">
+                            <div class="fader-container">
+                                <label class="param-label">Grain Size</label>
                                 <span class="param-value" id="grainsizeperc-val">30.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Grain Scatter</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="grainscat" min="0" max="1000" value="0">
+                                <input type="range" class="slider" id="grainsizeperc" min="0" max="1000" value="300">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Grain Scatter</label>
                                 <span class="param-value" id="grainscat-val">0.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Grain Pan Random</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="grainpanrnd" min="0" max="1000" value="0">
+                                <input type="range" class="slider" id="grainscat" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Grain Pan Random</label>
                                 <span class="param-value" id="grainpanrnd-val">0.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Grain Density</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="graindensity" min="0" max="1000" value="600">
+                                <input type="range" class="slider" id="grainpanrnd" min="0" max="1000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Grain Density</label>
                                 <span class="param-value" id="graindensity-val">60.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Grain Read Speed</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="grainreadspeed" min="0" max="2000" value="1000">
-                                <span class="param-value" id="grainreadspeed-val">100.0%</span>
+                                <input type="range" class="slider" id="graindensity" min="0" max="1000" value="600">
                             </div>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Grain Source Window</label>
+                            <div class="fader-container">
+                                <label class="param-label">Grain Read Speed</label>
+                                <span class="param-value" id="grainreadspeed-val">100.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="grainreadspeed" min="0" max="2000" value="1000">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Grain Source Window</label>
+                                <span class="param-value" id="gainssrcwin-val">0.0%</span>
+                            </div>
                             <div class="param-control">
                                 <input type="range" class="slider" id="gainssrcwin" min="0" max="1000" value="0">
-                                <span class="param-value" id="gainssrcwin-val">0.0%</span>
                             </div>
                         </div>
                     </div>
@@ -1451,15 +1469,21 @@
                 <div class="param-section">
                     <h3>Delay Parameters</h3>
                     <div class="param-grid">
+
                         <div class="param">
-                            <label class="param-label">Delay Time (ms)</label>
+                            <div class="fader-container">
+                                <label class="param-label">Delay Time (ms)</label>
+                                <span class="param-value" id="fx-delay-val">40.0%</span>
+                            </div>    
                             <div class="param-control">
                                 <input type="range" class="slider" id="fx-delay" min="0" max="1000" value="400">
-                                <span class="param-value" id="fx-delay-val">40.0%</span>
                             </div>
                         </div>
+                        
                         <div class="param">
-                            <label class="param-label">Delay Time (sync)</label>
+                            <div class="dropdown-container-1">
+                                <label class="param-label">Delay Time (sync)</label>
+                            </div>
                             <select class="select" id="fx-delaymustime">
                                 <option value="0">1/64</option>
                                 <option value="1">1/32</option>
@@ -1475,48 +1499,67 @@
                                 <option value="11">1 bar</option>
                             </select>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Feedback</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="fx-feedback" min="0" max="1000" value="400">
+                            <div class="fader-container">
+                                <label class="param-label">Feedback</label>
                                 <span class="param-value" id="fx-feedback-val">40.0%</span>
                             </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-feedback" min="0" max="1000" value="400">
+                            </div>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Cutoff</label>
+                            <div class="fader-container">
+                                <label class="param-label">Cutoff</label>
+                                <span class="param-value" id="fx-cutoff-val">12.0%</span>
+                            </div>    
                             <div class="param-control">
                                 <input type="range" class="slider" id="fx-cutoff" min="0" max="1000" value="120">
-                                <span class="param-value" id="fx-cutoff-val">12.0%</span>
                             </div>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Filter Quality</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="fx-filtquality" min="0" max="1000" value="1000">
+                            <div class="fader-container">
+                                <label class="param-label">Filter Quality</label>
                                 <span class="param-value" id="fx-filtquality-val">100.0%</span>
                             </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-filtquality" min="0" max="1000" value="1000">
+                            </div>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Beat Sync</label>
+                            <div class="dropdown-container-1">
+                                <label class="param-label">Beat Sync</label>
+                            </div>
                             <select class="select" id="fx-dealybeatsync">
                                 <option value="0">Off</option>
                                 <option value="1" selected>On</option>
                             </select>
                         </div>
+
                         <div class="param">
+                            <div class="dropdown-container-1">
                             <label class="param-label">Filter Enable</label>
+                            </div>
                             <select class="select" id="fx-filtenable">
                                 <option value="0">Off</option>
                                 <option value="1" selected>On</option>
                             </select>
+                            </div>
+                            
+                            <div class="param">
+                                <div class="dropdown-container-1">
+                                    <label class="param-label">Ping Pong</label>
+                                </div>
+                                <select class="select" id="fx-delaypingpong">
+                                    <option value="0">Off</option>
+                                    <option value="1" selected>On</option>
+                                </select>
                         </div>
-                        <div class="param">
-                            <label class="param-label">Ping Pong</label>
-                            <select class="select" id="fx-delaypingpong">
-                                <option value="0">Off</option>
-                                <option value="1" selected>On</option>
-                            </select>
-                        </div>
+
                     </div>
                 </div>
 
@@ -1533,27 +1576,37 @@
                 <div class="param-section">
                     <h3>Reverb Parameters</h3>
                     <div class="param-grid">
+
                         <div class="param">
-                            <label class="param-label">Decay</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="fx-decay" min="0" max="1000" value="600">
+                            <div class="fader-container">
+                                <label class="param-label">Decay</label>
                                 <span class="param-value" id="fx-decay-val">60.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Pre-delay</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="fx-predelay" min="0" max="1000" value="40">
+                                <input type="range" class="slider" id="fx-decay" min="0" max="1000" value="600">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Pre-delay</label>
                                 <span class="param-value" id="fx-predelay-val">4.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Damping</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="fx-damping" min="0" max="1000" value="500">
-                                <span class="param-value" id="fx-damping-val">50.0%</span>
+                                <input type="range" class="slider" id="fx-predelay" min="0" max="1000" value="40">
                             </div>
                         </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Damping</label>
+                                <span class="param-value" id="fx-damping-val">50.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-damping" min="0" max="1000" value="500">
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -1571,8 +1624,11 @@
                     <h3>EQ Band 1</h3>
                     <div class="param-grid">
                         <div>
+
                             <div class="param">
-                                <label class="param-label">Type</label>
+                                <div class="dropdown-container-1">
+                                    <label class="param-label">Type</label>
+                                </div>
                                 <select class="select" id="fx-eqtype">
                                     <option value="0">None</option>
                                     <option value="1" selected>Low Cut</option>
@@ -1582,35 +1638,48 @@
                                     <option value="5">High Cut</option>
                                 </select>
                             </div>
+
                             <div class="param">
-                                <label class="param-label">Enable</label>
+                                <div class="dropdown-container-1">
+                                    <label class="param-label">Enable</label>
+                                </div>
                                 <select class="select" id="fx-eqenable">
                                     <option value="0">Off</option>
                                     <option value="1" selected>On</option>
                                 </select>
                             </div>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Gain</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="fx-eqgain" min="-24000" max="24000" value="0">
+                            <div class="fader-container">
+                                <label class="param-label">Gain</label>
                                 <span class="param-value" id="fx-eqgain-val">0.0 dB</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Frequency</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="fx-eqcutoff" min="0" max="1000" value="200">
+                                <input type="range" class="slider" id="fx-eqgain" min="-24000" max="24000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Frequency</label>
                                 <span class="param-value" id="fx-eqcutoff-val">20.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Q / Width</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="fx-eqres" min="0" max="1000" value="400">
-                                <span class="param-value" id="fx-eqres-val">40.0%</span>
+                                <input type="range" class="slider" id="fx-eqcutoff" min="0" max="1000" value="200">
                             </div>
                         </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Q / Width</label>
+                                <span class="param-value" id="fx-eqres-val">40.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqres" min="0" max="1000" value="400">
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -1619,7 +1688,9 @@
                     <h3>EQ Band 2</h3>
                     <div class="param-grid">
                         <div class="param">
-                            <label class="param-label">Type</label>
+                            <div class="dropdown-container-1">
+                                <label class="param-label">Type</label>
+                            </div>
                             <select class="select" id="fx-eqtype2">
                                 <option value="0">None</option>
                                 <option value="1">Low Cut</option>
@@ -1629,32 +1700,44 @@
                                 <option value="5">High Cut</option>
                             </select>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Enable</label>
+                            <div class="dropdown-container-1">
+                                <label class="param-label">Enable</label>
+                            </div>
                             <select class="select" id="fx-eqenable2">
                                 <option value="0">Off</option>
                                 <option value="1" selected>On</option>
                             </select>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Gain</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="fx-eqgain2" min="-24000" max="24000" value="0">
+                            <div class="fader-container">
+                                <label class="param-label">Gain</label>
                                 <span class="param-value" id="fx-eqgain2-val">0.0 dB</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Frequency</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="fx-eqcutoff2" min="0" max="1000" value="400">
-                                <span class="param-value" id="fx-eqcutoff2-val">40.0%</span>
+                                <input type="range" class="slider" id="fx-eqgain2" min="-24000" max="24000" value="0">
                             </div>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Q / Width</label>
+                            <div class="fader-container">
+                                <label class="param-label">Frequency</label>
+                                <span class="param-value" id="fx-eqcutoff2-val">40.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqcutoff2" min="0" max="1000" value="400">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Q / Width</label>
+                                <span class="param-value" id="fx-eqres2-val">40.0%</span>
+                            </div>
                             <div class="param-control">
                                 <input type="range" class="slider" id="fx-eqres2" min="0" max="1000" value="400">
-                                <span class="param-value" id="fx-eqres2-val">40.0%</span>
                             </div>
                         </div>
                     </div>
@@ -1663,8 +1746,11 @@
                 <div class="param-section">
                     <h3>EQ Band 3</h3>
                     <div class="param-grid">
+
                         <div class="param">
-                            <label class="param-label">Type</label>
+                            <div class="dropdown-container-1">
+                                <label class="param-label">Type</label>
+                            </div>
                             <select class="select" id="fx-eqtype3">
                                 <option value="0">None</option>
                                 <option value="1">Low Cut</option>
@@ -1674,32 +1760,43 @@
                                 <option value="5">High Cut</option>
                             </select>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Enable</label>
+                            <div class="dropdown-container-1">
+                                <label class="param-label">Enable</label>
+                            </div>
                             <select class="select" id="fx-eqenable3">
                                 <option value="0">Off</option>
                                 <option value="1" selected>On</option>
                             </select>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Gain</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="fx-eqgain3" min="-24000" max="24000" value="0">
+                            <div class="fader-container">
+                                <label class="param-label">Gain</label>
                                 <span class="param-value" id="fx-eqgain3-val">0.0 dB</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Frequency</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="fx-eqcutoff3" min="0" max="1000" value="600">
+                                <input type="range" class="slider" id="fx-eqgain3" min="-24000" max="24000" value="0">
+                            </div>        
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Frequency</label>
                                 <span class="param-value" id="fx-eqcutoff3-val">60.0%</span>
                             </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqcutoff3" min="0" max="1000" value="600">
+                            </div>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Q / Width</label>
+                            <div class="fader-container">
+                                <label class="param-label">Q / Width</label>
+                                <span class="param-value" id="fx-eqres3-val">40.0%</span>
+                            </div>
                             <div class="param-control">
                                 <input type="range" class="slider" id="fx-eqres3" min="0" max="1000" value="400">
-                                <span class="param-value" id="fx-eqres3-val">40.0%</span>
                             </div>
                         </div>
                     </div>
@@ -1708,8 +1805,11 @@
                 <div class="param-section">
                     <h3>EQ Band 4</h3>
                     <div class="param-grid">
+
                         <div class="param">
-                            <label class="param-label">Type</label>
+                            <div class="dropdown-container-1">
+                                <label class="param-label">Type</label>
+                            </div>
                             <select class="select" id="fx-eqtype4">
                                 <option value="0">None</option>
                                 <option value="1">Low Cut</option>
@@ -1719,34 +1819,47 @@
                                 <option value="5">High Cut</option>
                             </select>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Enable</label>
+                            <div class="dropdown-container-1">
+                                <label class="param-label">Enable</label>
+                            </div>
                             <select class="select" id="fx-eqenable4">
                                 <option value="0">Off</option>
                                 <option value="1" selected>On</option>
                             </select>
                         </div>
+
                         <div class="param">
-                            <label class="param-label">Gain</label>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="fx-eqgain4" min="-24000" max="24000" value="0">
+                            <div class="fader-container">
+                                <label class="param-label">Gain</label>
                                 <span class="param-value" id="fx-eqgain4-val">0.0 dB</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Frequency</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="fx-eqcutoff4" min="0" max="1000" value="800">
+                                <input type="range" class="slider" id="fx-eqgain4" min="-24000" max="24000" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Frequency</label>
                                 <span class="param-value" id="fx-eqcutoff4-val">80.0%</span>
                             </div>
-                        </div>
-                        <div class="param">
-                            <label class="param-label">Q / Width</label>
                             <div class="param-control">
-                                <input type="range" class="slider" id="fx-eqres4" min="0" max="1000" value="400">
-                                <span class="param-value" id="fx-eqres4-val">40.0%</span>
+                                <input type="range" class="slider" id="fx-eqcutoff4" min="0" max="1000" value="800">
                             </div>
                         </div>
+
+                        <div class="param">
+                            <div class="fader-container">
+                                <label class="param-label">Q / Width</label>
+                                <span class="param-value" id="fx-eqres4-val">40.0%</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="fx-eqres4" min="0" max="1000" value="400">
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
