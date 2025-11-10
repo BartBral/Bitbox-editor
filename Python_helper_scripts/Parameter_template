@@ -232,3 +232,459 @@ slicersync = {
         { 'value': '1',  'label':  'On' }
     ]
 }
+
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+
+# Reverb FX
+'row': 1,
+'layer': 3,
+'type': 'reverb',
+    
+    'params': {
+        'decay':{ 
+            'min': '0', 
+            'max': '1000',
+            'default': '600'
+        },
+        'predelay': { 
+            'min': '0', 
+            'max': '1000',
+            'default': '40'
+        },
+        'damping': { 
+            'min': '0', 
+            'max': '1000',
+            'default': '500' 
+        }
+    }    
+
+================================
+
+# Delay FX
+'row': 0,
+'layer': 3,
+'type': 'delay',
+'params': {
+    'delay': { 
+        'min': '0', 
+        'max': '1000',
+        'default': '500' 
+    },
+    'delaymustime': {
+        'options': [
+            { 'value':  '0',   'label': '1/64' },
+            { 'value':  '1',   'label': '1/32' },
+            { 'value':  '2',   'label': '1/16' },
+            { 'value':  '3',   'label': '1/8T' },
+            { 'value':  '4',   'label':'1/16D' },
+            { 'value':  '5',   'label':  '1/8' },
+            { 'value':  '6',   'label': '1/4T' },
+            { 'value':  '7',   'label': '1/8D' },
+            { 'value':  '8',   'label':  '1/4' },
+            { 'value':  '9',   'label': '1/2T' },
+            { 'value': '10',   'label':  '1/2' },
+            { 'value': '11',   'label': '1 bar' }
+        ]
+        'default': '7'
+    },    
+    'feedback': { 
+            'min': '0', 
+            'max': '1000',
+            'default': '500'
+    },
+    'cutoff': { 
+            'min': '0', 
+            'max': '1000',
+            'default': '500'
+    },
+    'filtquality': { 
+            'min': '0', 
+            'max': '1000',
+            'default': '500'
+    },
+    'dealybeatsync': {
+        'options': [
+            { 'value':  '0',   'label': 'Off' },
+            { 'value':  '1',   'label': 'on' }
+        ]
+        'default': '0'
+    }
+    'filtenable':  {
+        'options': [
+            { 'value':  '0',   'label': 'Off' },
+            { 'value':  '1',   'label': 'on' }
+        ]
+        'default': '0'
+    }
+    'delaypingpong': {
+        'options': [
+            { 'value':  '0',   'label': 'Off' },
+            { 'value':  '1',   'label': 'on' }
+        ]
+        'default': '0'
+    }
+    
+
+=================================
+EQ:
+
+MINIMAL settings: Channel 2
+
+On screen on the hardware:
+Band-1:
+Gain: -24.0 dB
+Freq: 20 Hz
+Q: 0.1
+Type: none
+
+Band-2:
+Gain: -24.0 dB
+Freq: 20 Hz
+Q: 0.1
+Type: none
+
+Band-3:
+Gain: -24.0 dB
+Freq: 20 Hz
+Q: 0.1
+Type: none
+
+Band-3:
+Gain: -24.0 dB
+Freq: 20 Hz
+Q: 0.1
+Type: none
+
+-----------
+
+MAXIMAL settings: Channel 1
+On screen on the hardware:
+Band-1:
+Gain: +24.0 dB
+Freq: 20.4 kHz
+Q: 18.1
+Type: H Cut (high cut)
+
+Band-2:
+Gain: +24.0 dB
+Freq: 20.4 kHz
+Q: 18.1
+Type: H Cut (high cut)
+
+Band-3:
+Gain: +24.0 dB
+Freq: 20.4 kHz
+Q: 18.1
+Type: H Cut (high cut)
+
+Band-3:
+Gain: +24.0 dB
+Freq: 20.4 kHz
+Q: 18.1
+Type: H Cut (high cut)
+
+##########################################
+
+# Active EQ band // number of the EQ band selected at time of saving
+eqactband = {
+    'name': 'eqactband',
+    'type': 'dropdown',
+    'label': 'Active EQ band',
+    'tab': 'EQ',
+    'default': '0',
+    'options': [
+        { 'value':  '0',   'label': 'Band-1' },
+        { 'value':  '1',   'label': 'Band-2' },
+        { 'value':  '2',   'label': 'Band-3' },
+        { 'value':  '3',   'label': 'Band-4' }
+    ]
+}
+##########################################
+# EQ Type 
+##########################################
+eqtype = {
+    'name': 'eqtype',
+    'type': 'dropdown',
+    'label': 'EQ Type band-1',
+    'tab': 'EQ',
+    'default': '1',
+    'options': [
+        { 'value':  '0',   'label': 'None' },
+        { 'value':  '1',   'label': 'Low Cut' },
+        { 'value':  '2',   'label': 'Low Shelf' },
+        { 'value':  '3',   'label': 'Parametric' },
+        { 'value':  '4',   'label': 'High Shelf' },
+        { 'value':  '5',   'label': 'High Cut' }
+    ]
+}
+eqtype2= {
+    'name': 'eqtype2',
+    'type': 'dropdown',
+    'label': 'EQ Type band-2',
+    'tab': 'EQ',
+    'default': '3',
+    'options': [
+        { 'value':  '0',   'label': 'None' },
+        { 'value':  '1',   'label': 'Low Cut' },
+        { 'value':  '2',   'label': 'Low Shelf' },
+        { 'value':  '3',   'label': 'Parametric' },
+        { 'value':  '4',   'label': 'High Shelf' },
+        { 'value':  '5',   'label': 'High Cut' }
+    ]
+}
+eqtype3= {
+    'name': 'eqtype3',
+    'type': 'dropdown',
+    'label': 'EQ Type band-3',
+    'tab': 'EQ',
+    'default': '3',
+    'options': [
+        { 'value':  '0',   'label': 'None' },
+        { 'value':  '1',   'label': 'Low Cut' },
+        { 'value':  '2',   'label': 'Low Shelf' },
+        { 'value':  '3',   'label': 'Parametric' },
+        { 'value':  '4',   'label': 'High Shelf' },
+        { 'value':  '5',   'label': 'High Cut' }
+    ]
+}
+eqtype4= {
+    'name': 'eqtype4',
+    'type': 'dropdown',
+    'label': 'EQ Type band-4',
+    'tab': 'EQ',
+    'default': '4',
+    'options': [
+        { 'value':  '0',   'label': 'None' },
+        { 'value':  '1',   'label': 'Low Cut' },
+        { 'value':  '2',   'label': 'Low Shelf' },
+        { 'value':  '3',   'label': 'Parametric' },
+        { 'value':  '4',   'label': 'High Shelf' },
+        { 'value':  '5',   'label': 'High Cut' }
+    ]
+}
+##########################################
+# EQ Gain 
+##########################################
+eqgain = {
+    'name': 'eqgain',
+    'type': 'slider',
+    'label': 'EQ Gain band-1',
+    'tab': 'EQ',
+    'min': -24000,
+    'max':  24000,
+    'default': 0,
+    'format': 'db' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+eqgain2 = {
+    'name': 'eqgain2',
+    'type': 'slider',
+    'label': 'EQ Gain band-2',
+    'tab': 'EQ',
+    'min': -24000,
+    'max':  24000,
+    'default': 0,
+    'format': 'db' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+eqgain3 = {
+    'name': 'eqgain3',
+    'type': 'slider',
+    'label': 'EQ Gain band-3',
+    'tab': 'EQ',
+    'min': -24000,
+    'max':  24000,
+    'default': 0,
+    'format': 'db' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+eqgain4 = {
+    'name': 'eqgain4',
+    'type': 'slider',
+    'label': 'EQ Gain band-4',
+    'tab': 'EQ',
+    'min': -24000,
+    'max':  24000,
+    'default': 0,
+    'format': 'db' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+##########################################
+# EQ Cutoff frequency
+##########################################
+eqcutoff= {
+    'name': 'eqcutoff',
+    'type': 'slider',
+    'label': 'EQ Cutoff freq band-1',
+    'tab': 'EQ',
+    'min':    0 = 20.0  Hz
+    'max': 1000 = 20.4 kHz
+    'default': 80 Hz,
+    'format': 'hz' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+eqcutoff2= {
+    'name': 'eqcutoff2',
+    'type': 'slider',
+    'label': 'EQ Cutoff freq band-2',
+    'tab': 'EQ',
+    'min':    0 = 20.0  Hz
+    'max': 1000 = 20.4 kHz
+    'default': 320 Hz,
+    'format': 'hz' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+eqcutoff3= {
+    'name': 'eqcutoff3',
+    'type': 'slider',
+    'label': 'EQ Cutoff freq band-3',
+    'tab': 'EQ',
+    'min':    0 = 20.0  Hz
+    'max': 1000 = 20.4 kHz
+    'default': 1.2 kHz,
+    'format': 'hz' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+eqcutoff4= {
+    'name': 'eqcutoff4',
+    'type': 'slider',
+    'label': 'EQ Cutoff freq band-4',
+    'tab': 'EQ',
+    'min':    0 = 20.0  Hz
+    'max': 1000 = 20.4 kHz
+    'default': 5.1 kHz,
+    'format': 'hz' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+##########################################
+# EQ Resonance / Band width
+##########################################
+eqres= {
+    'name': 'eqres',
+    'type': 'slider',
+    'label': 'EQ Resonance/Width band-1',
+    'tab': 'EQ',
+    'min':    0
+    'max': 1000
+    'default': 0.8,
+    'format': 'percentage' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+eqres2= {
+    'name': 'eqres2',
+    'type': 'slider',
+    'label': 'EQ Resonance/Width band-2',
+    'tab': 'EQ',
+    'min':    0
+    'max': 1000
+    'default': 0.8,
+    'format': 'percentage' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+eqres3= {
+    'name': 'eqres3',
+    'type': 'slider',
+    'label': 'EQ Resonance/Width band-3',
+    'tab': 'EQ',
+    'min':    0
+    'max': 1000
+    'default': 0.8,
+    'format': 'percentage' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+eqres4= {
+    'name': 'eqres4',
+    'type': 'slider',
+    'label': 'EQ Resonance/Width band-4',
+    'tab': 'EQ',
+    'min':    0
+    'max': 1000
+    'default': 0.8,
+    'format': 'percentage' # 'percentage' or 'db', 'semitones', 'hz', 'ms', 'custom'
+}
+
+##########################################
+# EQ Enable // No UI for this on hardware 
+# // when setting this flag to 0, 
+# that band still seems to be working 
+##########################################
+eqenable = {
+    'name': 'eqenable',
+    'type': 'dropdown',
+    'label': 'EQ Enable band-1',
+    'tab': 'EQ',
+    'default': '1',
+    'options': [
+        { 'value':  '0',   'label': 'Off' },
+        { 'value':  '1',   'label': 'On' },
+    ]
+}
+eqenable2 = {
+    'name': 'eqenable2',
+    'type': 'dropdown',
+    'label': 'EQ Enable band-2',
+    'tab': 'EQ',
+    'default': '1',
+    'options': [
+        { 'value':  '0',   'label': 'Off' },
+        { 'value':  '1',   'label': 'On' },
+    ]
+}
+eqenable3 = {
+    'name': 'eqenable3',
+    'type': 'dropdown',
+    'label': 'EQ Enable band-3',
+    'tab': 'EQ',
+    'default': '1',
+    'options': [
+        { 'value':  '0',   'label': 'Off' },
+        { 'value':  '1',   'label': 'On' },
+    ]
+}
+eqenable4 = {
+    'name': 'eqenable4',
+    'type': 'dropdown',
+    'label': 'EQ Enable band-4',
+    'tab': 'EQ',
+    'default': '1',
+    'options': [
+        { 'value':  '0',   'label': 'Off' },
+        { 'value':  '1',   'label': 'On' },
+    ]
+}
+
+
+###################################################
+###################################################
+## Modulation sources and destinations for FX Delay and Reverb:
+###################################################
+
+Modulation Sources:
+src = "mod1"     
+src = "mod2"     
+src = "mod3"     
+src = "mod4"     
+src = "mod5"     
+src = "mod6"     
+src = "mod7"     
+src = "mod8"     
+src = "keytrig"  
+src = "velocity" 
+src = "lfo1"     
+src = "pitchbend"
+src = "modwheel"
+src = "midivol" 
+src = "midipan" 
+src = "midicc"  
+
+########################################################
+## In Delay window, following are destinations:
+## <!-- Max 9 Modulation sources for the Delay effect -->
+########################################################
+Screen name:		xml name:
+
+Delay:				dest="delaymustime"
+Feedback			dest="feedback"     
+Cutoff:				dest="cutoff"        
+
+########################################################
+## In Reverb window, following are destinations:
+## <!-- Max 9 Modulation sources for the Reverb effect -->
+########################################################
+Screen name:		xml name:
+
+Decay:				dest="decay"	
+Predelay:			dest="predelay"	
+Damping:			dest="damping"	
+
+########################################################

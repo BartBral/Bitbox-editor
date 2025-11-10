@@ -188,6 +188,27 @@ async function loadPreset(file) {
             }
         }
 
+        // After loading all pads, check for multisample references
+        for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 4; col++) {
+                const pad = window.BitboxerData.presetData.pads[row][col];
+                if (pad && pad.params.multisammode === '1') {
+                    // This pad uses multisamples - ensure it's marked as 'sample' type
+                    if (!pad.filename) {
+                        // Find the first asset that references this pad
+                        const asset = window.BitboxerData.assetCells.find(a => 
+                            parseInt(a.params.asssrcrow) === row && 
+                            parseInt(a.params.asssrccol) === col
+                        );
+                        if (asset) {
+                            pad.filename = asset.filename;
+                            pad.type = 'sample';
+                        }
+                    }
+                }
+            }
+        }        
+
         // Update UI
         window.BitboxerUI.updatePadDisplay();
         window.BitboxerData.initializeProject();
@@ -265,31 +286,148 @@ function generateCellXML(row, col, layer, cellData) {
     return xml;
 }
 
+/**
+ * Find the WAV file object for a given filename
+ * Searches through the last import's WAV files
+ */
+async function findWAVFileForAsset(wavFileName) {
+    // Check if we have a reference to the last imported files
+    if (!window._lastImportedFiles) {
+        console.warn('No imported files cached');
+        return null;
+    }
+    
+    // Search for the WAV file by name
+    for (const [path, file] of window._lastImportedFiles.entries()) {
+        if (file.name.toLowerCase() === wavFileName.toLowerCase()) {
+            return file;
+        }
+        // Also check just the filename part of the path
+        if (path.split('/').pop().toLowerCase() === wavFileName.toLowerCase()) {
+            return file;
+        }
+    }
+    
+    return null;
+}
+
+
 // ============================================
 // XML SAVING
 // ============================================
 /**
- * Saves the current preset as an XML file
+ * Saves the current preset as a ZIP file with proper folder structure
  */
-function savePreset() {
-    const { presetData } = window.BitboxerData;
-    
+async function savePreset() {
+    const { presetData, projectName, assetCells } = window.BitboxerData;
+    console.log('=== SAVING PRESET ===');
+    console.log('Project name:', projectName);
+
     if (!presetData) {
         window.BitboxerUtils.setStatus('No preset to save', 'error');
         return;
     }
 
     try {
+        // Generate XML
         const xml = generatePresetXML(presetData);
-        const blob = new Blob([xml], { type: 'text/xml' });
+        
+        // Create ZIP file structure
+        const files = {};
+        
+        // Add preset.xml at root level
+        files[`${projectName}/preset.xml`] = new TextEncoder().encode(xml);
+
+        console.log('ZIP Structure:');
+        console.log(`  Root: ${projectName}/`);
+
+        // Collect all unique multisample folders
+        const multisamFolders = new Set();
+        for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 4; col++) {
+                const pad = presetData.pads[row][col];
+                if (pad.params.multisammode === '1' && pad.filename) {
+                    // Extract folder name from filename like ".\Trumpet"
+                    const folderName = pad.filename.replace('.\\', '').replace('./', '');
+                    if (folderName) {
+                        multisamFolders.add(folderName);
+                    }
+                }
+            }
+        }
+        
+
+        
+        // Add actual WAV files to multisample folders
+        for (const folder of multisamFolders) {
+            console.log(`  Adding WAV files to: ${projectName}/${folder}/`);
+
+            // Find all asset cells for this folder
+            const folderAssets = assetCells.filter(asset => {
+                const assetFolder = asset.filename.split('\\')[1];
+                return assetFolder === folder;
+            });
+
+            // Track which files were expected and which were found
+            const expectedFiles = [];
+            const missingFiles = [];
+
+            for (const asset of folderAssets) {
+                const wavFileName = asset.filename.split('\\').pop();
+                expectedFiles.push(wavFileName);
+
+                // Find the corresponding WAV file from the import
+                const wavFile = await findWAVFileForAsset(wavFileName);
+
+                if (wavFile) {
+                    // Read the WAV file as ArrayBuffer
+                    const wavData = await wavFile.arrayBuffer();
+                    const wavBytes = new Uint8Array(wavData);
+
+                    // Add to ZIP with correct path
+                    files[`${projectName}/${folder}/${wavFileName}`] = wavBytes;
+                    console.log(`    ✓ Added: ${wavFileName}`);
+                } else {
+                    console.warn(`    ✗ Missing: ${wavFileName}`);
+                    missingFiles.push(wavFileName);
+
+                    // Add placeholder so structure is correct
+                    const warning = `WARNING: ${wavFileName} was not found.\nPlease add this file manually.`;
+                    files[`${projectName}/${folder}/${wavFileName}.missing.txt`] = new TextEncoder().encode(warning);
+                }
+            }
+
+            // After processing all samples, create a README.txt file listing expected files
+            const readmeContent = [
+                `This folder should contain the following WAV files:\n`,
+                ...expectedFiles.map(name => `- ${name}`),
+                '',
+                missingFiles.length > 0
+                    ? `Missing files:\n${missingFiles.map(name => `- ${name}`).join('\n')}\n`
+                    : 'All files are present.\n',
+                'Please ensure all required files are here before loading into Bitbox.'
+            ].join('\n');
+
+            // Add README.txt to the folder
+            files[`${projectName}/${folder}/README.txt`] = new TextEncoder().encode(readmeContent);
+            console.log(`    ✓ Created README.txt for ${folder}`);
+        }
+
+
+        // Create ZIP
+        const zipped = fflate.zipSync(files);
+        const blob = new Blob([zipped], { type: 'application/zip' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'preset.xml';
+        a.download = `${projectName}.zip`;
         a.click();
         URL.revokeObjectURL(url);
 
-        window.BitboxerUtils.setStatus('Preset saved successfully', 'success');
+        window.BitboxerUtils.setStatus(
+            `Preset saved as ZIP with ${multisamFolders.size} multisample folder(s)`, 
+            'success'
+        );
     } catch (error) {
         window.BitboxerUtils.setStatus(`Error saving: ${error.message}`, 'error');
         console.error(error);
@@ -388,7 +526,11 @@ function generatePresetXML(data) {
  * @returns {string} XML string
  */
 function generatePadCellXML(row, col, pad) {
-    let xml = `        <cell row="${row}" column="${col}" layer="0" filename="${pad.filename}" type="${pad.type}">\n`;
+    // Determine correct type: 'sample' if loaded, 'samtempl' if empty
+    const isLoaded = pad.filename && pad.filename !== '';
+    const cellType = isLoaded ? 'sample' : 'samtempl';
+    
+    let xml = `        <cell row="${row}" column="${col}" layer="0" filename="${pad.filename}" type="${cellType}">\n`;
     
     // Parameters
     xml += '            <params';

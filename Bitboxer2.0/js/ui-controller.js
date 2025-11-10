@@ -400,16 +400,30 @@ function updatePadDisplay() {
 
             const padData = presetData.pads[row]?.[col];
             const label = pad.querySelector('.pad-label');
+            const status = pad.querySelector('.pad-status');
 
-            if (padData && padData.filename && padData.type !== 'samtempl') {
+            if (padData && padData.filename && padData.type === 'sample') {
                 pad.classList.remove('empty');
                 pad.classList.add('active');
+                
                 // Extract filename without path and extension
-                label.textContent = padData.filename.split(/[/\\]/).pop().replace('.wav', '');
+                const displayName = padData.filename.split(/[/\\]/).pop().replace('.wav', '');
+                label.textContent = displayName;
+                
+                // Show multisample indicator if applicable
+                if (padData.params.multisammode === '1') {
+                    status.textContent = '🎹'; // Musical keyboard emoji
+                    status.style.display = 'inline';
+                } else {
+                    status.textContent = '';
+                    status.style.display = 'none';
+                }
             } else {
                 pad.classList.add('empty');
                 pad.classList.remove('active');
                 label.textContent = 'Empty';
+                status.textContent = '';
+                status.style.display = 'none';
             }
         }
     }

@@ -71,15 +71,23 @@
                 <div class="panel">
                     <h3>File Operations</h3>
                     <div class="controls">
+                        <!-- NEW: Working Folder Button -->
+                        <button class="btn btn-primary" id="setWorkingFolderBtn" style="display:none;">
+                            📁 Set Working Folder
+                        </button>
+
                         <!-- Load Preset Button: Triggers hidden file input -->
                         <button class="btn btn-primary" id="loadBtn">Load Preset</button>
-
-                        <!-- Hidden File Input: Accepts .xml files -->
-                        <input type="file" id="fileInput" accept=".xml">
-
+                    
+                        <!-- Hidden File Input: Now accepts XML, ZIP, SFZ, WAV -->
+                        <input type="file" id="fileInput" accept=".xml,.zip,.sfz,.wav" multiple>
+                    
+                        <!-- NEW: Folder Import Button (Chrome/Edge only) -->
+                        <button class="btn btn-primary" id="loadFolderBtn" style="display:none;">Load Folder</button>
+                    
                         <!-- Save Preset Button: Downloads current preset as XML -->
                         <button class="btn btn-primary" id="saveBtn">Save Preset</button>
-
+                    
                         <!-- New Preset Button: Creates empty preset -->
                         <button class="btn" id="newPresetBtn">New Preset</button>
                     </div>
@@ -853,7 +861,7 @@
                             <div> <!-- empty container --></div>
 
                         </div>
-                        
+
                         <div class="dropdown-container-dual">
 
                             <!-- Poly Mode: Voice polyphony -->
@@ -1633,6 +1641,10 @@
          Load order is CRITICAL - do not change!
          ============================================ -->
 
+ <!-- 0. TEST -->
+ <!-- <script src="js/processing_example.js></script> -->
+
+
     <!-- 1. Third-party library: ZIP/GZIP compression -->
     <script src="js/lib/fflate.js"></script>
 
@@ -1657,7 +1669,12 @@
     <!-- 8. FX Editor: FX editing and modulation -->
     <script src="js/fx-editor.js"></script>
 
-    <!-- 9. Main: Application initialization (MUST BE LAST) -->
+    <!-- 9. File Handler: File import system: ZIP, SFZ, WAV and Folder uploads -->
+    <script src="js/file_handler.js"></script>
+
+    
+
+    <!-- 10. Main: Application initialization (MUST BE LAST!!!) -->
     <script src="js/main.js"></script>
 
 </body>

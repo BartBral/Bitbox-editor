@@ -5,6 +5,11 @@
  * for creating empty/default presets, pads, and FX.
  */
 
+/**
+ * Working folder handle for File System Access API
+ */
+let workingFolderHandle = null;
+
 // ============================================
 // GLOBAL STATE VARIABLES
 // ============================================
@@ -62,7 +67,7 @@ let projectName = '';
 function createEmptyPadData() {
     return {
         filename: '',
-        type: 'samtempl',
+        type: 'sample',
         params: {
             // Main Parameters
             gaindb: '0',              // Level: -96dB to +12dB (stored as millidecibels)
@@ -278,7 +283,7 @@ function generateRandomHex() {
  */
 function initializeProject() {
     const name = prompt('Enter project name (leave blank for random):', '');
-    projectName = name.trim() || `Project_${generateRandomHex()}`;
+    window.BitboxerData.projectName = name.trim() || `Project_${generateRandomHex()}`;
     updateProjectTitle();
 }
 
@@ -286,7 +291,7 @@ function initializeProject() {
  * Updates the page title with current project name
  */
 function updateProjectTitle() {
-    document.querySelector('h1').textContent = `BITBOXER - ${projectName}`;
+    document.querySelector('h1').textContent = `BITBOXER - ${window.BitboxerData.projectName}`;
 }
 
 // ============================================
@@ -303,6 +308,7 @@ window.BitboxerData = {
     currentEditingPad,
     assetCells,
     projectName,
+    workingFolderHandle,
     
     // Factory Functions
     createEmptyPadData,
