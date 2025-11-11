@@ -138,6 +138,9 @@ h1 {
     grid-template-columns: repeat(4, 1fr);
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
+    max-width: 500px; /* ← ADD THIS */
+    margin-left: auto;  /* ← ADD THIS (centers grid) */
+    margin-right: auto; /* ← ADD THIS */
 }
 
 /* Individual Pad Styling */
@@ -371,6 +374,18 @@ h1 {
 .context-item.disabled {
     opacity: 0.3;
     cursor: not-allowed;
+}
+
+.context-item.separator {
+    height: 1px;
+    background: var(--color-border);
+    margin: 4px 0;
+    padding: 0;
+    cursor: default;
+}
+
+.context-item.separator:hover {
+    background: var(--color-border);
 }
 
 /* ============================================
@@ -764,6 +779,7 @@ input[type="file"] {
     grid-template-columns: repeat(1, 1fr);
     
     }
+}    
 /* ============================================
    ACCESSIBILITY
    ============================================ */
@@ -782,3 +798,28 @@ input[type="file"] {
         transition-duration: 0.01ms !important;
     }
 }
+
+.import-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.import-label {
+    font-size: 0.75em;
+    font-weight: 600;
+    color: var(--color-accent-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.import-hint {
+    font-size: 0.7em;
+    color: var(--color-accent-yellow);
+    font-style: italic;
+}
+
+

@@ -405,7 +405,7 @@ async function savePreset() {
                 missingFiles.length > 0
                     ? `Missing files:\n${missingFiles.map(name => `- ${name}`).join('\n')}\n`
                     : 'All files are present.\n',
-                'Please ensure all required files are here before loading into Bitbox.'
+                'Be sure all files are here before loading into Bitbox.'
             ].join('\n');
 
             // Add README.txt to the folder

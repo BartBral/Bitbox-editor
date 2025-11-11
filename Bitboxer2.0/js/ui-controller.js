@@ -113,6 +113,7 @@ function updateTabVisibility() {
     if (!cellmodeSelect) return;
     
     const cellmode = cellmodeSelect.value;
+    const isMultisample = cellmode === '0-multi';
     const granTab = document.querySelector('[data-tab="gran"]');
     const posTab = document.querySelector('[data-tab="pos"]');
     const lfoTab = document.querySelector('[data-tab="lfo"]');
@@ -137,8 +138,16 @@ function updateTabVisibility() {
 
     const { GREY_VALUE } = window.BITBOXER_CONFIG;
 
-    // Apply greying based on cellmode
-    // 0=Sample, 1=Clip, 2=Slice, 3=Granular
+    // Handle multisample mode - grey out POS and GRAN
+    if (isMultisample) {
+        if (posTab) posTab.style.opacity = GREY_VALUE;
+        if (posContent) posContent.style.opacity = GREY_VALUE;
+        if (granTab) granTab.style.opacity = GREY_VALUE; // ← ADD
+        if (granContent) granContent.style.opacity = GREY_VALUE; // ← ADD
+        return; // Exit early, don't process other modes
+    }
+
+    // Apply greying based on cellmode (existing code continues...)
     switch (cellmode) {
         case '0': // Sample mode - grey out Gran
             if (granTab) granTab.style.opacity = GREY_VALUE;
@@ -381,6 +390,12 @@ function updateButtonStates() {
     document.getElementById('copyPadBtn').disabled = !hasSelection;
     document.getElementById('deletePadBtn').disabled = !hasSelection;
     document.getElementById('pastePadBtn').disabled = !clipboard;
+
+    // Enable "Import to Pad" button only when ONE pad is selected
+    const importToPadBtn = document.getElementById('importToPadBtn');
+    if (importToPadBtn) {
+        importToPadBtn.disabled = selectedPads.size !== 1;
+    }
 }
 
 // ============================================

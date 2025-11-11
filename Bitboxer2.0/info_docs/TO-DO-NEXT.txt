@@ -1,31 +1,3 @@
-This is almost correct, nice work!  
-
-However, each grid cell (for example, Row 0, Column 0) **must** reference the **folder name** that contains the multisample, **NOT** a wav file name as it does now. 
-
-Multisamples must **always** be stored inside their own folders. The preset.xml file must be located one level above those subfolders. The name of each subfolder (where the wav files are stored) is what appears on the Bitbox display as the multisample name. This setup allows 16 multisamples, one per subfolder.
-
-If all wav-files are placed in the same folder, the multisample will not play.
-
-Correct SD card structure:
-```
-Preset_name\
-    ├── Multisample1_name\
-    │     ├── Sample01.wav
-    │     ├── Sample02.wav
-    │     └── Sample03.wav
-    ├── Multisample2_name\
-    │     ├── Break01.wav
-    │     ├── Break02.wav
-    │     ├── Break03.wav
-    │     ├── Break04.wav
-    │     └── Break05.wav
-    └── Preset.xml
-```
-
-When saving, always create a zip file with the folder structure within. This ensures the correct folder structure is preserved. We include the samples inside the zip-file, using the project name as the Preset folder name. The Multisample folder name should be derived from the .sfz file name. That way, users always have a working preset and a proper and descriptive folder name.
-
-
-In the attachment you'll find an edited preset.xml that is correct (also tested on Bitbox), and the same file unedited (directly save from our app) that did not work. You can div them to see the problem. If my explanation above is not clear.
 
 
 ===============================
@@ -33,16 +5,10 @@ TO-DO next; food for thought:
 
 • We need more UI elements to make the import options more clear. 
 
-• We need to implement a clear "mode" indicator for multisamples. The user should be able to see immediately that they are working with a multisample. The Bitbox hardware makes this distinction unclear, and we should avoid repeating that issue in our editor. Add a new entry called "Multisample mode" to the sample mode dropdown list, alongside the existing dropdown options: Sample mode, Clip mode, Slice mode, and Granular mode.
-
-• If the sample type is set to "multisample," the POS tab and all POS-related parameters should be greyed out, since multisamples cannot be edited on the Bitbox.
-
 • I want to add a dedicated tab specifically for editing multi-samples. Initially, this tab should show a simple console-style window listing the samples and the keys they are mapped to, to provide basic feedback. The ideal interface would display a musical keyboard as an SVG image, with highlighted key ranges showing which sample is assigned to each range. This tab should allow manipulation of individual samples within the multi-sample set, such as changing loop points for each sample. The loop point information is stored within the chunk metadata of the wave files, and this is also the data that the Bitbox hardware reads for looping multi-samples.
 
 • The maximum range for the sample start, sample end, loop start, and loop end sliders should be dynamically determined based on the total number of samples in the loaded audio file. Currently, using a fixed 4GB maximum range makes the sliders too coarse, causing even tiny movements to jump large distances. Instead, when a sample is loaded, the maximum slider value should be set to the sample’s actual length in samples.
 slider_max_value = audio_sample.length_in_samples
-
-• We need to add an option to import SFZ files directly into a specific pad without resetting all other pads to their default state when importing. The current behavior resets all pads, but the import process should only affect the selected pad.
 
 Current behavior:
 - Importing a preset.xml resets every pad in the project.

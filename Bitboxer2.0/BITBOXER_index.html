@@ -68,29 +68,40 @@
                      FILE OPERATIONS PANEL
                      Load, save, and create presets
                      ============================================ -->
-                <div class="panel">
-                    <h3>File Operations</h3>
-                    <div class="controls">
-                        <!-- NEW: Working Folder Button -->
-                        <button class="btn btn-primary" id="setWorkingFolderBtn" style="display:none;">
-                            📁 Set Working Folder
-                        </button>
-
-                        <!-- Load Preset Button: Triggers hidden file input -->
-                        <button class="btn btn-primary" id="loadBtn">Load Preset</button>
-                    
-                        <!-- Hidden File Input: Now accepts XML, ZIP, SFZ, WAV -->
-                        <input type="file" id="fileInput" accept=".xml,.zip,.sfz,.wav" multiple>
-                    
-                        <!-- NEW: Folder Import Button (Chrome/Edge only) -->
-                        <button class="btn btn-primary" id="loadFolderBtn" style="display:none;">Load Folder</button>
-                    
-                        <!-- Save Preset Button: Downloads current preset as XML -->
-                        <button class="btn btn-primary" id="saveBtn">Save Preset</button>
-                    
-                        <!-- New Preset Button: Creates empty preset -->
-                        <button class="btn" id="newPresetBtn">New Preset</button>
+                <div class="controls">
+                    <!-- Working Folder -->
+                    <button class="btn btn-primary" id="setWorkingFolderBtn" style="display:none;">
+                        📁 Set Working Folder
+                    </button>
+                
+                    <!-- Load Full Preset -->
+                    <div class="import-group">
+                        <label class="import-label">📂 Full Preset Import</label>
+                        <button class="btn btn-primary" id="loadBtn">Load Preset (XML/ZIP)</button>
+                        <input type="file" id="fileInput" accept=".xml,.zip" multiple>
+                        <span class="import-hint">⚠️ Replaces all pads</span>
                     </div>
+                
+                    <!-- Import to Pad -->
+                    <div class="import-group">
+                        <label class="import-label">🎯 Import to Selected Pad</label>
+                        <button class="btn btn-primary" id="importToPadBtn" disabled>
+                            Import SFZ/WAV to Pad
+                        </button>
+                        <input type="file" id="padImportInput" accept=".sfz,.wav,.zip" multiple>
+                        <span class="import-hint">Select a pad first</span>
+                    </div>
+                
+                    <!-- Folder Import (Chrome/Edge) -->
+                    <button class="btn btn-primary" id="loadFolderBtn" style="display:none;">
+                        Load Folder
+                    </button>
+                
+                    <!-- Save -->
+                    <button class="btn btn-primary" id="saveBtn">Save Preset</button>
+
+                    <!-- New Preset -->
+                    <button class="btn" id="newPresetBtn">New Preset</button>
                 </div>
 
                 <!-- ============================================
@@ -148,12 +159,14 @@
          Shows when right-clicking a pad
          ============================================ -->
     <div class="context-menu" id="contextMenu">
-        <div class="context-item" id="contextEdit">Edit Pad</div>
-        <div class="context-item" id="contextExport">Export Pad</div>
-        <div class="context-item" id="contextCopy">Copy</div>
-        <div class="context-item" id="contextPaste">Paste</div>
-        <div class="context-item" id="contextDelete">Delete</div>
-    </div>
+    <div class="context-item" id="contextEdit">Edit Pad</div>
+    <div class="context-item" id="contextImport">Import to This Pad</div> <!-- ← ADD -->
+    <div class="context-item separator"></div> <!-- ← ADD (visual divider) -->
+    <div class="context-item" id="contextExport">Export Pad</div>
+    <div class="context-item" id="contextCopy">Copy</div>
+    <div class="context-item" id="contextPaste">Paste</div>
+    <div class="context-item" id="contextDelete">Delete</div>
+</div>
 
     <!-- ============================================
          EDIT MODAL
@@ -177,6 +190,7 @@
                                 </div>
                                 <select class="select" id="cellmode">
                                     <option value="0">Sample</option>
+                                    <option value="0-multi">Multisample</option> <!-- ← Fake value -->
                                     <option value="1">Clip</option>
                                     <option value="2">Slicer</option>
                                     <option value="3">Granular</option>

@@ -36,9 +36,18 @@ function openEditModal(pad) {
 
     // Load parameters to UI
     loadParamsToModal(padData);
+    
+    // Force cellmode dropdown update for multisamples
+    const cellmodeSelect = document.getElementById('cellmode');
+    if (cellmodeSelect && padData.params.multisammode === '1') {
+        cellmodeSelect.value = '0-multi';
+    }
 
     // Render modulation slots
     renderModSlots(padData);
+    
+    // Render multisample list
+    renderMultisampleList();
 
     // Show modal
     window.BitboxerUI.openModal('editModal');
@@ -97,6 +106,16 @@ function loadParamsToModal(padData) {
         'slicerquantsize', 'slicersync'
     ];
 
+    // Load cellmode dropdown - check for multisample
+    const cellmodeSelect = document.getElementById('cellmode');
+    if (cellmodeSelect && params.cellmode !== undefined) {
+        const isMultisample = params.multisammode === '1';
+        cellmodeSelect.value = isMultisample ? '0-multi' : params.cellmode;
+
+        // Trigger visibility update immediately
+        window.BitboxerUI.updateTabVisibility();
+    }
+
     dropdownParams.forEach(param => {
         const select = document.getElementById(param);
         if (select && params[param] !== undefined) {
@@ -152,8 +171,17 @@ function setupParameterListeners() {
         const select = document.getElementById(param);
         if (select) {
             select.addEventListener('change', () => {
-                updateParamAndSave(param, select.value);
-                
+                const value = select.value;
+    
+                // Handle multisample special case
+                if (value === '0-multi') {
+                    updateParamAndSave('cellmode', '0');
+                    updateParamAndSave('multisammode', '1');
+                } else {
+                    updateParamAndSave('cellmode', value);
+                    updateParamAndSave('multisammode', '0');
+                }
+
                 // Update visibility based on changes
                 if (param === 'cellmode') {
                     window.BitboxerUI.updateTabVisibility();
@@ -165,6 +193,7 @@ function setupParameterListeners() {
                         renderModSlots(presetData.pads[row][col]);
                     }
                 }
+                
                 if (param === 'lfobeatsync') {
                     window.BitboxerUI.updateLFOParameterVisibility();
                 }
@@ -320,6 +349,73 @@ function drawEnvelope() {
     ctx.lineTo(pad + ax + dx + sx + rx, pad + h);               // Release
 
     ctx.stroke();
+}
+
+/**
+ * Renders multisample layer list
+ */
+function renderMultisampleList() {
+    const container = document.getElementById('multisampleList');
+    if (!container) return;
+
+    const { currentEditingPad, presetData, assetCells } = window.BitboxerData;
+    if (!currentEditingPad) return;
+
+    const row = parseInt(currentEditingPad.dataset.row);
+    const col = parseInt(currentEditingPad.dataset.col);
+    const padData = presetData.pads[row][col];
+
+    // Check if this is a multisample pad
+    if (padData.params.multisammode !== '1') {
+        container.innerHTML = '<p style="color: var(--color-text-secondary);">This pad is not in multisample mode.</p>';
+        return;
+    }
+
+    // Find assets for this pad
+    const assets = assetCells.filter(asset =>
+        parseInt(asset.params.asssrcrow) === row &&
+        parseInt(asset.params.asssrccol) === col
+    );
+
+    if (assets.length === 0) {
+        container.innerHTML = '<p style="color: var(--color-text-secondary);">No multisample layers found.</p>';
+        return;
+    }
+
+    // Build list
+    let html = '';
+    assets.forEach((asset, idx) => {
+        const sampleName = asset.filename.split(/[/\\]/).pop();
+        const rootNote = midiToNoteName(parseInt(asset.params.rootnote));
+        const keyBottom = midiToNoteName(parseInt(asset.params.keyrangebottom));
+        const keyTop = midiToNoteName(parseInt(asset.params.keyrangetop));
+        const velBottom = asset.params.velrangebottom;
+        const velTop = asset.params.velrangetop;
+
+        html += `
+            <div class="multisample-layer" data-asset-index="${asset.row}">
+                <div class="multisample-layer-name">${idx + 1}. ${sampleName}</div>
+                <div class="multisample-layer-info">
+                    Root: <span>${rootNote}</span> | 
+                    Keys: <span>${keyBottom} - ${keyTop}</span> | 
+                    Vel: <span>${velBottom} - ${velTop}</span>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+/**
+ * Convert MIDI number to note name
+ */
+function midiToNoteName(midi) {
+    if (midi < 0 || midi > 127) return '---';
+    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const octave = Math.floor(midi / 12) - 1;
+    const note = notes[midi % 12];
+    return `${note}${octave}`;
 }
 
 // ============================================
@@ -683,5 +779,6 @@ window.BitboxerPadEditor = {
     renderModSlots,
     addModSlot,
     removeModSlot,
-    updateModSlotAppearance
+    updateModSlotAppearance,
+    renderMultisampleList 
 };
