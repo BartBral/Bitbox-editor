@@ -146,6 +146,8 @@ h1 {
 /* Individual Pad Styling */
 .pad {
     aspect-ratio: 1;
+    min-width: 0;      
+    min-height: 0;        
     border: 2px solid var(--color-border);
     border-radius: var(--radius-lg);
     display: flex;
@@ -219,6 +221,7 @@ h1 {
     white-space: nowrap;
     max-width: 90%;
     pointer-events: none;
+    word-break: break-all;
 }
 
 .pad.active .pad-label {
@@ -822,4 +825,40 @@ input[type="file"] {
     font-style: italic;
 }
 
+/* Multisample list */
+.multisample-list {
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+}
 
+.multisample-layer {
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    background: var(--color-bg-secondary);
+    border-left: 3px solid var(--color-accent-blue);
+    border-radius: var(--radius-sm);
+}
+
+.multisample-layer:hover {
+    background: var(--color-bg-tertiary);
+}
+
+.multisample-layer-name {
+    color: var(--color-accent-green);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.multisample-layer-info {
+    color: var(--color-text-secondary);
+    font-size: 0.9em;
+}
+
+.multisample-layer-info span {
+    color: var(--color-accent-blue);
+}

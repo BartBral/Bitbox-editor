@@ -311,6 +311,8 @@ function swapPads(pad1, pad2) {
     );
 }
 
+
+
 /**
  * Handles file drop on a pad
  * 
@@ -318,147 +320,10 @@ function swapPads(pad1, pad2) {
  * @param {HTMLElement} targetPad - Target pad
  */
 async function handleFileDropOnPad(file, targetPad) {
-    if (file.name.endsWith('.xml')) {
-        // XML preset file
-        if (confirm(`Load preset from ${file.name}? All current pads will be lost!`)) {
-            window.BitboxerXML.loadPreset(file);
-        }
-    } else if (file.name.endsWith('.json')) {
-        // JSON pad export
-        loadPadFromJSON(file, targetPad);
-    } else if (file.name.endsWith('.zip')) {
-        // ZIP archive - check contents first
-        await handleZipDropOnPad(file, targetPad); // ← NEW FUNCTION
-    } else if (file.name.endsWith('.sfz')) {
-        // SFZ file - import to this pad only
-        await handleSfzDropOnPad(file, targetPad); // ← NEW FUNCTION
-    } else if (file.name.endsWith('.wav')) {
-        // WAV file
-        await handleWavDrop(file, targetPad);
-    } else {
-        window.BitboxerUtils.setStatus(`Unsupported file type: ${file.name}`, 'error');
-    }
+    // Route everything through unified handler
+    await unifiedImportHandler(file, 'drag-pad', targetPad);
 }
 
-async function handleSfzDropOnPad(sfzFile, targetPad) {
-    try {
-        window.BitboxerUtils.setStatus('Processing SFZ...', 'info');
-        const result = await window.BitboxerFileHandler.FileImporter.import(sfzFile);
-
-        if (result.sfzFiles.length > 0) {
-            const importResult = await handleMissingSamples(result.sfzFiles[0], result.wavFiles);
-            if (!importResult.cancelled) {
-                await convertSFZToPad(result.sfzFiles[0], importResult.wavFiles, targetPad);
-            }
-        }
-    } catch (error) {
-        console.error('SFZ import error:', error);
-        window.BitboxerUtils.setStatus(`SFZ import failed: ${error.message}`, 'error');
-    }
-}
-
-async function handleZipDropOnPad(zipFile, targetPad) {
-    try {
-        window.BitboxerUtils.setStatus('Processing ZIP...', 'info');
-        const result = await window.BitboxerFileHandler.FileImporter.import(zipFile);
-        
-        if (result.xmlFiles.length > 0) {
-            // Found Bitbox preset - ask user if they want to load entire preset
-            if (confirm(`ZIP contains full preset. Load entire preset (replaces all pads)?`)) {
-                // ← ADD THIS:
-                window._lastImportedFiles = result.collection.files;
-                console.log('Cached files from ZIP drag-drop:', window._lastImportedFiles.size);
-                
-                await window.BitboxerXML.loadPreset(result.xmlFiles[0].file);
-            }
-        } else if (result.sfzFiles.length > 0) {
-            // Found SFZ - import to this pad only
-            const importResult = await handleMissingSamples(result.sfzFiles[0], result.wavFiles);
-            if (!importResult.cancelled) {
-                await convertSFZToPad(result.sfzFiles[0], importResult.wavFiles, targetPad);
-            }
-        } else {
-            window.BitboxerUtils.setStatus('No preset or SFZ found in ZIP', 'error');
-        }
-    } catch (error) {
-        console.error('ZIP import error:', error);
-        window.BitboxerUtils.setStatus(`ZIP import failed: ${error.message}`, 'error');
-    }
-}
-
-async function handleZipDrop(zipFile, targetPad) {
-    try {
-        window.BitboxerUtils.setStatus('Processing ZIP...', 'info');
-        const result = await window.BitboxerFileHandler.FileImporter.import(zipFile);
-
-        if (result.xmlFiles.length > 0) {
-            // Found Bitbox preset - load it
-            if (confirm(`Load preset from ZIP? All current pads will be lost!`)) {
-                await window.BitboxerXML.loadPreset(result.xmlFiles[0].file);
-            }
-        } else if (result.sfzFiles.length > 0) {
-            // Found SFZ - convert it
-            if (confirm(`Import SFZ kit? All current pads will be lost!`)) {
-                await convertSFZToPreset(result.sfzFiles[0], result.wavFiles);
-            }
-        } else {
-            window.BitboxerUtils.setStatus('No preset or SFZ found in ZIP', 'error');
-        }
-    } catch (error) {
-        console.error('ZIP import error:', error);
-        window.BitboxerUtils.setStatus(`ZIP import failed: ${error.message}`, 'error');
-    }
-}
-
-async function handleWavDrop(wavFile, targetPad) {
-    try {
-        window.BitboxerUtils.setStatus('Processing WAV...', 'info');
-        const result = await window.BitboxerFileHandler.FileImporter.import(wavFile);
-        const wavData = result.wavFiles[0];
-
-        const row = parseInt(targetPad.dataset.row);
-        const col = parseInt(targetPad.dataset.col);
-        const pad = window.BitboxerData.presetData.pads[row][col];
-
-        // Set filename
-        pad.filename = wavData.name;
-        pad.type = 'samtempl';
-
-        // IMPORTANT: Change type to 'sample' when filename is set
-        if (pad.filename) {
-            pad.type = 'sample';
-        }
-
-        // Apply WAV metadata
-        if (wavData.metadata.loopPoints) {
-            pad.params.loopstart = wavData.metadata.loopPoints.start.toString();
-            pad.params.loopend = wavData.metadata.loopPoints.end.toString();
-            pad.params.loopmode = '1';
-
-            if (wavData.metadata.loopPoints.type === 1) {
-                pad.params.loopmodes = '2'; // Bidirectional
-            }
-        }
-
-        if (wavData.metadata.slices.length > 1) {
-            pad.params.cellmode = '2'; // Slicer mode
-            pad.slices = wavData.metadata.slices.map(pos => ({ pos: pos.toString() }));
-        }
-
-        if (wavData.metadata.tempo) {
-            window.BitboxerData.presetData.tempo = Math.round(wavData.metadata.tempo).toString();
-        }
-
-        window.BitboxerUI.updatePadDisplay();
-        window.BitboxerUtils.setStatus(
-            `Loaded ${wavData.name} to Pad ${targetPad.dataset.padnum}`,
-            'success'
-        );
-    } catch (error) {
-        console.error('WAV import error:', error);
-        window.BitboxerUtils.setStatus(`WAV import failed: ${error.message}`, 'error');
-    }
-}
 
 /**
  * Loads a pad from a JSON export file
@@ -482,6 +347,77 @@ async function loadPadFromJSON(file, targetPad) {
             window.BitboxerUtils.setStatus('Invalid pad JSON format', 'error');
         }
     } catch (error) {
+        window.BitboxerUtils.setStatus(`Error loading pad: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * Loads a pad from a self-contained ZIP export
+ * 
+ * @param {File} zipFile - ZIP file
+ * @param {HTMLElement} targetPad - Target pad
+ */
+async function loadPadFromZIP(zipFile, targetPad) {
+    try {
+        window.BitboxerUtils.setStatus('Loading pad ZIP...', 'info');
+        const result = await window.BitboxerFileHandler.FileImporter.import(zipFile);
+
+        // Find the JSON file
+        const jsonFiles = Array.from(result.collection.files.entries())
+            .filter(([path, file]) => path.endsWith('.json'));
+
+        if (jsonFiles.length === 0) {
+            window.BitboxerUtils.setStatus('No pad JSON found in ZIP', 'error');
+            return;
+        }
+
+        // Read the JSON
+        const [jsonPath, jsonFile] = jsonFiles[0];
+        const text = await jsonFile.text();
+        const padData = JSON.parse(text);
+
+        const row = parseInt(targetPad.dataset.row);
+        const col = parseInt(targetPad.dataset.col);
+
+        if (padData.data) {
+            // Cache the WAV files from ZIP
+            window._lastImportedFiles = result.collection.files;
+            console.log('Cached WAV files from pad ZIP:', window._lastImportedFiles.size);
+
+            // Load the pad data
+            window.BitboxerData.presetData.pads[row][col] = JSON.parse(JSON.stringify(padData.data));
+
+            // If multisample, update asset cells
+            if (padData.assetReferences) {
+                // Remove old assets for this pad
+                window.BitboxerData.assetCells = window.BitboxerData.assetCells.filter(asset =>
+                    !(parseInt(asset.params.asssrcrow) === row &&
+                        parseInt(asset.params.asssrccol) === col)
+                );
+
+                // Add new assets
+                padData.assetReferences.forEach(asset => {
+                    window.BitboxerData.assetCells.push({
+                        ...asset,
+                        params: {
+                            ...asset.params,
+                            asssrcrow: row.toString(),
+                            asssrccol: col.toString()
+                        }
+                    });
+                });
+            }
+
+            window.BitboxerUI.updatePadDisplay();
+            window.BitboxerUtils.setStatus(
+                `Loaded pad from ${zipFile.name} to Pad ${targetPad.dataset.padnum}`,
+                'success'
+            );
+        } else {
+            window.BitboxerUtils.setStatus('Invalid pad ZIP format', 'error');
+        }
+    } catch (error) {
+        console.error('Pad ZIP load error:', error);
         window.BitboxerUtils.setStatus(`Error loading pad: ${error.message}`, 'error');
     }
 }
@@ -563,77 +499,18 @@ function setupEventListeners() {
 
     // File operations
     document.getElementById('loadBtn').addEventListener('click', () => {
+        console.log('=== LOAD BUTTON CLICKED ===');
         document.getElementById('fileInput').click();
     });
 
     document.getElementById('fileInput').addEventListener('change', async (e) => {
         if (e.target.files.length === 0) return;
-
-        // Check what type of files were selected
-        const files = Array.from(e.target.files);
-        const hasXML = files.some(f => f.name.endsWith('.xml'));
-        const hasZIP = files.some(f => f.name.endsWith('.zip'));
-        const hasSFZ = files.some(f => f.name.endsWith('.sfz'));
-        const hasWAV = files.some(f => f.name.endsWith('.wav'));
-
-        // Single XML file - use existing flow
-        if (files.length === 1 && hasXML) {
-            if (confirm(`Load preset? All current pads will be lost!`)) {
-                window.BitboxerXML.loadPreset(files[0]);
-            }
-            e.target.value = '';
-            return;
-        }
-
-        // Single ZIP file - extract and check contents
-        if (files.length === 1 && hasZIP) {
-            if (confirm(`Load ZIP? All current pads will be lost!`)) {
-                try {
-                    window.BitboxerUtils.setStatus('Processing ZIP...', 'info');
-                    const result = await window.BitboxerFileHandler.FileImporter.import(files[0]);
-
-                    // Check for preset.xml inside ZIP
-                    if (result.xmlFiles.length > 0) {
-                        // ← ADD THIS BLOCK:
-                        // Cache all files from ZIP for later save
-                        window._lastImportedFiles = result.collection.files;
-                        console.log('Cached files from ZIP:', window._lastImportedFiles.size);
-
-                        // Load the preset XML
-                        await window.BitboxerXML.loadPreset(result.xmlFiles[0].file);
-                    } else if (result.sfzFiles.length > 0) {
-                        // SFZ found - import as multisample
-                        const importResult = await handleMissingSamples(result.sfzFiles[0], result.wavFiles);
-                        if (!importResult.cancelled) {
-                            await convertSFZToPreset(result.sfzFiles[0], importResult.wavFiles);
-                        }
-                    } else {
-                        window.BitboxerUtils.setStatus('No preset or SFZ found in ZIP', 'error');
-                    }
-                } catch (error) {
-                    console.error('ZIP import error:', error);
-                    window.BitboxerUtils.setStatus(`ZIP import failed: ${error.message}`, 'error');
-                }
-            }
-            e.target.value = '';
-            return;
-        }
-
-        // Multiple files or SFZ/WAV files
-        if (hasZIP || hasSFZ || hasWAV || files.length > 1) {
-            if (confirm(`Import files? All current pads will be lost!`)) {
-                try {
-                    window.BitboxerUtils.setStatus('Importing files...', 'info');
-                    const result = await window.BitboxerFileHandler.FileImporter.import(files);
-                    await processImportedFiles(result);
-                } catch (error) {
-                    console.error('Import error:', error);
-                    window.BitboxerUtils.setStatus(`Import failed: ${error.message}`, 'error');
-                }
-            }
-        }
-
-        e.target.value = ''; // Reset file input
+        
+        const files = e.target.files.length === 1 ? e.target.files[0] : Array.from(e.target.files);
+        
+        await unifiedImportHandler(files, 'button');
+        
+        e.target.value = '';
     });
 
     // NEW: Folder upload button (if browser supports it)
@@ -671,28 +548,15 @@ function setupEventListeners() {
         const selectedPad = document.querySelector('.pad.selected');
         if (!selectedPad) {
             window.BitboxerUtils.setStatus('No pad selected', 'error');
+            e.target.value = '';
             return;
         }
 
-        // Import files to this specific pad
-        try {
-            const result = await window.BitboxerFileHandler.FileImporter.import(e.target.files);
-
-            if (result.sfzFiles.length > 0) {
-                // SFZ import to this pad only
-                const importResult = await handleMissingSamples(result.sfzFiles[0], result.wavFiles);
-                if (!importResult.cancelled) {
-                    await convertSFZToPad(result.sfzFiles[0], importResult.wavFiles, selectedPad);
-                }
-            } else if (result.wavFiles.length > 0) {
-                // WAV import to this pad
-                await handleWavDrop(result.wavFiles[0].file, selectedPad);
-            }
-        } catch (error) {
-            window.BitboxerUtils.setStatus(`Import failed: ${error.message}`, 'error');
-        }
-
-        e.target.value = ''; // Reset
+        // Route through unified handler
+        const files = e.target.files.length === 1 ? e.target.files[0] : Array.from(e.target.files);
+        await unifiedImportHandler(files, 'button', selectedPad);
+        
+        e.target.value = '';
     });
 
     document.getElementById('saveBtn').addEventListener('click', window.BitboxerXML.savePreset);
@@ -853,6 +717,9 @@ function pasteToSelected() {
 /**
  * Deletes selected pads
  */
+/**
+ * Deletes selected pads
+ */
 function deleteSelectedPads() {
     const { selectedPads, presetData } = window.BitboxerData;
 
@@ -866,13 +733,248 @@ function deleteSelectedPads() {
         const pad = document.querySelector(`[data-padnum="${padNum}"]`);
         const row = parseInt(pad.dataset.row);
         const col = parseInt(pad.dataset.col);
+
+        // ← IMPORTANT: Create truly empty pad
         presetData.pads[row][col] = window.BitboxerData.createEmptyPadData();
+        presetData.pads[row][col].type = 'samtempl'; // ← Ensure type is samtempl
+        presetData.pads[row][col].filename = ''; // ← Ensure filename is empty
+
+        // Also remove any asset cells for this pad
+        window.BitboxerData.assetCells = window.BitboxerData.assetCells.filter(asset =>
+            !(parseInt(asset.params.asssrcrow) === row &&
+                parseInt(asset.params.asssrccol) === col)
+        );
     });
 
     window.BitboxerUI.updatePadDisplay();
     window.BitboxerUI.clearPadSelection();
     window.BitboxerUI.updateButtonStates();
     window.BitboxerUtils.setStatus(`Deleted ${count} pad(s)`, 'success');
+}
+
+/**
+ * Unified preset import handler - ensures consistency
+ * @param {File|Array} files - File(s) to import
+ * @param {string} source - 'button', 'drag-grid', 'drag-pad', 'folder'
+ * @param {HTMLElement} targetPad - Target pad (only for drag-pad/button with selection)
+ */
+async function unifiedImportHandler(files, source, targetPad = null) {
+    console.log('=== UNIFIED HANDLER CALLED ===');
+    console.log('Files:', files);
+    console.log('Source:', source);
+    console.log('TargetPad:', targetPad);
+    
+    // Convert single file to array
+    const fileArray = Array.isArray(files) ? files : [files];
+
+    // Determine what we're importing
+    const hasXML = fileArray.some(f => f.name.endsWith('.xml'));
+    const hasZIP = fileArray.some(f => f.name.endsWith('.zip'));
+    const hasSFZ = fileArray.some(f => f.name.endsWith('.sfz'));
+    const hasWAV = fileArray.some(f => f.name.endsWith('.wav'));
+    const hasJSON = fileArray.some(f => f.name.endsWith('.json'));
+
+    // Single file cases
+    if (fileArray.length === 1) {
+        const file = fileArray[0];
+
+        // JSON pad export (legacy)
+        if (hasJSON) {
+            if (!targetPad) {
+                window.BitboxerUtils.setStatus('JSON pad export must target a specific pad', 'error');
+                return;
+            }
+            await loadPadFromJSON(file, targetPad);
+            return;
+        }
+
+        // XML file
+        if (hasXML) {
+            // Always offer merge/replace for presets (button or drag)
+            const choice = await promptLoadOrMerge();
+            if (choice === 'cancel') return;
+
+            if (choice === 'replace') {
+                window.BitboxerData.createEmptyPreset();
+                await window.BitboxerXML.loadPreset(file);
+                await autoLoadReferencedSamples();
+            } else {
+                await mergePreset(file);
+                await autoLoadReferencedSamples();
+            }
+            return;
+        }
+
+        // ZIP file - need to examine contents
+        if (hasZIP) {
+            try {
+                window.BitboxerUtils.setStatus('Processing ZIP...', 'info');
+                const result = await window.BitboxerFileHandler.FileImporter.import(file);
+                window._lastImportedFiles = result.collection.files;
+
+                // Check what's inside
+                const hasPresetXML = result.xmlFiles.length > 0;
+                const hasPadJSON = Array.from(result.collection.files.keys())
+                    .some(path => /pad_\d{2}\.json/.test(path));
+                const hasSFZInside = result.sfzFiles.length > 0;
+
+                if (hasPadJSON) {
+                    // Single pad ZIP
+                    if (!targetPad) {
+                        window.BitboxerUtils.setStatus('Pad ZIP must be dropped on a specific pad', 'error');
+                        return;
+                    }
+                    await loadPadFromZIP(file, targetPad);
+                    return;
+                }
+
+                if (hasPresetXML) {
+                    // Full preset ZIP - always offer merge/replace
+                    const choice = await promptLoadOrMerge();
+                    if (choice === 'cancel') return;
+
+                    if (choice === 'replace') {
+                        window.BitboxerData.createEmptyPreset();
+                        await window.BitboxerXML.loadPreset(result.xmlFiles[0].file);
+                        await autoLoadReferencedSamples();
+                    } else {
+                        // Preset to button/grid = offer merge/replace
+                        const choice = await promptLoadOrMerge();
+                        if (choice === 'cancel') return;
+
+                        if (choice === 'replace') {
+                            window.BitboxerData.createEmptyPreset();
+                            await window.BitboxerXML.loadPreset(result.xmlFiles[0].file);
+                            await autoLoadReferencedSamples();
+                        } else {
+                            await mergePreset(result.xmlFiles[0].file);
+                            await autoLoadReferencedSamples();
+                        }
+                    }
+                    return;
+                }
+
+
+                if (hasSFZInside) {
+                    // SFZ ZIP
+                    if (!targetPad) {
+                        window.BitboxerUtils.setStatus('SFZ must be imported to a specific pad', 'error');
+                        return;
+                    }
+                    const importResult = await handleMissingSamples(result.sfzFiles[0], result.wavFiles);
+                    if (!importResult.cancelled) {
+                        await convertSFZToPad(result.sfzFiles[0], importResult.wavFiles, targetPad);
+                    }
+                    return;
+                }
+
+                window.BitboxerUtils.setStatus('ZIP does not contain a valid preset or pad', 'error');
+            } catch (error) {
+                console.error('ZIP import error:', error);
+                window.BitboxerUtils.setStatus(`ZIP import failed: ${error.message}`, 'error');
+            }
+            return;
+        }
+
+        // SFZ file
+        if (hasSFZ) {
+            if (!targetPad) {
+                window.BitboxerUtils.setStatus('SFZ must be imported to a specific pad', 'error');
+                return;
+            }
+            try {
+                window.BitboxerUtils.setStatus('Processing SFZ...', 'info');
+                const result = await window.BitboxerFileHandler.FileImporter.import(file);
+                if (result.sfzFiles.length > 0) {
+                    const importResult = await handleMissingSamples(result.sfzFiles[0], result.wavFiles);
+                    if (!importResult.cancelled) {
+                        await convertSFZToPad(result.sfzFiles[0], importResult.wavFiles, targetPad);
+                    }
+                }
+            } catch (error) {
+                console.error('SFZ import error:', error);
+                window.BitboxerUtils.setStatus(`SFZ import failed: ${error.message}`, 'error');
+            }
+            return;
+        }
+
+        // WAV file
+        if (hasWAV) {
+            if (!targetPad) {
+                window.BitboxerUtils.setStatus('WAV must be dropped on a specific pad', 'error');
+                return;
+            }
+
+            try {
+                window.BitboxerUtils.setStatus('Processing WAV...', 'info');
+
+                // Cache the original File object FIRST
+                if (!window._lastImportedFiles) window._lastImportedFiles = new Map();
+                window._lastImportedFiles.set(file.name, file);
+                console.log('✓ Cached WAV:', file.name);
+
+                // Now process it
+                const result = await window.BitboxerFileHandler.FileImporter.import(file);
+                const wavData = result.wavFiles[0];
+
+                const row = parseInt(targetPad.dataset.row);
+                const col = parseInt(targetPad.dataset.col);
+                const pad = window.BitboxerData.presetData.pads[row][col];
+
+                pad.filename = wavData.name;
+                pad.type = 'sample';
+
+                const duration = wavData.metadata.duration || 0;
+                if (duration > 0) {
+                    const sampleRate = wavData.metadata.sampleRate || 44100;
+                    const totalSamples = Math.floor(sampleRate * duration);
+                    pad.params.samlen = totalSamples.toString();
+                    if (pad.params.loopend === '0') {
+                        pad.params.loopend = totalSamples.toString();
+                    }
+                }
+
+                if (wavData.metadata.loopPoints) {
+                    pad.params.loopstart = wavData.metadata.loopPoints.start.toString();
+                    pad.params.loopend = wavData.metadata.loopPoints.end.toString();
+                    pad.params.loopmode = '1';
+                    if (wavData.metadata.loopPoints.type === 1) {
+                        pad.params.loopmodes = '2';
+                    }
+                }
+
+                if (wavData.metadata.slices && wavData.metadata.slices.length > 1) {
+                    pad.params.cellmode = '2';
+                    pad.slices = wavData.metadata.slices.map(pos => ({ pos: pos.toString() }));
+                }
+
+                if (wavData.metadata.tempo) {
+                    window.BitboxerData.presetData.tempo = Math.round(wavData.metadata.tempo).toString();
+                }
+
+                window.BitboxerUI.updatePadDisplay();
+                window.BitboxerUtils.setStatus(`Loaded ${wavData.name} to Pad ${targetPad.dataset.padnum}`, 'success');
+            } catch (error) {
+                console.error('WAV import error:', error);
+                window.BitboxerUtils.setStatus(`WAV failed: ${error.message}`, 'error');
+            }
+            return;
+        }
+    }
+
+    // Multiple files = always replace (preset import)
+    if (fileArray.length > 1) {
+        if (!confirm(`Import ${fileArray.length} files? All current pads will be lost!`)) return;
+
+        try {
+            window.BitboxerUtils.setStatus('Importing files...', 'info');
+            const result = await window.BitboxerFileHandler.FileImporter.import(fileArray);
+            await processImportedFiles(result);
+        } catch (error) {
+            console.error('Import error:', error);
+            window.BitboxerUtils.setStatus(`Import failed: ${error.message}`, 'error');
+        }
+    }
 }
 
 // ============================================
@@ -1305,15 +1407,36 @@ async function convertSFZToPad(sfzData, wavFiles, targetPad) {
     const { presetData, assetCells } = window.BitboxerData;
     const pad = presetData.pads[row][col];
 
-    // Set pad to multi-sample mode
     pad.type = 'sample';
+    
+    // Check if single region = normal sample, multiple = multisample
+    const validRegions = sfzData.regions.filter(r => r.wavFile);
+    
+    if (validRegions.length === 1) {
+        // Single region - load as normal sample
+        const region = validRegions[0];
+        pad.filename = region.wavFile.name;
+        pad.params.multisammode = '0';
+        
+        // Apply SFZ opcodes to pad
+        applySFZOpcodesToPad(pad, region, region.wavFile.metadata || {});
+        
+        window.BitboxerUI.updatePadDisplay();
+        window.BitboxerUtils.setStatus(
+            `Imported single sample: ${region.wavFile.name} to Pad ${targetPad.dataset.padnum}`,
+            'success'
+        );
+        return;
+    }
+    
+    // Multiple regions - multisample mode
     pad.params.multisammode = '1';
 
     const multisamFolder = sfzData.file.name.replace('.sfz', '');
     pad.filename = `.\\${multisamFolder}`;
 
     // Create asset cells for each region
-    let validRegions = 0;
+    validRegions = 0;
     for (let i = 0; i < sfzData.regions.length; i++) {
         const region = sfzData.regions[i];
         if (!region.wavFile) continue;
@@ -1608,6 +1731,620 @@ function assignWAVsToPads(wavFiles) {
         `Loaded ${assignedCount} WAV file${assignedCount !== 1 ? 's' : ''}`,
         'success'
     );
+}
+
+/**
+ * Prompts user to choose between replace or merge
+ * @returns {Promise<string>} 'replace', 'merge', or 'cancel'
+ */
+async function promptLoadOrMerge() {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.style.zIndex = '3000';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2>Load Preset</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p style="margin-bottom: 20px; color: var(--color-text-primary);">
+                        How would you like to load this preset?
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button class="btn btn-primary" id="replaceBtn" style="padding: 15px;">
+                            <strong>Replace All Pads</strong><br>
+                            <small style="opacity: 0.8;">Clear current project and load preset</small>
+                        </button>
+                        <button class="btn btn-primary" id="mergeBtn" style="padding: 15px;">
+                            <strong>Merge Into Project</strong><br>
+                            <small style="opacity: 0.8;">Import pads to empty slots</small>
+                        </button>
+                        <button class="btn" id="cancelBtn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById('replaceBtn').onclick = () => {
+            document.body.removeChild(modal);
+            resolve('replace');
+        };
+
+        document.getElementById('mergeBtn').onclick = () => {
+            document.body.removeChild(modal);
+            resolve('merge');
+        };
+
+        document.getElementById('cancelBtn').onclick = () => {
+            document.body.removeChild(modal);
+            resolve('cancel');
+        };
+
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+                resolve('cancel');
+            }
+        };
+    });
+}
+
+/**
+ * Merges a preset into the current project
+ * @param {File} file - XML preset file
+ */
+async function mergePreset(file) {
+    try {
+        // Parse the preset to be merged
+        const text = await file.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text, 'text/xml');
+
+        // Extract pads from XML
+        const cells = xmlDoc.querySelectorAll('cell[layer="0"]');
+        const importedPads = [];
+
+        cells.forEach(cell => {
+            const row = parseInt(cell.getAttribute('row'));
+            const col = parseInt(cell.getAttribute('column'));
+            const filename = cell.getAttribute('filename') || '';
+
+            // Only include pads with content
+            if (!isNaN(row) && !isNaN(col) && filename) {
+                const padData = {
+                    row,
+                    col,
+                    filename,
+                    type: cell.getAttribute('type'),
+                    params: {},
+                    modsources: [],
+                    slices: []
+                };
+
+                const params = cell.querySelector('params');
+                if (params) {
+                    Array.from(params.attributes).forEach(attr => {
+                        padData.params[attr.name] = attr.value;
+                    });
+                }
+
+                cell.querySelectorAll('modsource').forEach(mod => {
+                    const modSource = {
+                        dest: mod.getAttribute('dest'),
+                        src: mod.getAttribute('src'),
+                        slot: mod.getAttribute('slot'),
+                        amount: mod.getAttribute('amount')
+                    };
+                    const mchan = mod.getAttribute('mchan');
+                    const ccnum = mod.getAttribute('ccnum');
+                    if (mchan !== null) modSource.mchan = mchan;
+                    if (ccnum !== null) modSource.ccnum = ccnum;
+                    padData.modsources.push(modSource);
+                });
+
+                const slicesNode = cell.querySelector('slices');
+                if (slicesNode) {
+                    slicesNode.querySelectorAll('slice').forEach(slice => {
+                        padData.slices.push({ pos: slice.getAttribute('pos') });
+                    });
+                }
+
+                importedPads.push(padData);
+            }
+        });
+
+        if (importedPads.length === 0) {
+            window.BitboxerUtils.setStatus('No pads found in preset', 'error');
+            return;
+        }
+
+        // Find empty and occupied slots
+        const { presetData } = window.BitboxerData;
+        const emptySlots = [];
+        const occupiedSlots = [];
+
+        for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 4; col++) {
+                const pad = presetData.pads[row][col];
+                if (!pad.filename || pad.filename === '') {
+                    emptySlots.push({ row, col });
+                } else {
+                    occupiedSlots.push({ row, col });
+                }
+            }
+        }
+
+        // Show mapping UI
+        const mappings = await promptPadMapping(importedPads, emptySlots, occupiedSlots);
+
+        if (!mappings || mappings.length === 0) {
+            window.BitboxerUtils.setStatus('Merge cancelled', 'info');
+            return;
+        }
+
+        // Apply mappings
+        mappings.forEach(mapping => {
+            const { source, target } = mapping;
+
+            presetData.pads[target.row][target.col] = {
+                filename: source.filename,
+                type: source.type,
+                params: { ...source.params },
+                modsources: JSON.parse(JSON.stringify(source.modsources)),
+                slices: JSON.parse(JSON.stringify(source.slices))
+            };
+        });
+
+        // Parse assets (multisamples)
+        const assetNodes = xmlDoc.querySelectorAll('cell[type="asset"]');
+        assetNodes.forEach((asset) => {
+            const params = asset.querySelector('params');
+            if (params) {
+                window.BitboxerData.assetCells.push({
+                    row: window.BitboxerData.assetCells.length,
+                    filename: asset.getAttribute('filename') || '',
+                    params: {
+                        rootnote: params.getAttribute('rootnote') || '60',
+                        keyrangebottom: params.getAttribute('keyrangebottom') || '0',
+                        keyrangetop: params.getAttribute('keyrangetop') || '127',
+                        velroot: params.getAttribute('velroot') || '64',
+                        velrangebottom: params.getAttribute('velrangebottom') || '0',
+                        velrangetop: params.getAttribute('velrangetop') || '127',
+                        asssrcrow: params.getAttribute('asssrcrow') || '0',
+                        asssrccol: params.getAttribute('asssrccol') || '0'
+                    }
+                });
+            }
+        });
+
+        window.BitboxerUI.updatePadDisplay();
+        window.BitboxerUtils.setStatus(
+            `Merged ${mappings.length} pad(s) into project`,
+            'success'
+        );
+
+    } catch (error) {
+        console.error('Merge error:', error);
+        window.BitboxerUtils.setStatus(`Merge failed: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * Automatically loads WAV files referenced in the loaded preset
+ */
+async function autoLoadReferencedSamples() {
+    console.log('=== AUTO-LOADING SAMPLES ===');
+
+    const { presetData, assetCells, workingFolderHandle } = window.BitboxerData;
+
+    // If we already have cached files (from ZIP), we're done
+    if (window._lastImportedFiles && window._lastImportedFiles.size > 0) {
+        console.log('✓ Samples already in cache:', window._lastImportedFiles.size);
+        return;
+    }
+
+    // Collect all referenced sample filenames
+    const referencedSamples = new Set();
+
+    // From pads
+    for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 4; col++) {
+            const pad = presetData.pads[row][col];
+            if (pad.filename && pad.params.multisammode !== '1') {
+                // Single sample
+                const wavName = pad.filename.split(/[/\\]/).pop();
+                if (wavName.endsWith('.wav') || wavName.endsWith('.WAV')) {
+                    referencedSamples.add(wavName);
+                }
+            }
+        }
+    }
+
+    // From asset cells (multisamples)
+    assetCells.forEach(asset => {
+        const wavName = asset.filename.split(/[/\\]/).pop();
+        if (wavName.endsWith('.wav') || wavName.endsWith('.WAV')) {
+            referencedSamples.add(wavName);
+        }
+    });
+
+    if (referencedSamples.size === 0) {
+        console.log('No samples referenced in preset');
+        return;
+    }
+
+    console.log('Preset references', referencedSamples.size, 'samples:', Array.from(referencedSamples));
+
+    // Try to load samples from working folder
+    if (!workingFolderHandle) {
+        // No working folder - ask user
+        const shouldLocate = await promptNoWorkingFolder(referencedSamples.size);
+        if (shouldLocate) {
+            try {
+                const foundFiles = await promptForSampleFolder(Array.from(referencedSamples));
+                window._lastImportedFiles = new Map();
+                foundFiles.forEach(file => {
+                    window._lastImportedFiles.set(file.name, file);
+                });
+                console.log('✓ Loaded', foundFiles.length, 'samples into cache');
+                window.BitboxerUtils.setStatus(
+                    `Loaded ${foundFiles.length}/${referencedSamples.size} sample(s)`,
+                    foundFiles.length < referencedSamples.size ? 'error' : 'success'
+                );
+            } catch (error) {
+                window.BitboxerUtils.setStatus('Sample loading cancelled', 'info');
+            }
+        } else {
+            window.BitboxerUtils.setStatus('Preset loaded without samples', 'error');
+        }
+        return;
+    }
+
+    // Working folder is set - search automatically
+    window.BitboxerUtils.setStatus('Searching for samples...', 'info');
+
+    try {
+        const foundFiles = await searchFolderForSamplesRecursive(
+            workingFolderHandle,
+            Array.from(referencedSamples)
+        );
+
+        // Cache found files
+        window._lastImportedFiles = new Map();
+        foundFiles.forEach(file => {
+            window._lastImportedFiles.set(file.name, file);
+        });
+
+        if (foundFiles.length >= referencedSamples.size) {
+            // Found everything (or more)!
+            console.log('✓ Found all', referencedSamples.size, 'samples');
+            window.BitboxerUtils.setStatus(
+                `Loaded preset with ${referencedSamples.size} sample(s)`,
+                'success'
+            );
+            return; // ← EXIT HERE, no prompt
+        }
+
+        // Only prompt if actually missing samples
+        const foundNames = new Set(foundFiles.map(f => f.name.toLowerCase()));
+        const missing = Array.from(referencedSamples).filter(
+            name => !foundNames.has(name.toLowerCase())
+        );
+
+        // Should never reach here if foundFiles.length >= referencedSamples.size
+        const shouldLocate = await promptSomeMissing(missing, foundFiles.length, referencedSamples.size);
+
+        if (shouldLocate) {
+            try {
+                const additionalFiles = await searchFilesForSamples(missing);
+                additionalFiles.forEach(file => {
+                    window._lastImportedFiles.set(file.name, file);
+                });
+                console.log('✓ Total cached:', window._lastImportedFiles.size);
+                window.BitboxerUtils.setStatus(
+                    `Loaded ${window._lastImportedFiles.size}/${referencedSamples.size} sample(s)`,
+                    window._lastImportedFiles.size < referencedSamples.size ? 'error' : 'success'
+                );
+            } catch (error) {
+                window.BitboxerUtils.setStatus(
+                    `Loaded ${foundFiles.length}/${referencedSamples.size} sample(s) - some missing`,
+                    'error'
+                );
+            }
+        } else {
+            window.BitboxerUtils.setStatus(
+                `Loaded ${foundFiles.length}/${referencedSamples.size} sample(s) - some missing`,
+                'error'
+            );
+        }
+    } catch (error) {
+        console.error('Sample search error:', error);
+        window.BitboxerUtils.setStatus('Could not search for samples', 'error');
+    }
+}
+
+/**
+ * Prompts when no working folder is set
+ */
+async function promptNoWorkingFolder(sampleCount) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.style.zIndex = '3000';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2>📁 Locate Sample Files</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p style="margin-bottom: 15px; color: var(--color-text-primary);">
+                        This preset references <strong>${sampleCount} sample file(s)</strong>.
+                    </p>
+                    <p style="margin-bottom: 20px; color: var(--color-text-secondary);">
+                        No working folder is set. Would you like to locate the samples?
+                    </p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" id="locateBtn2" style="flex: 1;">
+                            📁 Locate Samples
+                        </button>
+                        <button class="btn" id="skipBtn2" style="flex: 1;">
+                            Skip
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById('locateBtn2').onclick = () => {
+            document.body.removeChild(modal);
+            resolve(true);
+        };
+
+        document.getElementById('skipBtn2').onclick = () => {
+            document.body.removeChild(modal);
+            resolve(false);
+        };
+    });
+}
+
+/**
+ * Prompts when some samples are missing
+ */
+async function promptSomeMissing(missingSamples, foundCount, totalCount) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.style.zIndex = '3000';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h2>⚠️ Some Samples Missing</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p style="margin-bottom: 15px; color: var(--color-text-primary);">
+                        Found: <strong>${foundCount}/${totalCount}</strong> samples<br>
+                        Missing: <strong>${missingSamples.length}</strong>
+                    </p>
+                    ${missingSamples.length <= 10 ? `
+                        <div style="max-height: 200px; overflow-y: auto; background: var(--color-bg-primary); padding: 10px; border-radius: var(--radius-md); margin-bottom: 15px; font-family: monospace; font-size: 0.85em;">
+                            ${missingSamples.map(name => `<div>• ${name}</div>`).join('')}
+                        </div>
+                    ` : ''}
+                    <p style="margin-bottom: 20px; color: var(--color-text-secondary);">
+                        Would you like to locate the missing samples?
+                    </p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" id="locateBtn3" style="flex: 1;">
+                            📁 Locate Missing Samples
+                        </button>
+                        <button class="btn" id="skipBtn3" style="flex: 1;">
+                            Continue Without Them
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById('locateBtn3').onclick = () => {
+            document.body.removeChild(modal);
+            resolve(true);
+        };
+
+        document.getElementById('skipBtn3').onclick = () => {
+            document.body.removeChild(modal);
+            resolve(false);
+        };
+    });
+}
+
+/**
+ * Prompts user to select folder containing samples
+ */
+async function promptForSampleFolder(sampleNames) {
+    if (window.showDirectoryPicker) {
+        // Modern API
+        window.BitboxerUtils.setStatus('Select folder containing samples...', 'info');
+        const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+
+        // Save as working folder
+        window.BitboxerData.workingFolderHandle = dirHandle;
+        const btn = document.getElementById('setWorkingFolderBtn');
+        if (btn) {
+            btn.textContent = `📁 ${dirHandle.name}`;
+            btn.classList.add('active');
+        }
+
+        return await searchFolderForSamplesRecursive(dirHandle, sampleNames);
+    } else {
+        // Fallback: file picker
+        return await searchFilesForSamples(sampleNames);
+    }
+}
+
+/**
+ * Recursively searches folder for samples
+ */
+async function searchFolderForSamplesRecursive(dirHandle, targetNames) {
+    const foundFiles = [];
+    const targetLookup = {};
+    targetNames.forEach(name => {
+        targetLookup[name.toLowerCase()] = name; // Store original name too
+    });
+
+    async function searchDir(handle, depth = 0) {
+        if (depth > 5) return; // Max 5 levels deep
+
+        for await (const entry of handle.values()) {
+            if (entry.kind === 'file') {
+                const fileName = entry.name.toLowerCase();
+                if (fileName.endsWith('.wav') && targetLookup[fileName]) {
+                    const file = await entry.getFile();
+                    foundFiles.push(file);
+                    console.log(`✓ Found: ${entry.name}`);
+                }
+            } else if (entry.kind === 'directory') {
+                await searchDir(entry, depth + 1);
+            }
+        }
+    }
+
+    await searchDir(dirHandle);
+    return foundFiles;
+}
+
+/**
+ * Prompts user to map imported pads to target slots
+ * @param {Array} importedPads - Pads to import
+ * @param {Array} emptySlots - Available empty slots
+ * @param {Array} occupiedSlots - Occupied slots
+ * @returns {Promise<Array|null>} Array of mappings [{source, target}] or null if cancelled
+ */
+async function promptPadMapping(importedPads, emptySlots, occupiedSlots) {
+    return new Promise((resolve) => {
+        const allSlots = [...emptySlots, ...occupiedSlots].sort((a, b) => {
+            if (a.row !== b.row) return a.row - b.row;
+            return a.col - b.col;
+        });
+
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.style.zIndex = '3000';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h2>Map Imported Pads</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p style="margin-bottom: 15px; color: var(--color-text-primary);">
+                        Select which pads to import and where to place them:
+                    </p>
+                    <div id="padMappingContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" id="importMappedBtn" style="flex: 1;">
+                            Import Selected Pads
+                        </button>
+                        <button class="btn" id="cancelMappingBtn" style="flex: 1;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const container = document.getElementById('padMappingContainer');
+        const { presetData } = window.BitboxerData;
+
+        // Build mapping UI
+        importedPads.forEach((pad, idx) => {
+            const sourcePadNum = (pad.row * 4) + pad.col + 1;
+            const sourceName = pad.filename ?
+                pad.filename.split(/[/\\]/).pop().replace(/\.(wav|WAV)$/, '') :
+                'Empty';
+
+            // Build target options
+            let targetOptions = '<option value="">-- Don\'t Import --</option>';
+
+            // Add empty slots first (highlighted)
+            emptySlots.forEach(slot => {
+                const targetPadNum = (slot.row * 4) + slot.col + 1;
+                targetOptions += `<option value="${slot.row},${slot.col}">Pad ${targetPadNum} (Empty)</option>`;
+            });
+
+            // Add occupied slots (with warning)
+            occupiedSlots.forEach(slot => {
+                const targetPadNum = (slot.row * 4) + slot.col + 1;
+                const targetPad = presetData.pads[slot.row][slot.col];
+                const targetName = targetPad.filename ?
+                    targetPad.filename.split(/[/\\]/).pop().replace(/\.(wav|WAV)$/, '') :
+                    'Sample';
+                targetOptions += `<option value="${slot.row},${slot.col}">Pad ${targetPadNum} (${targetName}) ⚠️</option>`;
+            });
+
+            const rowHtml = `
+                <div class="pad-mapping-row" style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; padding: 10px; background: var(--color-bg-tertiary); border-radius: var(--radius-md);">
+                    <div style="color: var(--color-accent-blue); font-weight: 600;">
+                        Pad ${sourcePadNum}: ${sourceName}
+                    </div>
+                    <div style="color: var(--color-text-secondary);">→</div>
+                    <select class="select mapping-target" data-source-idx="${idx}" style="width: 100%;">
+                        ${targetOptions}
+                    </select>
+                </div>
+            `;
+            container.innerHTML += rowHtml;
+        });
+
+        // Auto-select empty slots for first N pads
+        const targetSelects = container.querySelectorAll('.mapping-target');
+        targetSelects.forEach((select, idx) => {
+            if (idx < emptySlots.length) {
+                select.value = `${emptySlots[idx].row},${emptySlots[idx].col}`;
+            }
+        });
+
+        document.getElementById('importMappedBtn').onclick = () => {
+            // Collect mappings
+            const mappings = [];
+            targetSelects.forEach((select, idx) => {
+                if (select.value) {
+                    const [row, col] = select.value.split(',').map(Number);
+                    mappings.push({
+                        source: importedPads[idx],
+                        target: { row, col }
+                    });
+                }
+            });
+
+            if (mappings.length === 0) {
+                window.BitboxerUtils.setStatus('No pads selected for import', 'error');
+                return;
+            }
+
+            document.body.removeChild(modal);
+            resolve(mappings);
+        };
+
+        document.getElementById('cancelMappingBtn').onclick = () => {
+            document.body.removeChild(modal);
+            resolve(null);
+        };
+
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+                resolve(null);
+            }
+        };
+    });
 }
 
 // ============================================

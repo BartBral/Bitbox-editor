@@ -297,17 +297,25 @@ async function findWAVFileForAsset(wavFileName) {
         return null;
     }
     
-    // Search for the WAV file by name
+    console.log(`Looking for: "${wavFileName}" in cache of ${window._lastImportedFiles.size} files`);
+    
+    // Try exact match first
+    if (window._lastImportedFiles.has(wavFileName)) {
+        console.log(`✓ Exact match: ${wavFileName}`);
+        return window._lastImportedFiles.get(wavFileName);
+    }
+    
+    // Try case-insensitive match
+    const lowerFileName = wavFileName.toLowerCase();
     for (const [path, file] of window._lastImportedFiles.entries()) {
-        if (file.name.toLowerCase() === wavFileName.toLowerCase()) {
-            return file;
-        }
-        // Also check just the filename part of the path
-        if (path.split('/').pop().toLowerCase() === wavFileName.toLowerCase()) {
+        const fileName = path.split(/[/\\]/).pop().toLowerCase();
+        if (fileName === lowerFileName) {
+            console.log(`✓ Found: ${file.name}`);
             return file;
         }
     }
     
+    console.warn(`✗ Not found: ${wavFileName}`);
     return null;
 }
 
@@ -357,7 +365,28 @@ async function savePreset() {
         }
         
 
-        
+        // Add regular (non-multisample) WAV files at root level
+        for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 4; col++) {
+                const pad = presetData.pads[row][col];
+                
+                // Skip if empty or multisample
+                if (!pad.filename || pad.params.multisammode === '1') continue;
+                
+                const wavName = pad.filename.split(/[/\\]/).pop();
+                if (wavName.endsWith('.wav') || wavName.endsWith('.WAV')) {
+                    const wavFile = await findWAVFileForAsset(wavName);
+                    if (wavFile) {
+                        const wavData = await wavFile.arrayBuffer();
+                        files[`${projectName}/${wavName}`] = new Uint8Array(wavData);
+                        console.log(`  ✓ Added regular sample: ${wavName}`);
+                    } else {
+                        console.warn(`  ✗ Missing regular sample: ${wavName}`);
+                    }
+                }
+            }
+        }
+
         // Add actual WAV files to multisample folders
         for (const folder of multisamFolders) {
             console.log(`  Adding WAV files to: ${projectName}/${folder}/`);
@@ -444,12 +473,27 @@ function generatePresetXML(data) {
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n    <session version="2">\n';
 
     // Layer 0 - Pads (iterate column first, then row)
+    // ← ONLY SAVE PADS WITH CONTENT
     for (let col = 0; col < 4; col++) {
         for (let row = 0; row < 4; row++) {
             const pad = data.pads[row]?.[col];
             if (!pad) continue;
 
-            xml += generatePadCellXML(row, col, pad);
+            // ← ADD THIS CHECK: Skip empty pads
+            if (!pad.filename || pad.filename === '' || pad.type === 'samtempl') {
+                // Empty pad - write minimal samtempl cell
+                xml += `        <cell row="${row}" column="${col}" layer="0" filename="" type="samtempl">\n`;
+                xml += '            <params';
+                for (let [key, value] of Object.entries(pad.params)) {
+                    xml += ` ${key}="${value}"`;
+                }
+                xml += '/>\n';
+                xml += '            <slices/>\n';
+                xml += '        </cell>\n';
+            } else {
+                // Active pad - full cell
+                xml += generatePadCellXML(row, col, pad);
+            }
         }
     }
 
@@ -630,102 +674,134 @@ async function exportSelectedPads() {
         window.BitboxerUtils.setStatus('No pads selected', 'error');
         return;
     }
-    // Safety check: ensure presetData exists
+
     if (!presetData || !presetData.pads) {
-        window.BitboxerUtils.setStatus('No preset loaded. Create or load a preset first.', 'error');
+        window.BitboxerUtils.setStatus('No preset loaded', 'error');
         return;
     }
 
-    const files = {};
-
+    // Export each pad as individual ZIP
     for (const padNum of selectedPads) {
-        const pad = document.querySelector(`[data-padnum="${padNum}"]`);
-        const row = parseInt(pad.dataset.row);
-        const col = parseInt(pad.dataset.col);
-        const padData = presetData.pads[row][col];
-
-        if (!padData) continue;
-
-        // Get sample name
-        let sampleName = 'Empty';
-        if (padData.filename) {
-            sampleName = padData.filename.split(/[/\\]/).pop().replace(/\.(wav|WAV)$/, '');
-        }
-
-        // Get playmode
-        const cellmode = padData.params.cellmode || '0';
-        const playmode = CELL_MODE_NAMES[cellmode] || 'Sample';
-
-        // Check for multisample mode
-        const isMultisample = padData.params.multisammode === '1';
-        const finalPlaymode = isMultisample ? 'Multisample' : playmode;
-
-        // Build filename
-        const filename = `${projectName}_${sampleName}_${finalPlaymode}_Pad${padNum.toString().padStart(2, '0')}.json`;
-
-        // Build export data
-        const exportData = {
-            padNumber: padNum,
-            row: row,
-            col: col,
-            projectName: projectName,
-            sampleName: sampleName,
-            playmode: finalPlaymode,
-            data: {
-                filename: padData.filename,
-                type: padData.type,
-                params: padData.params,
-                modsources: padData.modsources || [],
-                slices: padData.slices || []
-            }
-        };
-
-        // Add asset references if multisample
-        if (isMultisample) {
-            exportData.assetReferences = assetCells.filter(asset =>
-                parseInt(asset.params.asssrcrow) === row &&
-                parseInt(asset.params.asssrccol) === col
-            );
-        }
-
-        files[filename] = JSON.stringify(exportData, null, 2);
+        await exportSinglePadAsZip(padNum);
     }
 
-    // Single pad - download directly as JSON
-    if (selectedPads.size === 1) {
-        const filename = Object.keys(files)[0];
-        const content = files[filename];
-        const blob = new Blob([content], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-        window.BitboxerUtils.setStatus(`Exported 1 pad as JSON`, 'success');
-        return;
+    window.BitboxerUtils.setStatus(
+        `Exported ${selectedPads.size} pad(s) as individual ZIP files`, 
+        'success'
+    );
+}
+
+/**
+ * Exports a single pad as a self-contained ZIP with JSON + WAV files
+ */
+async function exportSinglePadAsZip(padNum) {
+    const { presetData, projectName, assetCells } = window.BitboxerData;
+    const { CELL_MODE_NAMES } = window.BITBOXER_CONFIG;
+    
+    const pad = document.querySelector(`[data-padnum="${padNum}"]`);
+    const row = parseInt(pad.dataset.row);
+    const col = parseInt(pad.dataset.col);
+    const padData = presetData.pads[row][col];
+
+    if (!padData) return;
+
+    // Get sample name
+    let sampleName = 'Empty';
+    if (padData.filename) {
+        sampleName = padData.filename.split(/[/\\]/).pop().replace(/\.(wav|WAV)$/, '');
     }
 
-    // Multiple pads - create ZIP using fflate
+    // Get playmode
+    const cellmode = padData.params.cellmode || '0';
+    const playmode = CELL_MODE_NAMES[cellmode] || 'Sample';
+    const isMultisample = padData.params.multisammode === '1';
+    const finalPlaymode = isMultisample ? 'Multisample' : playmode;
+
+    // Build export data
+    const exportData = {
+        padNumber: padNum,
+        row: row,
+        col: col,
+        projectName: projectName,
+        sampleName: sampleName,
+        playmode: finalPlaymode,
+        data: {
+            filename: padData.filename,
+            type: padData.type,
+            params: padData.params,
+            modsources: padData.modsources || [],
+            slices: padData.slices || []
+        }
+    };
+
+    // Track WAV files needed
+    const wavFilesNeeded = new Set();
+
+    // Add asset references if multisample
+    if (isMultisample) {
+        const assets = assetCells.filter(asset =>
+            parseInt(asset.params.asssrcrow) === row &&
+            parseInt(asset.params.asssrccol) === col
+        );
+        exportData.assetReferences = assets;
+        
+        // Track WAV files
+        assets.forEach(asset => {
+            const wavName = asset.filename.split(/[/\\]/).pop();
+            wavFilesNeeded.add(wavName);
+        });
+    } else if (padData.filename) {
+        // Single sample
+        const wavName = padData.filename.split(/[/\\]/).pop();
+        if (wavName.endsWith('.wav') || wavName.endsWith('.WAV')) {
+            wavFilesNeeded.add(wavName);
+        }
+    }
+
+    // Create ZIP
     try {
         const filesForZip = {};
-        for (const [name, content] of Object.entries(files)) {
-            filesForZip[name] = new TextEncoder().encode(content);
+        
+        // Add JSON file
+        const jsonFilename = `pad_${padNum.toString().padStart(2, '0')}.json`;
+        filesForZip[jsonFilename] = new TextEncoder().encode(JSON.stringify(exportData, null, 2));
+
+        // Add WAV files
+        let foundWavs = 0;
+        let missingWavs = 0;
+        
+        for (const wavName of wavFilesNeeded) {
+            const wavFile = await findWAVFileForAsset(wavName);
+            if (wavFile) {
+                const wavData = await wavFile.arrayBuffer();
+                filesForZip[wavName] = new Uint8Array(wavData);
+                foundWavs++;
+                console.log(`✓ Added WAV: ${wavName}`);
+            } else {
+                missingWavs++;
+                console.warn(`✗ Missing WAV: ${wavName}`);
+                filesForZip[`${wavName}.missing.txt`] = new TextEncoder().encode(
+                    `WARNING: ${wavName} was not found.\nPlease add this file manually.`
+                );
+            }
         }
+
+        // Generate ZIP filename
+        const zipFilename = `${projectName}_${sampleName}_${finalPlaymode}_Pad${padNum.toString().padStart(2, '0')}.zip`;
 
         const zipped = fflate.zipSync(filesForZip);
         const blob = new Blob([zipped], { type: 'application/zip' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${projectName}_pads_export.zip`;
+        a.download = zipFilename;
         a.click();
         URL.revokeObjectURL(url);
 
-        window.BitboxerUtils.setStatus(`Exported ${selectedPads.size} pads to ZIP`, 'success');
+        console.log(`Exported: ${zipFilename} (${foundWavs} samples)`);
     } catch (error) {
-        window.BitboxerUtils.setStatus(`Error creating ZIP: ${error.message}`, 'error');
-        console.error(error);
+        console.error(`Error exporting pad ${padNum}:`, error);
+        window.BitboxerUtils.setStatus(`Error exporting pad ${padNum}`, 'error');
     }
 }
 

@@ -37,6 +37,9 @@ function openEditModal(pad) {
     // Load parameters to UI
     loadParamsToModal(padData);
     
+    // Update slider max values based on sample length
+    updateSliderMaxValues(padData);
+
     // Force cellmode dropdown update for multisamples
     const cellmodeSelect = document.getElementById('cellmode');
     if (cellmodeSelect && padData.params.multisammode === '1') {
@@ -120,6 +123,27 @@ function loadParamsToModal(padData) {
         const select = document.getElementById(param);
         if (select && params[param] !== undefined) {
             select.value = params[param];
+        }
+    });
+}
+
+/**
+ * Updates slider max values based on sample length
+ * 
+ * @param {Object} padData - Pad data object
+ */
+function updateSliderMaxValues(padData) {
+    const samlen = parseInt(padData.params.samlen) || 0;
+    
+    // If sample has length, use it. Otherwise use default 4GB
+    const maxValue = samlen > 0 ? samlen : 4294967295;
+    
+    // Update position sliders
+    ['samstart', 'samlen', 'loopstart', 'loopend'].forEach(param => {
+        const slider = document.getElementById(param);
+        if (slider) {
+            slider.max = maxValue;
+            console.log(`Set ${param} max to ${maxValue}`);
         }
     });
 }
@@ -774,6 +798,7 @@ function updateModSlotAppearance(slotElement) {
 window.BitboxerPadEditor = {
     openEditModal,
     loadParamsToModal,
+    updateSliderMaxValues, 
     setupParameterListeners,
     drawEnvelope,
     renderModSlots,

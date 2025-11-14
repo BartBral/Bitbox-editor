@@ -167,7 +167,21 @@ function updateTabVisibility() {
         case '3': // Granular mode - all available
             break;
     }
+    // Grey out Multi tab when NOT multisample
+    const multiTab = document.querySelector('[data-tab="multi"]');
+    const multiContent = document.getElementById('tab-multi');
+    
+    if (multiTab && multiContent) {
+        if (isMultisample) {
+            multiTab.style.opacity = '1';
+            multiContent.style.opacity = '1';
+        } else {
+            multiTab.style.opacity = GREY_VALUE;
+            multiContent.style.opacity = GREY_VALUE;
+        }
+    }
 }
+
 
 /**
  * Updates parameter visibility in Pos tab based on cell mode
@@ -427,7 +441,7 @@ function updatePadDisplay() {
                 
                 // Show multisample indicator if applicable
                 if (padData.params.multisammode === '1') {
-                    status.textContent = '🎹'; // Musical keyboard emoji
+                    // status.textContent = '🎹'; // Musical keyboard emoji
                     status.style.display = 'inline';
                 } else {
                     status.textContent = '';

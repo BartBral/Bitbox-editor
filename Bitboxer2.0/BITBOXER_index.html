@@ -71,26 +71,26 @@
                 <div class="controls">
                     <!-- Working Folder -->
                     <button class="btn btn-primary" id="setWorkingFolderBtn" style="display:none;">
-                        📁 Set Working Folder
+                        ⚠️ Set Working Folder! For best user experience! ⚠️  
                     </button>
                 
                     <!-- Load Full Preset -->
-                    <div class="import-group">
-                        <label class="import-label">📂 Full Preset Import</label>
+                    <!-- <div class="import-group"> -->
+                        <!-- <label class="import-label">📂 Full Preset Import</label> -->
                         <button class="btn btn-primary" id="loadBtn">Load Preset (XML/ZIP)</button>
                         <input type="file" id="fileInput" accept=".xml,.zip" multiple>
-                        <span class="import-hint">⚠️ Replaces all pads</span>
-                    </div>
+                        <!-- <span class="import-hint">⚠️ Replaces all pads</span> -->
+                    <!-- </div> -->
                 
                     <!-- Import to Pad -->
-                    <div class="import-group">
-                        <label class="import-label">🎯 Import to Selected Pad</label>
+                    <!-- <div class="import-group"> -->
+                        <!-- <label class="import-label">🎯 Import to Selected Pad</label> -->
                         <button class="btn btn-primary" id="importToPadBtn" disabled>
-                            Import SFZ/WAV to Pad
+                            🍻 Import SFZ/WAV to Pad
                         </button>
                         <input type="file" id="padImportInput" accept=".sfz,.wav,.zip" multiple>
-                        <span class="import-hint">Select a pad first</span>
-                    </div>
+                        <!-- <span class="import-hint">Select a pad first</span> -->
+                    <!-- </div> -->
                 
                     <!-- Folder Import (Chrome/Edge) -->
                     <button class="btn btn-primary" id="loadFolderBtn" style="display:none;">
@@ -212,6 +212,7 @@
                 <button class="tab-btn" data-tab="lfo">LFO</button>
                 <button class="tab-btn" data-tab="pos">Pos</button>
                 <button class="tab-btn" data-tab="gran">Gran</button>
+                <button class="tab-btn" data-tab="multi">Multi</button>
                 <button class="tab-btn" data-tab="config">Config</button>
                 <button class="tab-btn" data-tab="mod">Mod</button>
             </div>
@@ -1146,6 +1147,16 @@
                 </div>
             </div>
             
+            <!-- MULTISAMPLE TAB -->
+            <div class="tab-content" id="tab-multi">
+                <div class="param-section">
+                    <h3>Multisample Layers</h3>
+                    <div id="multisampleList" class="multisample-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Status Bar for Edit Modal -->
             <div class="status-bar" id="editModalStatusBar"></div>
 

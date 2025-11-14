@@ -1,16 +1,27 @@
+01•Why are there so many inconsistencies? For example; the exact same preset.xml will:
+• Ask me to merge or overwrite, when I use the UI-button, but when throwing a zipped preset.xml+samples on it, then there is no Modal asking me to merge or overwrite. Same goes for when I select preset.xml+samples and drag and drop that on a pad. Why?
+• Load folder also does not have no Modal asking me to merge or overwrite.
+
+Because of these inconsistencies a log of bugs can arise, and could also bloat the code and make it hard to maintain.
+
+Can you please, find these inconsistencies?
 
 
 ===============================
 TO-DO next; food for thought:
 
+• When opening or merging a file, if an SFZ file is provided where a preset.xml file is expected, the system should import the SFZ file directly as a preset without requiring any additional user action. This behavior should be completely seamless and abstracted away from the user, so they do not need to use separate buttons or workflows for SFZ versus preset.xml imports. Both file types should be handled with the same one-step import action for ease of use.
+
+• We need to be able to Rename both the project, as well as the Pads.
+
 • We need more UI elements to make the import options more clear. 
 
-• I want to add a dedicated tab specifically for editing multi-samples. Initially, this tab should show a simple console-style window listing the samples and the keys they are mapped to, to provide basic feedback. The ideal interface would display a musical keyboard as an SVG image, with highlighted key ranges showing which sample is assigned to each range. This tab should allow manipulation of individual samples within the multi-sample set, such as changing loop points for each sample. The loop point information is stored within the chunk metadata of the wave files, and this is also the data that the Bitbox hardware reads for looping multi-samples.
+• The ideal interface would display a musical keyboard as an SVG image, with highlighted key ranges showing which sample is assigned to each range. This tab should allow manipulation of individual samples within the multi-sample set, such as changing loop points for each sample. The loop point information is stored within the chunk metadata of the wave files, and this is also the data that the Bitbox hardware reads for looping multi-samples.
 
 • The maximum range for the sample start, sample end, loop start, and loop end sliders should be dynamically determined based on the total number of samples in the loaded audio file. Currently, using a fixed 4GB maximum range makes the sliders too coarse, causing even tiny movements to jump large distances. Instead, when a sample is loaded, the maximum slider value should be set to the sample’s actual length in samples.
 slider_max_value = audio_sample.length_in_samples
 
-Current behavior:
+• Current behavior:
 - Importing a preset.xml resets every pad in the project.
 
 Desired behavior for the merge function:
@@ -21,3 +32,7 @@ Desired behavior for the merge function:
    - Leave certain pads out, or
    - Overwrite existing pads.
 This ensures flexibility and prevents unwanted loss of data when merging presets into an active project.
+
+• think about how to split up sfz files with more layers playing at once. (eg. the Roland JV patches with multiple layers)
+• think about a way to use sfz files with velocity layers.
+• 
