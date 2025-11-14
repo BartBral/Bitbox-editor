@@ -243,6 +243,15 @@ h1 {
     background: var(--color-border);
 }
 
+.pad-mode-icon {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    pointer-events: none;
+    opacity: 0.8;
+    z-index: 1;
+}
+
 /* ============================================
    SIDEBAR PANELS
    ============================================ */

@@ -4,7 +4,6 @@
 ===============================
 TO-DO next; food for thought:
 
-• We need to be able to Rename both the project, as well as the Pads.
 
 • We need more UI elements to make the import options more clear. 
 

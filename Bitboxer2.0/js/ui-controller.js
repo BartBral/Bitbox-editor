@@ -435,6 +435,17 @@ function updatePadDisplay() {
                 pad.classList.remove('empty');
                 pad.classList.add('active');
                 
+                // Set mode indicator with dynamic SVG
+                const isMulti = padData.params.multisammode === '1';
+                const mode = isMulti ? '0-multi' : padData.params.cellmode || '0';
+                pad.setAttribute('data-mode', mode);
+
+                // Update SVG icon based on mode
+                const svgIcon = pad.querySelector('.pad-mode-icon');
+                if (svgIcon) {
+                    svgIcon.innerHTML = getModeIcon(mode);
+                }
+
                 // Extract filename without path and extension
                 const displayName = padData.filename.split(/[/\\]/).pop().replace('.wav', '');
                 label.textContent = displayName;
@@ -453,6 +464,13 @@ function updatePadDisplay() {
                 label.textContent = 'Empty';
                 status.textContent = '';
                 status.style.display = 'none';
+                pad.removeAttribute('data-mode');
+
+                // Reset SVG icon to default empty state
+                const svgIcon = pad.querySelector('.pad-mode-icon');
+                if (svgIcon) {
+                    svgIcon.innerHTML = getModeIcon('empty');
+                }
             }
         }
     }
@@ -529,6 +547,22 @@ function togglePadSelection(pad) {
     } else {
         selectPad(pad);
     }
+}
+
+/**
+ * Returns SVG icon markup for each mode
+ */
+function getModeIcon(mode) {
+    const icons = {
+        'empty': '<circle cx="8" cy="8" r="6" fill="#888" />', // Empty - Grey circle
+        '0': '<circle cx="8" cy="8" r="6" fill="#4a9eff" />', // Sample - Blue circle
+        '1': '<rect x="2" y="2" width="12" height="12" fill="#ff9e4a" />', // Clip - Square
+        '2': '<polygon points="8,2 14,14 2,14" fill="#9e4aff" />', // Slicer - Triangle
+        '3': '<path d="M8,2 L14,8 L8,14 L2,8 Z" fill="#4aff9e" />', // Granular - Diamond
+        '0-multi': '<circle cx="5" cy="8" r="3" fill="#ffea5e" /><circle cx="11" cy="8" r="3" fill="#ffea5e" />' // Multisample - Double circles
+    };
+    
+    return icons[mode] || icons['0'];
 }
 
 // ============================================
