@@ -1,16 +1,8 @@
-01•Why are there so many inconsistencies? For example; the exact same preset.xml will:
-• Ask me to merge or overwrite, when I use the UI-button, but when throwing a zipped preset.xml+samples on it, then there is no Modal asking me to merge or overwrite. Same goes for when I select preset.xml+samples and drag and drop that on a pad. Why?
-• Load folder also does not have no Modal asking me to merge or overwrite.
 
-Because of these inconsistencies a log of bugs can arise, and could also bloat the code and make it hard to maintain.
-
-Can you please, find these inconsistencies?
 
 
 ===============================
 TO-DO next; food for thought:
-
-• When opening or merging a file, if an SFZ file is provided where a preset.xml file is expected, the system should import the SFZ file directly as a preset without requiring any additional user action. This behavior should be completely seamless and abstracted away from the user, so they do not need to use separate buttons or workflows for SFZ versus preset.xml imports. Both file types should be handled with the same one-step import action for ease of use.
 
 • We need to be able to Rename both the project, as well as the Pads.
 

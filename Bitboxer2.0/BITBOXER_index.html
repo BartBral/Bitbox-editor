@@ -28,8 +28,8 @@
              Contains app title and mode toggle buttons
              ============================================ -->
         <div class="header">
-            <!-- App Title (updated dynamically with project name) -->
-            <h1>BITBOXER</h1>
+    <!-- App Title (updated dynamically with project name) -->
+    <h1 id="projectTitle" style="cursor: pointer;" title="Click to rename">BITBOXER</h1>
 
             <!-- Mode Toggle: Switch between Bitbox Micro (8 pads) and mk2 (16 pads) -->
             <div class="mode-toggle">
@@ -159,14 +159,15 @@
          Shows when right-clicking a pad
          ============================================ -->
     <div class="context-menu" id="contextMenu">
-    <div class="context-item" id="contextEdit">Edit Pad</div>
-    <div class="context-item" id="contextImport">Import to This Pad</div> <!-- ← ADD -->
-    <div class="context-item separator"></div> <!-- ← ADD (visual divider) -->
-    <div class="context-item" id="contextExport">Export Pad</div>
-    <div class="context-item" id="contextCopy">Copy</div>
-    <div class="context-item" id="contextPaste">Paste</div>
-    <div class="context-item" id="contextDelete">Delete</div>
-</div>
+        <div class="context-item" id="contextEdit">Edit Pad</div>
+          <div class="context-item" id="contextRename">Rename Pad</div>
+        <div class="context-item" id="contextImport">Import to This Pad</div> <!-- ← ADD -->
+        <div class="context-item separator"></div> <!-- ← ADD (visual divider) -->
+        <div class="context-item" id="contextExport">Export Pad</div>
+        <div class="context-item" id="contextCopy">Copy</div>
+        <div class="context-item" id="contextPaste">Paste</div>
+        <div class="context-item" id="contextDelete">Delete</div>
+    </div>
 
     <!-- ============================================
          EDIT MODAL

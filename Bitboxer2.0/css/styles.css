@@ -307,6 +307,29 @@ h1 {
     background: #3a8eef;
 }
 
+/* Blinking animation for working folder button */
+@keyframes blink-red {
+    0%, 100% { 
+        background-color: var(--color-accent-red);
+        box-shadow: 0 0 10px rgba(255, 94, 94, 0.5);
+    }
+    50% { 
+        background-color: #cc4a4a;
+        box-shadow: 0 0 20px rgba(255, 94, 94, 0.8);
+    }
+}
+
+.btn.blink-warning {
+    animation: blink-red 1.5s ease-in-out infinite;
+    color: white;
+    font-weight: 600;
+}
+
+.btn.blink-warning.active {
+    animation: none;
+    background: var(--color-accent-green);
+}
+
 /* ============================================
    STATUS BAR
    ============================================ */

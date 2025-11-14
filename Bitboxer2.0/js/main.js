@@ -17,10 +17,11 @@ function setupWorkingFolder() {
         return;
     }
 
-    // Show the "Set Working Folder" button
+    // Show the "Set Working Folder" button with blinking warning
     const btn = document.getElementById('setWorkingFolderBtn');
     if (btn) {
         btn.style.display = '';
+        btn.classList.add('blink-warning');
 
         btn.addEventListener('click', async () => {
             try {
@@ -32,6 +33,7 @@ function setupWorkingFolder() {
                 window.BitboxerData.workingFolderHandle = dirHandle;
 
                 btn.textContent = `📁 ${dirHandle.name}`;
+                btn.classList.remove('blink-warning');
                 btn.classList.add('active');
 
                 window.BitboxerUtils.setStatus(
@@ -513,6 +515,11 @@ function setupEventListeners() {
         e.target.value = '';
     });
 
+    // Project rename
+    document.getElementById('projectTitle').addEventListener('click', () => {
+        window.BitboxerData.renameProject();
+    });
+
     // NEW: Folder upload button (if browser supports it)
     const loadFolderBtn = document.getElementById('loadFolderBtn');
     if (window.showDirectoryPicker) {
@@ -615,6 +622,11 @@ function setupEventListeners() {
     document.getElementById('contextEdit').onclick = () => {
         const pad = document.querySelector('.pad.selected');
         if (pad) window.BitboxerPadEditor.openEditModal(pad);
+        window.BitboxerUI.hideContextMenu();
+    };
+    document.getElementById('contextRename').onclick = () => {
+        const pad = document.querySelector('.pad.selected');
+        if (pad) renamePad(pad);
         window.BitboxerUI.hideContextMenu();
     };
     document.getElementById('contextExport').onclick = () => {
@@ -750,6 +762,75 @@ function deleteSelectedPads() {
     window.BitboxerUI.clearPadSelection();
     window.BitboxerUI.updateButtonStates();
     window.BitboxerUtils.setStatus(`Deleted ${count} pad(s)`, 'success');
+}
+
+/**
+ * Renames a pad's sample
+ */
+function renamePad(pad) {
+    const { presetData, assetCells } = window.BitboxerData;
+    const row = parseInt(pad.dataset.row);
+    const col = parseInt(pad.dataset.col);
+    const padData = presetData.pads[row][col];
+    
+    if (!padData.filename) {
+        window.BitboxerUtils.setStatus('Cannot rename empty pad', 'error');
+        return;
+    }
+    
+    const isMultisample = padData.params.multisammode === '1';
+    
+    if (isMultisample) {
+        // Multisample: extract folder name
+        const oldFolder = padData.filename.replace(/^\.[\\/]/, '');
+        const newFolder = prompt('Enter new multisample name:', oldFolder);
+        
+        if (newFolder && newFolder.trim() && newFolder !== oldFolder) {
+            const trimmedFolder = newFolder.trim();
+            
+            // Update pad filename
+            padData.filename = `.\\${trimmedFolder}`;
+            
+            // Update all asset cell paths for this pad
+            assetCells.forEach(asset => {
+                const assetRow = parseInt(asset.params.asssrcrow);
+                const assetCol = parseInt(asset.params.asssrccol);
+                
+                if (assetRow === row && assetCol === col) {
+                    // Extract sample filename from old path
+                    const sampleName = asset.filename.split(/[\\/]/).pop();
+                    // Build new path
+                    asset.filename = `.\\${trimmedFolder}\\${sampleName}`;
+                    console.log(`✓ Updated asset: ${asset.filename}`);
+                }
+            });
+            
+            window.BitboxerUI.updatePadDisplay();
+            window.BitboxerUtils.setStatus(`Multisample renamed to: ${trimmedFolder}`, 'success');
+        }
+    } else {
+        // Regular sample: just rename file
+        const oldFullName = padData.filename.split(/[/\\]/).pop();
+        const currentName = oldFullName.replace(/\.(wav|WAV)$/, '');
+        const newName = prompt('Enter new sample name:', currentName);
+        
+        if (newName && newName.trim() && newName !== currentName) {
+            const extension = padData.filename.match(/\.(wav|WAV)$/)?.[0] || '.wav';
+            const newFullName = newName.trim() + extension;
+            
+            // Update cache with new key
+            if (window._lastImportedFiles && window._lastImportedFiles.has(oldFullName)) {
+                const file = window._lastImportedFiles.get(oldFullName);
+                window._lastImportedFiles.delete(oldFullName);
+                window._lastImportedFiles.set(newFullName, file);
+                console.log(`✓ Renamed cache: ${oldFullName} → ${newFullName}`);
+            }
+            
+            padData.filename = newFullName;
+            window.BitboxerUI.updatePadDisplay();
+            window.BitboxerUtils.setStatus(`Renamed to: ${newName.trim()}`, 'success');
+        }
+    }
 }
 
 /**
@@ -1107,29 +1188,19 @@ async function handleMissingSamples(sfzFile, existingWavFiles) {
         return { cancelled: false, wavFiles: existingWavFiles };
     }
 
-    // Step 4: Show what was found and ask to load
+    // Step 4: Silently use found samples
     const foundNames = newWavFiles.map(w => w.name);
     const stillMissing = missingSamples.filter(sample => {
         const sampleName = sample.split(/[/\\]/).pop().toLowerCase();
         return !foundNames.some(name => name.toLowerCase() === sampleName);
     });
 
-    let foundMessage = `Found ${newWavFiles.length} sample file(s):\n\n`;
-    newWavFiles.forEach(file => {
-        foundMessage += `  ✓ ${file.name}\n`;
-    });
+    console.log(`✓ Found ${newWavFiles.length} samples`);
+    newWavFiles.forEach(file => console.log(`  ✓ ${file.name}`));
 
     if (stillMissing.length > 0) {
-        foundMessage += `\nStill missing:\n`;
-        stillMissing.forEach(sample => {
-            foundMessage += `  ✗ ${sample}\n`;
-        });
-    }
-
-    foundMessage += `\nDo you want to load these samples and continue?`;
-
-    if (!confirm(foundMessage)) {
-        return { cancelled: true, wavFiles: existingWavFiles };
+        console.warn(`Still missing ${stillMissing.length} samples:`);
+        stillMissing.forEach(sample => console.warn(`  ✗ ${sample}`));
     }
 
     // Step 5: Process the new WAV files and merge with existing
@@ -1435,20 +1506,28 @@ async function convertSFZToPad(sfzData, wavFiles, targetPad) {
     const multisamFolder = sfzData.file.name.replace('.sfz', '');
     pad.filename = `.\\${multisamFolder}`;
 
-    // Create asset cells for each region
-    validRegions = 0;
-    for (let i = 0; i < sfzData.regions.length; i++) {
-        const region = sfzData.regions[i];
-        if (!region.wavFile) continue;
+    console.log('Multisample folder:', pad.filename);
 
+    // Create asset cells for each region
+    let validCount = 0;
+    for (let i = 0; i < validRegions.length; i++) {
+        const region = validRegions[i];
         const asset = createAssetFromSFZRegion(region, row, col, assetCells.length);
         assetCells.push(asset);
-        validRegions++;
+        validCount++;
     }
+
+    // Apply global SFZ settings to pad (if any)
+    if (sfzData.global) {
+        applySFZOpcodesToPad(pad, sfzData.global, {});
+    }
+
+    console.log(`Project name: ${window.BitboxerData.projectName}`);
+    console.log(`Multisample folder: ${multisamFolder}`);
 
     window.BitboxerUI.updatePadDisplay();
     window.BitboxerUtils.setStatus(
-        `Imported ${validRegions} layers to Pad ${targetPad.dataset.padnum}`,
+        `Imported multi-sample: ${validCount} layers from ${sfzData.file.name}`,
         'success'
     );
 }

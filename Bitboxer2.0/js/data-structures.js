@@ -291,7 +291,18 @@ function initializeProject() {
  * Updates the page title with current project name
  */
 function updateProjectTitle() {
-    document.querySelector('h1').textContent = `BITBOXER - ${window.BitboxerData.projectName}`;
+    document.getElementById('projectTitle').textContent = `BITBOXER - ${window.BitboxerData.projectName}`;
+}
+
+function renameProject() {
+    const currentName = window.BitboxerData.projectName;
+    const newName = prompt('Enter new project name:', currentName);
+    
+    if (newName && newName.trim() && newName !== currentName) {
+        window.BitboxerData.projectName = newName.trim();
+        updateProjectTitle();
+        window.BitboxerUtils.setStatus(`Project renamed to: ${newName.trim()}`, 'success');
+    }
 }
 
 // ============================================
@@ -310,6 +321,7 @@ window.BitboxerData = {
     projectName,
     workingFolderHandle,
     
+    
     // Factory Functions
     createEmptyPadData,
     createEmptyFXData,
@@ -318,5 +330,6 @@ window.BitboxerData = {
     // Project Management
     generateRandomHex,
     initializeProject,
+    renameProject,
     updateProjectTitle
 };
