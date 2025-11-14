@@ -6,19 +6,32 @@
 /* ============================================
    CSS VARIABLES & THEME COLORS
    ============================================ */
-:root {
+/* :root { */
     /* Color Palette */
-    --color-bg-primary: #1a1a1a;
-    --color-bg-secondary: #2a2a2a;
-    --color-bg-tertiary: #333;
-    --color-border: #404040;
-    --color-text-primary: #e0e0e0;
-    --color-text-secondary: #888;
-    --color-accent-blue: #4a9eff;
-    --color-accent-green: #5eff5e;
-    --color-accent-yellow: #ffea5e;
-    --color-accent-red: #ff5e5e;
+    /* --color-bg-primary: #1a1a1a; */
+    /* --color-bg-secondary: #2a2a2a; */
+    /* --color-bg-tertiary: #333; */
+    /* --color-border: #404040; */
+    /* --color-text-primary: #e0e0e0; */
+    /* --color-text-secondary: #888; */
+    /* --color-accent-blue: #4a9eff; */
+    /* --color-accent-green: #5eff5e; */
+    /* --color-accent-yellow: #ffea5e; */
+    /* --color-accent-red: #ff5e5e; */
     
+:root {
+    /* Color Palette - Warm Theme */
+    --color-bg-primary: #1a1614;
+    --color-bg-secondary: #2a2420;
+    --color-bg-tertiary: #3a332d;
+    --color-border: #4a4038;
+    --color-text-primary: #e8ddd0;
+    --color-text-secondary: #d0c2b9;
+    --color-accent-blue: #a35a2d;      /* Warm orange (replaces blue) */
+    --color-accent-green: #a35a2d;     /* Softer green */
+    --color-accent-yellow: #ffb347;    /* Peachy orange */
+    --color-accent-red: #ff0000;       /* Softer red */
+
     /* Spacing */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
@@ -45,12 +58,28 @@
     box-sizing: border-box;
 }
 
+/* body { */
+    /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; */
+    /* background: var(--color-bg-primary); */
+    /* min-height: 100vh; */
+    /* padding: var(--spacing-lg); */
+    /* color: var(--color-text-primary); */
+/* } */
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-    background: var(--color-bg-primary);
+    background: linear-gradient(135deg, #1a1612, #2a1a15, #1a1612, #15221a);
+    background-size: 400% 400%;
+    animation: gradientShift 20s ease infinite;
     min-height: 100vh;
     padding: var(--spacing-lg);
     color: var(--color-text-primary);
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 /* ============================================
@@ -67,7 +96,7 @@ body {
 
 .line-container {
     width: 100%;
-    border-bottom: 2px solid hsl(212.15deg 100% 64.51% / 30%);
+    border-bottom: 2px solid #9f582c46;
     padding-bottom: 26px;
     margin-bottom: 19px;
 }
@@ -131,7 +160,10 @@ h1 {
     background: var(--color-bg-primary);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
+
 }
+
+
 
 .pad-grid {
     display: grid;
@@ -168,20 +200,20 @@ h1 {
 
 /* Pad States */
 .pad.selected {
-    background: #1a3a5a;
+    background: #7d4514;
     border-color: var(--color-accent-blue);
-    box-shadow: 0 0 15px rgba(74, 158, 255, 0.3);
+    box-shadow: 0 0 15px rgba(255, 238, 0, 0.3);
 }
 
 .pad.active {
-    background: #2a4a2a;
+    background: #582f13;
     border-color: var(--color-accent-green);
 }
 
 .pad.active.selected {
-    background: #1a5a3a;
+    background: #794614;
     border-color: var(--color-accent-green);
-    box-shadow: 0 0 15px rgba(94, 255, 94, 0.3);
+    box-shadow: 0 0 15px #9946137c;
 }
 
 .pad.disabled {
@@ -284,7 +316,7 @@ h1 {
    BUTTONS
    ============================================ */
 .btn {
-    padding: 10px 16px;
+    padding: 4px 6px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     cursor: pointer;
@@ -313,7 +345,7 @@ h1 {
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #3a8eef;
+    background: #ff7b00;
 }
 
 /* Blinking animation for working folder button */
@@ -627,7 +659,7 @@ h1 {
 .select {
     border: 0;
     border-radius: var(--radius-sm);
-    background: hsl(212, 54%, 37%);
+    background: #a35a2d;
     color: #f2f1f1;
     font-size: 0.9em;
     cursor: pointer;

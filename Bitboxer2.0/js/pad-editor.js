@@ -350,7 +350,7 @@ function drawEnvelope() {
     const release = parseFloat(document.getElementById('envrel').value) / 1000;
 
     // Draw envelope shape
-    ctx.strokeStyle = '#4a9eff';
+    ctx.strokeStyle = '#a35a2d';
     ctx.lineWidth = 2;
     ctx.beginPath();
 
