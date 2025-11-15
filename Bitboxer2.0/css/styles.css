@@ -241,7 +241,7 @@ h1 {
 }
 
 .pad.active .pad-number {
-    color: var(--color-accent-green);
+    /* color: var(--color-accent-green); */
 }
 
 .pad-label {
@@ -257,7 +257,7 @@ h1 {
 }
 
 .pad.active .pad-label {
-    color: var(--color-accent-green);
+    /* color: var(--color-accent-green); */
 }
 
 .pad-status {
@@ -356,7 +356,7 @@ h1 {
     }
     50% { 
         background-color: #cc4a4a;
-        box-shadow: 0 0 20px rgba(255, 94, 94, 0.8);
+        box-shadow: 0 0 20px rgb(255, 0, 0);
     }
 }
 
@@ -370,6 +370,23 @@ h1 {
     animation: none;
     background: var(--color-accent-green);
 }
+
+.btn-container-dual {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.btn-container-dual > div {
+    width: 100%;
+}
+
+.btn-container-dual button {
+    width: 100%;
+    box-sizing: border-box; /* ensures padding/border doesn't increase width */
+    display: block;
+}
+
 
 /* ============================================
    STATUS BAR

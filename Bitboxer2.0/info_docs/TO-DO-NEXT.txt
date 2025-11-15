@@ -1,3 +1,31 @@
+Q1. **Detection Logic:** Should we detect stacked layers by checking if multiple regions use the **exact same sample file**? 
+A1. No we should not, the same file can also be used on another key in a keysplit, so that is not an option. It should always be the parameters inside a <region> or <group> that will decide what to send to what pad. For example more then one <region> that has the same keys played (in the range of 'hikey' and 'lokey'), so those key-ranges can **never** overlap, on the same layer.
+
+Q2. **Grouping Strategy:** For each unique sample file, should we:
+   - **Option A:** Create ONE pad with the sample, ignore the other layers' parameters (pan/volume differences)? Again, it is not the sample that needs to be looked at, but the <region> and <group>. But no, do not ignore the other layers, as we do not even know what is inside these layers, so this will **always** need user-interaction, like in our merge modal, and the implementation we have now.
+   - **Option B:** Create 3 separate pads (one per layer) and let user stack them manually? Yes, this is what I am aiming for. We can help the user by setting all layers/pads the same Midi-channel, so we need to ask user for Midi-channel they like to use.
+   - **Option C:** Something else? Well I was thinking of having a small text editor in a modal, that can, when needed directly edit the text in an sfz file, so user can add/remove opcodes if needed. I was thinking about adding support for the 'output' opcode, see text below. But this text-editor, will only open after sfz parser has found conflicting layers. The option for the user should be: -as it is now, select layer and pad destination. And in that modal, have a button for opening text editor, so the found layers can be edited.
+
+Q3. **Current Behavior:** Right now it's detecting "not stacked" because each region has **different key ranges** (lokey/hikey). Should the logic be:
+   - If **same sample** appears multiple times → stacked layers (regardless of key range)? Please read above.
+   - Current logic checks: same key range + overlapping velocity = stacked
+
+Q4. **Expected Result:** For this SFZ with 3 layers × 10 samples each = 30 regions total:
+   - Should create **3 pads** (one per layer comment)? Yes, in this example it should.
+   - Or **10 pads** (one per unique sample file)? No, this is not useful.
+   - Or something else? Again, read above and below.
+
+**What's the Bitbox-friendly approach you're imagining?**
+
+
+
+•The Bitbox mk2 and Micro can handle 16 velocity layers, so that's more than enough for the velocity splitting by the 'lovel' and 'hivel' opcodes. So that shouldn't be a concern.
+
+
+•The sfz standard (v1) has an opcode called 'output'. It is originally designed for selecting an audio-output on software that uses more than one output; but we can maybe re-use that opcode, so that output=1 sends it to the first (empty) pad, then output=2 will send the next layer to a second empty pad, etc. etc.
+
+Please ask me questions to come to an understanding, or is it clear?
+
 
 
 

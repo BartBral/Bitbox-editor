@@ -74,35 +74,28 @@
                         ⚠️ Set Working Folder! For best user experience! ⚠️  
                     </button>
                 
-                    <!-- Load Full Preset -->
-                    <!-- <div class="import-group"> -->
-                        <!-- <label class="import-label">📂 Full Preset Import</label> -->
-                        <button class="btn btn-primary" id="loadBtn">Load Preset (XML/ZIP)</button>
-                        <input type="file" id="fileInput" accept=".xml,.zip" multiple>
-                        <!-- <span class="import-hint">⚠️ Replaces all pads</span> -->
-                    <!-- </div> -->
-                
-                    <!-- Import to Pad -->
-                    <!-- <div class="import-group"> -->
-                        <!-- <label class="import-label">🎯 Import to Selected Pad</label> -->
-                        <button class="btn btn-primary" id="importToPadBtn" disabled>
-                            🍻 Import SFZ/WAV to Pad
-                        </button>
-                        <input type="file" id="padImportInput" accept=".xml,.sfz,.wav,.zip" multiple>
-                        <!-- <span class="import-hint">Select a pad first</span> -->
-                    <!-- </div> -->
-                
-                    <!-- Folder Import (Chrome/Edge) -->
-                    <button class="btn btn-primary" id="loadFolderBtn" style="display:none;">
-                        Load Folder
-                    </button>
-                
-                    <!-- Save -->
-                    <button class="btn btn-primary" id="saveBtn">Save Preset</button>
-
-                    <!-- New Preset -->
-                    <button class="btn" id="newPresetBtn">New Preset</button>
-                </div>
+                    
+                    <div class="btn-container-dual">
+                        <div><!-- Load Full Preset -->
+                            <button class="btn btn-primary" id="loadBtn">Load Preset</button>
+                            <input type="file" id="fileInput" accept=".xml,.zip" multiple>
+                        </div>
+                    
+                        <div><!-- Folder Import (Chrome/Edge) -->
+                            <button class="btn btn-primary" id="loadFolderBtn">Load Folder</button>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-container-dual">
+                    
+                        <!-- Save -->
+                        <button class="btn btn-primary" id="saveBtn">Save Preset</button>
+                    
+                        <!-- New Preset -->
+                        <button class="btn" id="newPresetBtn">New Preset</button>
+                    </div>
+                    
+                    </div>
 
                 <!-- ============================================
                      FX OPERATIONS PANEL
@@ -127,6 +120,14 @@
 
                         <!-- Export Selected: Exports selected pads to JSON/ZIP -->
                         <button class="btn" id="exportPadBtn" disabled>Export Selected</button>
+
+<!-- Import to Pad -->
+                        <div>
+                            <button class="btn btn-primary" id="importToPadBtn" disabled>
+                                🍻 Import SFZ/WAV to Pad
+                            </button>
+                            <input type="file" id="padImportInput" accept=".xml,.sfz,.wav,.zip" multiple>
+                        </div>
 
                         <!-- Copy: Copies selected pads to clipboard -->
                         <button class="btn" id="copyPadBtn" disabled>Copy</button>

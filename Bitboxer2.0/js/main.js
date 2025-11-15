@@ -1654,20 +1654,11 @@ async function promptLayerToPadMapping(regions, targetPad) {
         document.body.appendChild(modal);
         
         const container = document.getElementById('layerMappingContainer');
+        const selectedDestinations = new Set();
         
         // Build mapping UI
         regions.forEach((region, idx) => {
             const sampleName = region.sample ? region.sample.split(/[/\\]/).pop() : `Layer ${idx + 1}`;
-            
-            // Build pad options
-            let padOptions = '<option value="">-- Skip This Layer --</option>';
-            availablePads.forEach(p => {
-                const label = p.isEmpty 
-                    ? `Pad ${p.padNum} (Empty)` 
-                    : `Pad ${p.padNum} (${p.currentName}) ⚠️`;
-                const selected = (idx === 0 && p.padNum === parseInt(targetPad.dataset.padnum)) ? 'selected' : '';
-                padOptions += `<option value="${p.row},${p.col}" ${selected}>${label}</option>`;
-            });
             
             const rowHtml = `
                 <div class="pad-mapping-row" style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; padding: 10px; background: var(--color-bg-tertiary); border-radius: var(--radius-md);">
@@ -1676,15 +1667,64 @@ async function promptLayerToPadMapping(regions, targetPad) {
                     </div>
                     <div style="color: var(--color-text-secondary);">→</div>
                     <select class="select layer-target" data-layer-idx="${idx}" style="width: 100%;">
-                        ${padOptions}
+                        <!-- Populated by updateOptions -->
                     </select>
                 </div>
             `;
             container.innerHTML += rowHtml;
         });
         
+        const targetSelects = container.querySelectorAll('.layer-target');
+        
+        // Function to update all dropdowns
+        function updateAllOptions() {
+            targetSelects.forEach(select => {
+                const currentValue = select.value;
+                let options = '<option value="">-- Skip This Layer --</option>';
+                
+                availablePads.forEach(p => {
+                    const slotKey = `${p.row},${p.col}`;
+                    const isSelected = selectedDestinations.has(slotKey) && currentValue !== slotKey;
+                    
+                    if (!isSelected) {
+                        const label = p.isEmpty 
+                            ? `Pad ${p.padNum} (Empty)` 
+                            : `Pad ${p.padNum} (${p.currentName}) ⚠️`;
+                        options += `<option value="${slotKey}" ${currentValue === slotKey ? 'selected' : ''}>${label}</option>`;
+                    }
+                });
+                
+                select.innerHTML = options;
+            });
+        }
+        
+        updateAllOptions();
+
+        // Auto-fill empty pads
+        const emptyPads = availablePads.filter(p => p.isEmpty);
+        targetSelects.forEach((select, idx) => {
+            if (idx < emptyPads.length) {
+                const p = emptyPads[idx];
+                const slotKey = `${p.row},${p.col}`;
+                select.value = slotKey;
+                selectedDestinations.add(slotKey);
+            }
+        });
+        
+        updateAllOptions();
+        
+        // Listen for changes
+        targetSelects.forEach(select => {
+            select.addEventListener('change', () => {
+                selectedDestinations.clear();
+                targetSelects.forEach(s => {
+                    if (s.value) selectedDestinations.add(s.value);
+                });
+                updateAllOptions();
+            });
+        });
+        
         document.getElementById('importLayersBtn').onclick = () => {
-            // Collect mappings
             const mappings = [];
             document.querySelectorAll('.layer-target').forEach(select => {
                 if (select.value) {
@@ -2484,7 +2524,7 @@ async function promptPadMapping(importedPads, emptySlots, occupiedSlots) {
             if (a.row !== b.row) return a.row - b.row;
             return a.col - b.col;
         });
-
+        
         const modal = document.createElement('div');
         modal.className = 'modal show';
         modal.style.zIndex = '3000';
@@ -2509,38 +2549,22 @@ async function promptPadMapping(importedPads, emptySlots, occupiedSlots) {
                 </div>
             </div>
         `;
-
+        
         document.body.appendChild(modal);
-
+        
         const container = document.getElementById('padMappingContainer');
         const { presetData } = window.BitboxerData;
-
+        
+        // Track selected destinations
+        const selectedDestinations = new Set();
+        
         // Build mapping UI
         importedPads.forEach((pad, idx) => {
             const sourcePadNum = (pad.row * 4) + pad.col + 1;
-            const sourceName = pad.filename ?
-                pad.filename.split(/[/\\]/).pop().replace(/\.(wav|WAV)$/, '') :
+            const sourceName = pad.filename ? 
+                pad.filename.split(/[/\\]/).pop().replace(/\.(wav|WAV)$/, '') : 
                 'Empty';
-
-            // Build target options
-            let targetOptions = '<option value="">-- Don\'t Import --</option>';
-
-            // Add empty slots first (highlighted)
-            emptySlots.forEach(slot => {
-                const targetPadNum = (slot.row * 4) + slot.col + 1;
-                targetOptions += `<option value="${slot.row},${slot.col}">Pad ${targetPadNum} (Empty)</option>`;
-            });
-
-            // Add occupied slots (with warning)
-            occupiedSlots.forEach(slot => {
-                const targetPadNum = (slot.row * 4) + slot.col + 1;
-                const targetPad = presetData.pads[slot.row][slot.col];
-                const targetName = targetPad.filename ?
-                    targetPad.filename.split(/[/\\]/).pop().replace(/\.(wav|WAV)$/, '') :
-                    'Sample';
-                targetOptions += `<option value="${slot.row},${slot.col}">Pad ${targetPadNum} (${targetName}) ⚠️</option>`;
-            });
-
+            
             const rowHtml = `
                 <div class="pad-mapping-row" style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; padding: 10px; background: var(--color-bg-tertiary); border-radius: var(--radius-md);">
                     <div style="color: var(--color-accent-blue); font-weight: 600;">
@@ -2548,23 +2572,76 @@ async function promptPadMapping(importedPads, emptySlots, occupiedSlots) {
                     </div>
                     <div style="color: var(--color-text-secondary);">→</div>
                     <select class="select mapping-target" data-source-idx="${idx}" style="width: 100%;">
-                        ${targetOptions}
+                        <!-- Populated by updateOptions -->
                     </select>
                 </div>
             `;
             container.innerHTML += rowHtml;
         });
-
-        // Auto-select empty slots for first N pads
+        
         const targetSelects = container.querySelectorAll('.mapping-target');
+        
+        // Function to update all dropdowns
+        function updateAllOptions() {
+            targetSelects.forEach((select, idx) => {
+                const currentValue = select.value;
+                let options = '<option value="">-- Don\'t Import --</option>';
+                
+                // Empty slots first
+                emptySlots.forEach(slot => {
+                    const slotKey = `${slot.row},${slot.col}`;
+                    const targetPadNum = (slot.row * 4) + slot.col + 1;
+                    const isSelected = selectedDestinations.has(slotKey) && currentValue !== slotKey;
+                    if (!isSelected) {
+                        options += `<option value="${slotKey}" ${currentValue === slotKey ? 'selected' : ''}>Pad ${targetPadNum} (Empty)</option>`;
+                    }
+                });
+                
+                // Occupied slots
+                occupiedSlots.forEach(slot => {
+                    const slotKey = `${slot.row},${slot.col}`;
+                    const targetPadNum = (slot.row * 4) + slot.col + 1;
+                    const targetPad = presetData.pads[slot.row][slot.col];
+                    const targetName = targetPad.filename ? 
+                        targetPad.filename.split(/[/\\]/).pop().replace(/\.(wav|WAV)$/, '') : 
+                        'Sample';
+                    const isSelected = selectedDestinations.has(slotKey) && currentValue !== slotKey;
+                    if (!isSelected) {
+                        options += `<option value="${slotKey}" ${currentValue === slotKey ? 'selected' : ''}>Pad ${targetPadNum} (${targetName}) ⚠️</option>`;
+                    }
+                });
+                
+                select.innerHTML = options;
+            });
+        }
+
+        updateAllOptions();
+
+        
+        // Auto-select empty slots
         targetSelects.forEach((select, idx) => {
             if (idx < emptySlots.length) {
-                select.value = `${emptySlots[idx].row},${emptySlots[idx].col}`;
+                const slotKey = `${emptySlots[idx].row},${emptySlots[idx].col}`;
+                select.value = slotKey;
+                selectedDestinations.add(slotKey);
             }
         });
-
+        
+        updateAllOptions();
+        
+        // Listen for changes
+        targetSelects.forEach(select => {
+            select.addEventListener('change', () => {
+                // Rebuild selected set
+                selectedDestinations.clear();
+                targetSelects.forEach(s => {
+                    if (s.value) selectedDestinations.add(s.value);
+                });
+                updateAllOptions();
+            });
+        });
+        
         document.getElementById('importMappedBtn').onclick = () => {
-            // Collect mappings
             const mappings = [];
             targetSelects.forEach((select, idx) => {
                 if (select.value) {
@@ -2575,21 +2652,21 @@ async function promptPadMapping(importedPads, emptySlots, occupiedSlots) {
                     });
                 }
             });
-
+            
             if (mappings.length === 0) {
                 window.BitboxerUtils.setStatus('No pads selected for import', 'error');
                 return;
             }
-
+            
             document.body.removeChild(modal);
             resolve(mappings);
         };
-
+        
         document.getElementById('cancelMappingBtn').onclick = () => {
             document.body.removeChild(modal);
             resolve(null);
         };
-
+        
         modal.onclick = (e) => {
             if (e.target === modal) {
                 document.body.removeChild(modal);
