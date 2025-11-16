@@ -1670,10 +1670,6 @@
          Load order is CRITICAL - do not change!
          ============================================ -->
 
- <!-- 0. TEST -->
- <!-- <script src="js/processing_example.js></script> -->
-
-
     <!-- 1. Third-party library: ZIP/GZIP compression -->
     <script src="js/lib/fflate.js"></script>
 
@@ -1701,9 +1697,13 @@
     <!-- 9. File Handler: File import system: ZIP, SFZ, WAV and Folder uploads -->
     <script src="js/file_handler.js"></script>
 
-    
+    <!-- 10. Pad Operations: Copy/paste/delete/swap/rename pads -->
+    <script src="js/pad-operations.js"></script>
 
-    <!-- 10. Main: Application initialization (MUST BE LAST!!!) -->
+    <!-- 11. Import Handler: File import orchestration and SFZ conversion -->
+    <script src="js/import-handler.js"></script>
+
+    <!-- 12. Main: Application initialization (MUST BE LAST!!!) -->
     <script src="js/main.js"></script>
 
 </body>
