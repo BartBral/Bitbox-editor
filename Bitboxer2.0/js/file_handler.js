@@ -540,6 +540,74 @@ class NoteNameParser {
     }
 }
 
+async function convertSFZToPad(sfzData, wavFiles, targetPad) {
+    const row = parseInt(targetPad.dataset.row);
+    const col = parseInt(targetPad.dataset.col);
+    const { presetData, assetCells } = window.BitboxerData;
+    
+    const validRegions = sfzData.regions.filter(r => r.wavFile);
+    
+    if (validRegions.length === 0) {
+        window.BitboxerUtils.setStatus('No valid samples found in SFZ', 'error');
+        return;
+    }
+    
+    // Analyze layer structure
+    const layerAnalysis = analyzeSFZLayers(validRegions);
+
+    // If single layer with multiple velocity zones, load to target pad
+    if (!layerAnalysis.isStacked && layerAnalysis.totalLayers === 1) {
+        window.BitboxerUtils.setStatus('Loading single layer with velocity zones...', 'info');
+        await loadLayerToPad(layerAnalysis.layers[0], row, col, '0'); // No MIDI channel
+        window.BitboxerUI.updatePadDisplay();
+        window.BitboxerUtils.setStatus(
+            `Imported layer with ${layerAnalysis.layers[0].regions.length} velocity zone(s)`,
+            'success'
+        );
+        return;
+    }
+
+    // If multiple layers detected, prompt for mapping
+    if (layerAnalysis.isStacked && layerAnalysis.totalLayers > 1) {
+        window.BitboxerUtils.setStatus('Loading single layer with velocity zones...', 'info');
+        await window.BitboxerFileHandler.loadLayerToPad(layerAnalysis.layers[0], row, col, '0');
+        window.BitboxerUI.updatePadDisplay();
+        window.BitboxerUtils.setStatus(
+            `Imported layer with ${layerAnalysis.layers[0].regions.length} velocity zone(s)`,
+            'success'
+        );
+        return;
+    }
+
+    // If multiple layers detected, prompt for mapping
+    if (layerAnalysis.isStacked && layerAnalysis.totalLayers > 1) {
+        window.BitboxerUtils.setStatus('Multiple layers detected - choose pads & MIDI channel...', 'info');
+
+        const mappings = await window.BitboxerFileHandler.promptLayerMapping(layerAnalysis.layers, targetPad);
+        
+        if (!mappings || mappings.length === 0) {
+            window.BitboxerUtils.setStatus('SFZ import cancelled', 'info');
+            return;
+        }
+        
+        // Load each layer to its assigned pad
+        for (const mapping of mappings) {
+            await window.BitboxerFileHandler.loadLayerToPad(mapping.layer, mapping.row, mapping.col, mapping.midiChannel);
+        }
+        
+        window.BitboxerUI.updatePadDisplay();
+        
+        const channelText = mappings[0].midiChannel === '0' ? 'None' : mappings[0].midiChannel;
+        const totalVelZones = mappings.reduce((sum, m) => sum + m.layer.regions.length, 0);
+        
+        window.BitboxerUtils.setStatus(
+            `✓ Imported ${mappings.length} layer(s), ${totalVelZones} velocity zone(s) total | MIDI Ch ${channelText}`,
+            'success'
+        );
+        return;
+    }
+}
+
 // ============================================
 // WAV PARSER
 // ============================================
@@ -726,5 +794,10 @@ window.BitboxerFileHandler = {
     FileProcessor,
     SFZParser,
     WAVParser,
-    NoteNameParser
+    NoteNameParser,
+
+    analyzeSFZLayers,      
+    promptLayerMapping,    
+    loadLayerToPad,        
+    mergeVelocityZones     
 };
