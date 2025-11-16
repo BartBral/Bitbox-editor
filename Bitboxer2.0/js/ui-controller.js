@@ -554,11 +554,11 @@ function togglePadSelection(pad) {
  */
 function getModeIcon(mode) {
     const icons = {
-        'empty': '<circle cx="8" cy="8" r="6" fill="#888" />', // Empty - Grey circle
-        '0': '<circle cx="8" cy="8" r="6" fill="#4a9eff" />', // Sample - Blue circle
-        '1': '<rect x="2" y="2" width="12" height="12" fill="#ff9e4a" />', // Clip - Square
-        '2': '<polygon points="8,2 14,14 2,14" fill="#9e4aff" />', // Slicer - Triangle
-        '3': '<path d="M8,2 L14,8 L8,14 L2,8 Z" fill="#4aff9e" />', // Granular - Diamond
+        'empty': '<circle cx="8" cy="8" r="6" fill="#888888a7" />', // Empty - Grey circle
+        '0': '<circle cx="8" cy="8" r="6" fill="#ffea5e" />', // Sample - Blue circle
+        '1': '<rect x="2" y="2" width="12" height="12" fill="#ffea5e" />', // Clip - Square
+        '2': '<polygon points="8,2 14,14 2,14" fill="#ffea5e" />', // Slicer - Triangle
+        '3': '<path d="M8,2 L14,8 L8,14 L2,8 Z" fill="#ffea5e" />', // Granular - Diamond
         '0-multi': '<circle cx="5" cy="8" r="3" fill="#ffea5e" /><circle cx="11" cy="8" r="3" fill="#ffea5e" />' // Multisample - Double circles
     };
     

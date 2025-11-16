@@ -61,7 +61,12 @@ function updateParamDisplay(param, value) {
             // Beat Count: 0=Auto, 1-512=specific count
             text = (val === 0) ? 'Auto' : val.toString();
             break;
-            
+
+        case 'actslice':
+            // Active Slice: 1-512 (integer)
+            text = val.toString();
+            break;
+
         case 'samstart':
         case 'samlen':
         case 'loopstart':
@@ -132,7 +137,13 @@ function parseDisplayValue(param, text) {
             const num2 = parseInt(trimmed, 10);
             if (isNaN(num2) || num2 < 0 || num2 > 512) return null;
             return num2;
-            
+        
+        case 'actslice':
+            // Active Slice: 1-512 (integer)
+            const sliceNum = parseInt(text, 10);
+            if (isNaN(sliceNum) || sliceNum < 1 || sliceNum > 512) return null;
+            return sliceNum;    
+
         default:
             return Math.round(val);
     }

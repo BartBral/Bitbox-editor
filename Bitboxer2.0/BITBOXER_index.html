@@ -28,8 +28,8 @@
              Contains app title and mode toggle buttons
              ============================================ -->
         <div class="header">
-    <!-- App Title (updated dynamically with project name) -->
-    <h1 id="projectTitle" style="cursor: pointer;" title="Click to rename">BITBOXER</h1>
+            <!-- App Title (updated dynamically with project name) -->
+            <h1 id="projectTitle" style="cursor: pointer;" title="Click to rename">BITBOXER</h1>
 
             <!-- Mode Toggle: Switch between Bitbox Micro (8 pads) and mk2 (16 pads) -->
             <div class="mode-toggle">
@@ -71,41 +71,43 @@
                 <div class="controls">
                     <!-- Working Folder -->
                     <button class="btn btn-primary" id="setWorkingFolderBtn" style="display:none;">
-                        ⚠️ Set Working Folder! For best user experience! ⚠️  
+                        ⚠️ Set Working Folder! For best user experience! ⚠️
                     </button>
-                
-                    
+
+
                     <div class="btn-container-dual">
                         <div><!-- Load Full Preset -->
                             <button class="btn btn-primary" id="loadBtn">Load Preset</button>
                             <input type="file" id="fileInput" accept=".xml,.zip" multiple>
                         </div>
-                    
+
                         <div><!-- Folder Import (Chrome/Edge) -->
                             <button class="btn btn-primary" id="loadFolderBtn">Load Folder</button>
                         </div>
                     </div>
-                    
+
                     <div class="btn-container-dual">
-                    
+
                         <!-- Save -->
                         <button class="btn btn-primary" id="saveBtn">Save Preset</button>
-                    
+
                         <!-- New Preset -->
-                        <button class="btn" id="newPresetBtn">New Preset</button>
+                        <button class="btn btn-primary" id="newPresetBtn">New Preset</button>
                     </div>
-                    
-                    </div>
+
+                </div>
 
                 <!-- ============================================
                      FX OPERATIONS PANEL
                      Access global FX settings (Delay, Reverb, EQ)
                      ============================================ -->
                 <div class="panel">
-                    <h3>Edit effects</h3>
+                    <h3>Global FX and EQ</h3>
                     <div class="controls">
-                        <!-- FX Settings Button: Opens FX modal -->
-                        <button class="btn" id="fxBtn">FX Settings</button>
+                        <div class="btn-container-dual">
+                            <!-- FX Settings Button: Opens FX modal -->
+                            <button class="btn btn-primary" id="fxBtn">FX & EQ Settings</button>
+                        </div>
                     </div>
                 </div>
 
@@ -116,27 +118,33 @@
                 <div class="panel">
                     <h3>Pad Operations</h3>
                     <div class="controls">
+                        <div class="btn-container-dual">
+                            <!-- Export Selected: Exports selected pads to JSON/ZIP -->
+                            <button class="btn btn-primary" id="exportPadBtn" disabled>Export Selected</button>
 
 
-                        <!-- Export Selected: Exports selected pads to JSON/ZIP -->
-                        <button class="btn" id="exportPadBtn" disabled>Export Selected</button>
-
-<!-- Import to Pad -->
-                        <div>
-                            <button class="btn btn-primary" id="importToPadBtn" disabled>
-                                🍻 Import SFZ/WAV to Pad
-                            </button>
-                            <input type="file" id="padImportInput" accept=".xml,.sfz,.wav,.zip" multiple>
+                            <!-- Import to Pad -->
+                            <div>
+                                <button class="btn btn-primary" id="importToPadBtn" disabled>
+                                    Import Pad
+                                </button>
+                                <input type="file" id="padImportInput" accept=".xml,.sfz,.wav,.zip" multiple>
+                            </div>
                         </div>
+                        <div class="btn-container-dual">
+                            <!-- Copy: Copies selected pads to clipboard -->
+                            <button class="btn btn-primary" id="copyPadBtn" disabled>Copy</button>
 
-                        <!-- Copy: Copies selected pads to clipboard -->
-                        <button class="btn" id="copyPadBtn" disabled>Copy</button>
-
-                        <!-- Paste: Pastes clipboard to selected pads -->
-                        <button class="btn" id="pastePadBtn" disabled>Paste</button>
-
-                        <!-- Delete: Clears selected pads -->
-                        <button class="btn" id="deletePadBtn" disabled>Delete</button>
+                            <!-- Paste: Pastes clipboard to selected pads -->
+                            <button class="btn btn-primary" id="pastePadBtn" disabled>Paste</button>
+                        </div>
+                        <div class="btn-container-dual">
+                            <div>
+                                <!-- Delete: Clears selected pads -->
+                                <button class="btn btn-primary" id="deletePadBtn" disabled>Delete</button>
+                            </div>
+                            <div></div>
+                        </div>
                     </div>
                 </div>
 
@@ -146,12 +154,12 @@
                      ============================================ -->
                 <div class="panel info-panel">
                     <h3>Quick Guide</h3>
-                    <p><strong>Click:</strong> Select pad</p>
-                    <p><strong>Ctrl+Click:</strong> Multi-select</p>
-                    <p><strong>Double-click:</strong> Edit parameters</p>
-                    <p><strong>Right-click:</strong> Context menu</p>
-                    <p><strong>Drag:</strong> Move/swap pads</p>
-                    <p><strong>Drop files:</strong> Load XML/SFZ/WAV</p>
+                    <strong>Click:</strong> Select pad<br>
+                    <strong>Ctrl+Click:</strong> Multi-select<br>
+                    <strong>Double-click:</strong> Edit parameters<br>
+                    <strong>Right-click:</strong> Context menu<br>
+                    <strong>Drag:</strong> Move/swap pads<br>
+                    <strong>Drop files:</strong> Load XML/SFZ/WAV/ZIP
                 </div>
             </div>
         </div>
@@ -163,7 +171,7 @@
          ============================================ -->
     <div class="context-menu" id="contextMenu">
         <div class="context-item" id="contextEdit">Edit Pad</div>
-          <div class="context-item" id="contextRename">Rename Pad</div>
+        <div class="context-item" id="contextRename">Rename Pad</div>
         <div class="context-item" id="contextImport">Import to This Pad</div> <!-- ← ADD -->
         <div class="context-item separator"></div> <!-- ← ADD (visual divider) -->
         <div class="context-item" id="contextExport">Export Pad</div>
@@ -186,20 +194,20 @@
                  ============================================ -->
             <div class="modal-header">
                 <h2 id="modalTitle">Edit Pad</h2>
-                            <div></div>
-                            <!-- Cell Mode: Determines pad behavior (Sample/Clip/Slicer/Granular) -->
-                            <div class="param">
-                                <div class="label-value-container">
-                                    <label class="param-label">Cell Mode</label>
-                                </div>
-                                <select class="select" id="cellmode">
-                                    <option value="0">Sample</option>
-                                    <option value="0-multi">Multisample</option> <!-- ← Fake value -->
-                                    <option value="1">Clip</option>
-                                    <option value="2">Slicer</option>
-                                    <option value="3">Granular</option>
-                                </select>
-                            </div>
+                <div></div>
+                <!-- Cell Mode: Determines pad behavior (Sample/Clip/Slicer/Granular) -->
+                <div class="param">
+                    <div class="label-value-container">
+                        <label class="param-label">Cell Mode</label>
+                    </div>
+                    <select class="select" id="cellmode">
+                        <option value="0">Sample</option>
+                        <option value="0-multi">Multisample</option> <!-- ← Fake value -->
+                        <option value="1">Clip</option>
+                        <option value="2">Slicer</option>
+                        <option value="3">Granular</option>
+                    </select>
+                </div>
 
 
                 <!-- Close Button: Saves changes and closes modal -->
@@ -230,7 +238,7 @@
                     <h3>Main Parameters</h3>
                     <div class="param-grid">
 
-                        
+
 
                         <!-- Level: Volume control (-96dB to +12dB) -->
                         <div class="param">
@@ -266,7 +274,7 @@
                             </div>
                         </div>
 
-                        
+
                         <div class="dropdown-container-dual">
 
                             <div>
@@ -281,9 +289,9 @@
                     </div>
 
                     <div class="line-container">
-                            <!-- empty line -->
-                        </div>
-                    
+                        <!-- empty line -->
+                    </div>
+
                     <div class="param-grid">
 
                         <!-- Filter: Cutoff frequency control -->
@@ -308,11 +316,11 @@
                             </div>
                         </div>
                     </div>
-                        
-                        <div class="line-container">
-                            <!-- line -->
-                        </div>
-                
+
+                    <div class="line-container">
+                        <!-- line -->
+                    </div>
+
                     <div class="param-grid">
                         <!-- FX1 Send: Amount sent to Delay -->
                         <div class="param">
@@ -341,7 +349,7 @@
                 <div class="line-container">
                     <!--  line -->
                 </div>
-                    
+
             </div>
 
             <!-- ============================================
@@ -404,7 +412,7 @@
                     </div>
                 </div>
                 <div class="line-container">
-                            <!-- line -->
+                    <!-- line -->
                 </div>
             </div>
 
@@ -440,7 +448,7 @@
                                 <!-- empty container -->
                             </div>
                         </div>
-                        
+
                         <div class="dropdown-container-dual">
 
                             <!-- LFO Key Trigger: Restart LFO on each note -->
@@ -469,8 +477,8 @@
                             </div>
                         </div>
 
-                        
-                        
+
+
                         <div class="dropdown-container-dual">
 
                             <!-- LFO Beat Sync: Sync to tempo instead of Hz -->
@@ -525,7 +533,7 @@
                     </div>
                 </div>
                 <div class="line-container">
-                            <!-- line -->
+                    <!-- line -->
                 </div>
             </div>
 
@@ -669,9 +677,9 @@
                             </div>
                         </div>
 
-                        
 
-                        
+
+
                         <div class="dropdown-container-dual">
 
                             <!-- Loop Mode: Enable looping in Slicer mode -->
@@ -696,7 +704,7 @@
                                 </select>
                             </div>
 
-                        </div>    
+                        </div>
 
                         <!-- Active Slice: Current slice number (Slicer mode) -->
                         <div class="param">
@@ -708,6 +716,7 @@
                                 <input type="range" class="slider" id="actslice" min="1" max="512" value="1">
                             </div>
                         </div>
+
 
                         <div class="dropdown-container-dual">
 
@@ -733,7 +742,7 @@
                                     <option value="13">none</option>
                                 </select>
                             </div>
-                        
+
                             <!-- Slicer Sync: Sync slices to tempo (Slicer mode) -->
                             <div class="param">
                                 <div class="label-value-container">
@@ -769,7 +778,7 @@
                     </div>
                 </div>
                 <div class="line-container">
-                            <!-- line -->
+                    <!-- line -->
                 </div>
             </div>
 
@@ -851,7 +860,7 @@
                     </div>
                 </div>
                 <div class="line-container">
-                            <!-- line -->
+                    <!-- line -->
                 </div>
             </div>
 
@@ -913,9 +922,9 @@
                             </div>
                         </div>
 
-                        
 
-                        
+
+
 
                         <div class="dropdown-container-dual">
 
@@ -1130,7 +1139,7 @@
                     </div>
                 </div>
                 <div class="line-container">
-                            <!-- line -->
+                    <!-- line -->
                 </div>
             </div>
 
@@ -1147,10 +1156,10 @@
                     <button class="btn" id="addModSlotBtn" style="margin-top: 10px;">+ Add Modulation</button>
                 </div>
                 <div class="line-container">
-                            <!-- line -->
+                    <!-- line -->
                 </div>
             </div>
-            
+
             <!-- MULTISAMPLE TAB -->
             <div class="tab-content" id="tab-multi">
                 <div class="param-section">
@@ -1256,7 +1265,7 @@
                             </div>
                         </div>
 
-                        
+
 
                         <div class="dropdown-container-dual">
                             <!-- Ping Pong: Stereo ping-pong delay -->
@@ -1270,8 +1279,8 @@
                                 </select>
                             </div>
 
-                            <div> 
-                                <!-- empty container --> 
+                            <div>
+                                <!-- empty container -->
                             </div>
                         </div>
 
@@ -1288,14 +1297,14 @@
                                 </select>
                             </div>
 
-                            <div> 
-                                <!-- empty container --> 
+                            <div>
+                                <!-- empty container -->
                             </div>
                         </div>
 
-                        
+
                         <div class="param">
-                            <!-- empty container --> 
+                            <!-- empty container -->
                         </div>
 
                         <!-- Cutoff: Filter cutoff frequency -->
@@ -1320,11 +1329,11 @@
                             </div>
                         </div>
 
-                        
 
 
 
-                        
+
+
 
                     </div>
                 </div>
@@ -1333,7 +1342,8 @@
                 <div class="param-section">
                     <h3>Delay Modulation</h3>
                     <div id="fxDelayModContainer" class="mod-slot-container"></div>
-                    <button class="btn" id="addDelayModSlotBtn" style="margin-top: 10px;">+ Add Modulation</button>
+                    <button class="btn" id="addDelayModSlotBtn" style="margin-top: 10px;">+ Add
+                        Modulation</button>
                 </div>
             </div>
 
@@ -1386,7 +1396,8 @@
                 <div class="param-section">
                     <h3>Reverb Modulation</h3>
                     <div id="fxReverbModContainer" class="mod-slot-container"></div>
-                    <button class="btn" id="addReverbModSlotBtn" style="margin-top: 10px;">+ Add Modulation</button>
+                    <button class="btn" id="addReverbModSlotBtn" style="margin-top: 10px;">+ Add
+                        Modulation</button>
                 </div>
             </div>
 
@@ -1402,32 +1413,32 @@
                     <div class="param-grid">
 
                         <div class="dropdown-container-dual">
-                        <!-- Type: Filter type for band 1 -->
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Type</label>
+                            <!-- Type: Filter type for band 1 -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Type</label>
+                                </div>
+                                <select class="select" id="fx-eqtype">
+                                    <option value="0">None</option>
+                                    <option value="1" selected>Low Cut</option>
+                                    <option value="2">Low Shelf</option>
+                                    <option value="3">Parametric</option>
+                                    <option value="4">High Shelf</option>
+                                    <option value="5">High Cut</option>
+                                </select>
                             </div>
-                            <select class="select" id="fx-eqtype">
-                                <option value="0">None</option>
-                                <option value="1" selected>Low Cut</option>
-                                <option value="2">Low Shelf</option>
-                                <option value="3">Parametric</option>
-                                <option value="4">High Shelf</option>
-                                <option value="5">High Cut</option>
-                            </select>
-                        </div>
 
-                        <!-- Enable: Band on/off -->
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Enable</label>
+                            <!-- Enable: Band on/off -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Enable</label>
+                                </div>
+                                <select class="select" id="fx-eqenable">
+                                    <option value="0">Off</option>
+                                    <option value="1" selected>On</option>
+                                </select>
                             </div>
-                            <select class="select" id="fx-eqenable">
-                                <option value="0">Off</option>
-                                <option value="1" selected>On</option>
-                            </select>
                         </div>
-</div>
 
                         <!-- Gain: Boost/cut in dB -->
                         <div class="param">
@@ -1471,31 +1482,31 @@
                     <div class="param-grid">
 
                         <div class="dropdown-container-dual">
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Type</label>
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Type</label>
+                                </div>
+                                <select class="select" id="fx-eqtype2">
+                                    <option value="0">None</option>
+                                    <option value="1">Low Cut</option>
+                                    <option value="2">Low Shelf</option>
+                                    <option value="3" selected>Parametric</option>
+                                    <option value="4">High Shelf</option>
+                                    <option value="5">High Cut</option>
+                                </select>
                             </div>
-                            <select class="select" id="fx-eqtype2">
-                                <option value="0">None</option>
-                                <option value="1">Low Cut</option>
-                                <option value="2">Low Shelf</option>
-                                <option value="3" selected>Parametric</option>
-                                <option value="4">High Shelf</option>
-                                <option value="5">High Cut</option>
-                            </select>
+
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Enable</label>
+                                </div>
+                                <select class="select" id="fx-eqenable2">
+                                    <option value="0">Off</option>
+                                    <option value="1" selected>On</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Enable</label>
-                            </div>
-                            <select class="select" id="fx-eqenable2">
-                                <option value="0">Off</option>
-                                <option value="1" selected>On</option>
-                            </select>
-                        </div>
-</div>
-                        
                         <div class="param">
                             <div class="label-value-container">
                                 <label class="param-label">Gain</label>
@@ -1535,30 +1546,30 @@
                     <div class="param-grid">
 
                         <div class="dropdown-container-dual">
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Type</label>
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Type</label>
+                                </div>
+                                <select class="select" id="fx-eqtype3">
+                                    <option value="0">None</option>
+                                    <option value="1">Low Cut</option>
+                                    <option value="2">Low Shelf</option>
+                                    <option value="3" selected>Parametric</option>
+                                    <option value="4">High Shelf</option>
+                                    <option value="5">High Cut</option>
+                                </select>
                             </div>
-                            <select class="select" id="fx-eqtype3">
-                                <option value="0">None</option>
-                                <option value="1">Low Cut</option>
-                                <option value="2">Low Shelf</option>
-                                <option value="3" selected>Parametric</option>
-                                <option value="4">High Shelf</option>
-                                <option value="5">High Cut</option>
-                            </select>
-                        </div>
 
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Enable</label>
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Enable</label>
+                                </div>
+                                <select class="select" id="fx-eqenable3">
+                                    <option value="0">Off</option>
+                                    <option value="1" selected>On</option>
+                                </select>
                             </div>
-                            <select class="select" id="fx-eqenable3">
-                                <option value="0">Off</option>
-                                <option value="1" selected>On</option>
-                            </select>
                         </div>
-</div>
 
                         <div class="param">
                             <div class="label-value-container">

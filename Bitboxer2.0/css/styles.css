@@ -31,6 +31,7 @@
     --color-accent-green: #a35a2d;     /* Softer green */
     --color-accent-yellow: #ffb347;    /* Peachy orange */
     --color-accent-red: #ff0000;       /* Softer red */
+    --color-accent-bright-orange:  #ffa600;
 
     /* Spacing */
     --spacing-xs: 4px;
@@ -260,18 +261,7 @@ h1 {
     /* color: var(--color-accent-green); */
 }
 
-.pad-status {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--color-accent-green);
-    pointer-events: none;
-}
-
-.pad.empty .pad-status {
+.pad.empty {
     background: var(--color-border);
 }
 
@@ -330,7 +320,7 @@ h1 {
 
 .btn:hover:not(:disabled) {
     background: var(--color-bg-tertiary);
-    border-color: var(--color-accent-blue);
+    border-color: var(--color-accent-bright-orange);
 }
 
 .btn:disabled {
@@ -339,13 +329,14 @@ h1 {
 }
 
 .btn-primary {
-    background: var(--color-accent-blue);
+    /* background: var(--color-accent-blue); */
     border-color: var(--color-accent-blue);
-    color: white;
+    /* color: white; */
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #ff7b00;
+     background: var(--color-bg-tertiary);
+    border-color: var(--color-accent-bright-orange);
 }
 
 /* Blinking animation for working folder button */
@@ -355,7 +346,7 @@ h1 {
         box-shadow: 0 0 10px rgba(255, 94, 94, 0.5);
     }
     50% { 
-        background-color: #cc4a4a;
+        background-color: #ff0000;
         box-shadow: 0 0 20px rgb(255, 0, 0);
     }
 }
@@ -809,7 +800,7 @@ input[type="file"] {
 /* ============================================
    RESPONSIVE DESIGN
    ============================================ */
-@media (max-width: 1200px) {
+@media (max-width: 800px) {
     .main-content {
         grid-template-columns: 1fr;
     }
