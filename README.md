@@ -11,7 +11,7 @@
 Overall; in the top-right corner is a switch to set type of Bitbox you have.
 The greyed out pads are **only** visual, as a reminder "these pads or parameters are not avaiable to you on your Bitbox". But all of these pads and parameters that are greyed out are still 100% editable and usable. Also to saved files are always the same and it doesn't matter if you have chosen the Bk2 or Micro option.
 
-Also when editing parameters, all greyed out settings are still completely usable, as some users might find it usefull to have certain parameters set, so they can change between to options in a live situation. (for example: set up a manual LFO speed on a certain rate, then switching to synced LFO-speed on the Bitbox, both speeds can already be set to known states)
+Also when editing parameters, all greyed out settings are still completely usable, as some users might find it usefull to have certain parameters set, so they can change between two options in a live situation. (for example: set up a manual LFO speed on a certain rate, then switching to synced LFO-speed on the Bitbox, both speeds can already be set to known states)
 
 
 **Before importing any files:**
@@ -125,7 +125,7 @@ When importing SFZ with multiple layers:
 
 ## 🎚️ Editing Pads
 
-When editing parameters, all greyed out settings are still completely usable, as some users might find it usefull to have certain parameters set, so they can change between to options in a live situation. (for example: set up a manual LFO speed on a certain rate, then switching to synced LFO-speed on the Bitbox, both speeds can already be set to known states)
+When editing parameters, all greyed out settings are still completely usable, as some users might find it usefull to have certain parameters set, so they can change between two options in a live situation. (for example: set up a manual LFO speed on a certain rate, then switching to synced LFO-speed on the Bitbox, both speeds can already be set to known states)
 
 ### Opening Pad Editor
 - **Double-click** any pad
