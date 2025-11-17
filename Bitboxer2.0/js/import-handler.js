@@ -317,7 +317,7 @@ async function convertSFZToPreset(sfzData, wavFiles) {
 }
 
 /**
- * Converts SFZ to single pad (with layer detection)
+ * Converts SFZ to single pad (with advanced layer detection)
  * Handles stacked layers vs velocity layers
  * 
  * @param {Object} sfzData - Parsed SFZ data
@@ -327,7 +327,7 @@ async function convertSFZToPreset(sfzData, wavFiles) {
 async function convertSFZToPad(sfzData, wavFiles, targetPad) {
     const row = parseInt(targetPad.dataset.row);
     const col = parseInt(targetPad.dataset.col);
-    const { presetData, assetCells } = window.BitboxerData;
+    const { presetData } = window.BitboxerData;
     
     const validRegions = sfzData.regions.filter(r => r.wavFile);
     
@@ -336,70 +336,52 @@ async function convertSFZToPad(sfzData, wavFiles, targetPad) {
         return;
     }
     
-    const layerAnalysis = analyzeSFZLayers(validRegions);
+    // Use advanced layer analysis
+    const analysis = window.BitboxerFileHandler.analyzeSFZLayersAdvanced(validRegions);
     
-    // Stacked layers - prompt for pad mapping
-    if (layerAnalysis.isStacked) {
-        window.BitboxerUtils.setStatus('Stacked layers detected...', 'info');
-        const mappings = await promptLayerToPadMapping(validRegions, targetPad);
-        
-        if (!mappings || mappings.length === 0) {
-            window.BitboxerUtils.setStatus('Import cancelled', 'info');
-            return;
-        }
-        
-        for (const mapping of mappings) {
-            const pad = presetData.pads[mapping.row][mapping.col];
-            const region = mapping.region;
-            
-            pad.type = 'sample';
-            pad.filename = region.wavFile.name;
-            pad.params.multisammode = '0';
-            
-            applySFZOpcodesToPad(pad, region, region.wavFile.metadata || {});
-        }
+    // Single layer - load directly
+    if (!analysis.hasMultipleLayers) {
+        const layer = analysis.layers[0];
+        window.BitboxerFileHandler.loadLayerToPad(layer, row, col, '1', sfzData.file.name);
         
         window.BitboxerUI.updatePadDisplay();
-        window.BitboxerUtils.setStatus(`Imported ${mappings.length} stacked layers`, 'success');
+        window.BitboxerUtils.setStatus(
+            layer.needsMerge 
+                ? `Imported ${layer.velocityZones} zones (merged to 16)` 
+                : `Imported ${layer.velocityZones} velocity zone(s)`,
+            'success'
+        );
         return;
     }
     
-    // Single region
-    if (validRegions.length === 1) {
-        const pad = presetData.pads[row][col];
-        const region = validRegions[0];
-        
-        pad.type = 'sample';
-        pad.filename = region.wavFile.name;
-        pad.params.multisammode = '0';
-        
-        applySFZOpcodesToPad(pad, region, region.wavFile.metadata || {});
-        
-        window.BitboxerUI.updatePadDisplay();
-        window.BitboxerUtils.setStatus(`Imported: ${region.wavFile.name}`, 'success');
+    // Multiple layers - prompt user
+    window.BitboxerUtils.setStatus('Multiple layers detected...', 'info');
+    const result = await window.BitboxerFileHandler.promptLayerMappingAdvanced(
+        analysis.layers, 
+        targetPad
+    );
+    
+    if (result.cancelled) {
+        window.BitboxerUtils.setStatus('Import cancelled', 'info');
         return;
     }
     
-    // Multiple regions = multisample
-    const pad = presetData.pads[row][col];
-    pad.type = 'sample';
-    pad.params.multisammode = '1';
-    
-    const multisamFolder = sfzData.file.name.replace('.sfz', '');
-    pad.filename = `.\\${multisamFolder}`;
-    
-    for (let i = 0; i < validRegions.length; i++) {
-        const region = validRegions[i];
-        const asset = createAssetFromSFZRegion(region, row, col, assetCells.length);
-        assetCells.push(asset);
-    }
-    
-    if (sfzData.global) {
-        applySFZOpcodesToPad(pad, sfzData.global, {});
-    }
+    // Load each layer to selected pad
+    result.mappings.forEach(mapping => {
+        window.BitboxerFileHandler.loadLayerToPad(
+            mapping.layer,
+            mapping.row,
+            mapping.col,
+            result.midiChannel,
+            sfzData.file.name
+        );
+    });
     
     window.BitboxerUI.updatePadDisplay();
-    window.BitboxerUtils.setStatus(`Imported multisample: ${validRegions.length} layers`, 'success');
+    window.BitboxerUtils.setStatus(
+        `Imported ${result.mappings.length} layer(s) to ${result.mappings.length} pad(s)`,
+        'success'
+    );
 }
 
 /**
@@ -811,7 +793,8 @@ async function handleMissingSamples(sfzFile, existingWavFiles) {
         );
         
         if (window.showDirectoryPicker) {
-            newWavFiles = await searchFolderForSamples(missingSamples);
+            newWavFiles = await searchWorkingFolderForSamples(missingSamples);
+
         } else {
             newWavFiles = await searchFilesForSamples(missingSamples);
         }
@@ -868,44 +851,70 @@ async function handleMissingSamples(sfzFile, existingWavFiles) {
     }
 }
 
+// ============================================
+// SAMPLE SEARCH (UNIFIED)
+// ============================================
+
 /**
- * Searches folder for missing samples (modern browsers)
+ * Searches working folder for samples (unified version)
+ * Stops when all samples are found (performance optimization)
  * 
- * @param {Array} missingSamplePaths - Array of missing sample paths
+ * @param {Array} targetSampleNames - Array of sample filenames to find
  * @returns {Promise<Array>} Array of found File objects
  */
-async function searchFolderForSamples(missingSamplePaths) {
+async function searchWorkingFolderForSamples(targetSampleNames) {
     try {
         let dirHandle = window.BitboxerData.workingFolderHandle;
         
+        // If no working folder, prompt user to select one
         if (!dirHandle) {
             window.BitboxerUtils.setStatus('Select folder with samples...', 'info');
-            dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+            dirHandle = await window.showDirectoryPicker({ 
+                mode: 'read',
+                startIn: 'downloads'
+            });
+            
             window.BitboxerData.workingFolderHandle = dirHandle;
             
             const btn = document.getElementById('setWorkingFolderBtn');
             if (btn) {
                 btn.textContent = `📁 ${dirHandle.name}`;
+                btn.classList.remove('blink-warning');
                 btn.classList.add('active');
             }
         }
         
         const foundFiles = [];
         const targetLookup = {};
-        missingSamplePaths.forEach(path => {
-            const fileName = path.split(/[/\\]/).pop().toLowerCase();
-            targetLookup[fileName] = path;
+        
+        // Build case-insensitive lookup
+        targetSampleNames.forEach(name => {
+            const fileName = name.split(/[/\\]/).pop().toLowerCase();
+            targetLookup[fileName] = name;
         });
         
+        const totalNeeded = Object.keys(targetLookup).length;
+        console.log(`Searching for ${totalNeeded} sample(s) in: ${dirHandle.name}`);
+        
+        // Recursive search with early exit
         async function searchDir(handle, depth = 0) {
+            // Stop if max depth reached
             if (depth > 5) return;
             
+            // CRITICAL: Stop if all samples found
+            if (foundFiles.length >= totalNeeded) return;
+            
             for await (const entry of handle.values()) {
+                // Check again in loop (for performance)
+                if (foundFiles.length >= totalNeeded) return;
+                
                 if (entry.kind === 'file') {
                     const fileName = entry.name.toLowerCase();
+                    
                     if (fileName.endsWith('.wav') && targetLookup[fileName]) {
                         const file = await entry.getFile();
                         foundFiles.push(file);
+                        console.log(`  ✓ Found: ${entry.name} (${foundFiles.length}/${totalNeeded})`);
                     }
                 } else if (entry.kind === 'directory') {
                     await searchDir(entry, depth + 1);
@@ -914,13 +923,17 @@ async function searchFolderForSamples(missingSamplePaths) {
         }
         
         await searchDir(dirHandle);
+        
+        console.log(`Search complete: ${foundFiles.length}/${totalNeeded} found`);
         return foundFiles;
+        
     } catch (error) {
         if (error.name === 'AbortError') throw error;
         console.error('Folder search error:', error);
         return [];
     }
 }
+
 
 /**
  * Searches manually selected files for missing samples
@@ -1028,8 +1041,7 @@ async function autoLoadReferencedSamples() {
     window.BitboxerUtils.setStatus('Searching for samples...', 'info');
     
     try {
-        const foundFiles = await searchFolderForSamplesRecursive(
-            workingFolderHandle,
+        const foundFiles = await searchWorkingFolderForSamples(
             Array.from(referencedSamples)
         );
         
@@ -1082,40 +1094,6 @@ async function autoLoadReferencedSamples() {
 }
 
 /**
- * Recursively searches folder for samples
- * 
- * @param {FileSystemDirectoryHandle} dirHandle - Directory handle
- * @param {Array} targetNames - Array of filenames to find
- * @returns {Promise<Array>} Array of found File objects
- */
-async function searchFolderForSamplesRecursive(dirHandle, targetNames) {
-    const foundFiles = [];
-    const targetLookup = {};
-    targetNames.forEach(name => {
-        targetLookup[name.toLowerCase()] = name;
-    });
-    
-    async function searchDir(handle, depth = 0) {
-        if (depth > 5) return;
-        
-        for await (const entry of handle.values()) {
-            if (entry.kind === 'file') {
-                const fileName = entry.name.toLowerCase();
-                if (fileName.endsWith('.wav') && targetLookup[fileName]) {
-                    const file = await entry.getFile();
-                    foundFiles.push(file);
-                }
-            } else if (entry.kind === 'directory') {
-                await searchDir(entry, depth + 1);
-            }
-        }
-    }
-    
-    await searchDir(dirHandle);
-    return foundFiles;
-}
-
-/**
  * Prompts user to select folder containing samples
  * 
  * @param {Array} sampleNames - Array of sample names to find
@@ -1133,9 +1111,9 @@ async function promptForSampleFolder(sampleNames) {
             btn.classList.add('active');
         }
         
-        return await searchFolderForSamplesRecursive(dirHandle, sampleNames);
+        return await searchWorkingFolderForSamples(dirHandle, sampleNames);
     } else {
-        return await searchFilesForSamples(sampleNames);
+        return await searchWorkingFolderForSamples(sampleNames);
     }
 }
 

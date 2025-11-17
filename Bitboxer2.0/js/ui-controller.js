@@ -401,6 +401,7 @@ function updateButtonStates() {
     const hasSelection = selectedPads.size > 0;
     
     document.getElementById('exportPadBtn').disabled = !hasSelection;
+    document.getElementById('exportSFZBtn').disabled = !hasSelection;
     document.getElementById('copyPadBtn').disabled = !hasSelection;
     document.getElementById('deletePadBtn').disabled = !hasSelection;
     document.getElementById('pastePadBtn').disabled = !clipboard;

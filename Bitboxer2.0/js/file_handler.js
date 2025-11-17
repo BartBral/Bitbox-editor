@@ -330,7 +330,7 @@ class FileProcessor {
 class SFZParser {
     static parse(sfzText) {
         console.log('=== Parsing SFZ ===');
-        console.log('SFZ Content:', sfzText.substring(0, 500)); // First 500 chars
+        console.log('SFZ Content:', sfzText.substring(0, 500));
 
         const lines = sfzText.split('\n');
         const regions = [];
@@ -338,16 +338,15 @@ class SFZParser {
         let globalOpcodes = {};
         let currentGroup = {};
         let defaultPath = '';
+        let groupIndex = 0; // ← TRACK GROUP INDEX
 
         for (let line of lines) {
-            // Remove comments
             line = line.split('//')[0].trim();
             if (!line) continue;
 
             // Handle <region> headers
             if (line.includes('<region>')) {
                 if (currentRegion) {
-                    // Finish previous region
                     if (defaultPath && currentRegion.sample) {
                         if (!currentRegion.sample.includes('/') && !currentRegion.sample.includes('\\')) {
                             currentRegion.sample = defaultPath + currentRegion.sample;
@@ -356,19 +355,22 @@ class SFZParser {
                     console.log('Finished region:', currentRegion);
                     regions.push(currentRegion);
                 }
-                // Start new region
-                currentRegion = { ...globalOpcodes, ...currentGroup };
+                
+                // Start new region with group index
+                currentRegion = { 
+                    ...globalOpcodes, 
+                    ...currentGroup,
+                    groupIndex: groupIndex // ← ADD GROUP INDEX
+                };
 
-                // Extract everything after <region>
                 line = line.substring(line.indexOf('<region>') + 8).trim();
-                // If line is now empty, continue to next line
-                // If line has content, fall through to parse it as opcodes
                 if (!line) continue;
             }
 
             // Handle <group> headers
             if (line.includes('<group>')) {
                 currentRegion = null;
+                groupIndex++; // ← INCREMENT GROUP INDEX
                 currentGroup = { ...globalOpcodes };
 
                 line = line.substring(line.indexOf('<group>') + 7).trim();
@@ -384,17 +386,14 @@ class SFZParser {
                 if (!line) continue;
             }
 
-            // Parse opcodes (if we're inside a region/group/global AND line has content)
             if (!line) continue;
 
             const opcodes = this._parseOpcodes(line);
 
-            // DEBUG: Log important opcodes
             if (opcodes.sample || opcodes.default_path) {
                 console.log('Found important opcode:', opcodes);
             }
 
-            // Special handling for default_path
             if (opcodes.default_path) {
                 defaultPath = opcodes.default_path;
                 if (!defaultPath.endsWith('/') && !defaultPath.endsWith('\\')) {
@@ -402,7 +401,6 @@ class SFZParser {
                 }
             }
 
-            // Assign opcodes to appropriate context
             if (currentRegion) {
                 Object.assign(currentRegion, opcodes);
             } else if (Object.keys(currentGroup).length > 0) {
@@ -414,7 +412,6 @@ class SFZParser {
 
         // Add last region
         if (currentRegion) {
-            // Apply default_path to sample if needed
             if (defaultPath && currentRegion.sample) {
                 if (!currentRegion.sample.includes('/') && !currentRegion.sample.includes('\\')) {
                     currentRegion.sample = defaultPath + currentRegion.sample;
@@ -424,7 +421,7 @@ class SFZParser {
             regions.push(currentRegion);
         }
 
-        // Convert note names to MIDI numbers for ALL regions
+        // Convert note names to MIDI numbers
         regions.forEach(region => {
             if (region.key) region.key = NoteNameParser.toMidiNumber(region.key);
             if (region.lokey) region.lokey = NoteNameParser.toMidiNumber(region.lokey);
@@ -433,9 +430,11 @@ class SFZParser {
         });
 
         console.log(`=== Total regions parsed: ${regions.length} ===`);
+        console.log(`=== Total groups: ${groupIndex} ===`); // ← LOG GROUP COUNT
         if (regions.length > 0) {
             console.log('First region sample:', regions[0].sample);
             console.log('First region key range:', regions[0].lokey, '-', regions[0].hikey);
+            console.log('First region group:', regions[0].groupIndex);
         }
 
         return {
@@ -446,29 +445,21 @@ class SFZParser {
 
     static _parseOpcodes(line) {
         const opcodes = {};
-        
-        // More robust regex that handles paths with spaces and special characters
-        // Split on spaces but respect equals signs
         const parts = line.trim().split(/\s+/);
         
         for (let i = 0; i < parts.length; i++) {
             const part = parts[i];
-
-            // Skip if not an opcode (no = sign)
             if (!part.includes('=')) continue;
 
             const equalIndex = part.indexOf('=');
             const key = part.substring(0, equalIndex);
             let value = part.substring(equalIndex + 1);
 
-            // If value is empty, might be space-separated (like "sample= file.wav")
             if (!value && i + 1 < parts.length) {
                 value = parts[i + 1];
-                i++; // Skip next part since we consumed it
+                i++;
             }
 
-            // Handle paths that might have been split by spaces
-            // If this looks like start of a path and next parts don't have =, join them
             if ((key === 'sample' || key === 'default_path') && i + 1 < parts.length) {
                 while (i + 1 < parts.length && !parts[i + 1].includes('=')) {
                     value += ' ' + parts[i + 1];
@@ -481,7 +472,6 @@ class SFZParser {
 
         return opcodes;
     }
-
 }
 
 // ============================================
@@ -785,6 +775,435 @@ class FileImporter {
 }
 
 // ============================================
+// ADVANCED SFZ LAYER DETECTION
+// ============================================
+
+/**
+ * Analyzes SFZ regions for advanced layer structure
+ * Detects key-based overlaps and velocity layer distribution
+ * 
+ * @param {Array} regions - SFZ regions to analyze
+ * @returns {Object} Analysis result with layer structure
+ */
+function analyzeSFZLayersAdvanced(regions) {
+    console.log('=== ADVANCED SFZ LAYER ANALYSIS ===');
+    console.log('Total regions:', regions.length);
+    
+    // First pass: Check if ANY key ranges overlap
+    let hasOverlap = false;
+    
+    for (let i = 0; i < regions.length; i++) {
+        const r1_lokey = regions[i].lokey !== undefined ? parseInt(regions[i].lokey) : 0;
+        const r1_hikey = regions[i].hikey !== undefined ? parseInt(regions[i].hikey) : 127;
+        
+        for (let j = i + 1; j < regions.length; j++) {
+            const r2_lokey = regions[j].lokey !== undefined ? parseInt(regions[j].lokey) : 0;
+            const r2_hikey = regions[j].hikey !== undefined ? parseInt(regions[j].hikey) : 127;
+            
+            // Check if ranges overlap
+            if (!(r1_hikey < r2_lokey || r1_lokey > r2_hikey)) {
+                hasOverlap = true;
+                console.log(`Overlap detected: Region ${i} (${r1_lokey}-${r1_hikey}) overlaps Region ${j} (${r2_lokey}-${r2_hikey})`);
+                break;
+            }
+        }
+        if (hasOverlap) break;
+    }
+    
+    // No overlap = single key-mapped layer (multisample)
+    if (!hasOverlap) {
+        console.log('No key overlap detected → Single key-mapped multisample');
+        
+        const lokey = Math.min(...regions.map(r => r.lokey !== undefined ? parseInt(r.lokey) : 0));
+        const hikey = Math.max(...regions.map(r => r.hikey !== undefined ? parseInt(r.hikey) : 127));
+        
+        return {
+            hasMultipleLayers: false,
+            layers: [{
+                index: 0,
+                lokey: lokey,
+                hikey: hikey,
+                regions: regions,
+                velocityZones: regions.length,
+                needsMerge: regions.length > 16
+            }],
+            totalLayers: 1
+        };
+    }
+    
+    // Has overlap = group by SFZ <group> sections
+    console.log('Key overlap detected → Grouping by SFZ <group> tags');
+    
+    const sfzGroups = new Map();
+    
+    regions.forEach((region, idx) => {
+        const lokey = region.lokey !== undefined ? parseInt(region.lokey) : 0;
+        const hikey = region.hikey !== undefined ? parseInt(region.hikey) : 127;
+        const groupKey = region.groupIndex !== undefined ? region.groupIndex : 0;
+        
+        console.log(`Region ${idx}: Group ${groupKey}, Keys ${lokey}-${hikey}, Vel ${region.lovel || 0}-${region.hivel || 127}`);
+        
+        if (!sfzGroups.has(groupKey)) {
+            sfzGroups.set(groupKey, []);
+        }
+        
+        sfzGroups.get(groupKey).push(region);
+    });
+    
+    console.log(`Found ${sfzGroups.size} SFZ <group> sections`);
+    
+    // Convert groups to layers
+    const layers = Array.from(sfzGroups.values()).map((groupRegions, idx) => {
+        const lokey = Math.min(...groupRegions.map(r => {
+            const lk = r.lokey !== undefined ? parseInt(r.lokey) : 0;
+            return isNaN(lk) ? 0 : lk;
+        }));
+        const hikey = Math.max(...groupRegions.map(r => {
+            const hk = r.hikey !== undefined ? parseInt(r.hikey) : 127;
+            return isNaN(hk) ? 127 : hk;
+        }));
+        const velocityZones = groupRegions.length;
+        const needsMerge = velocityZones > 16;
+        
+        console.log(`Layer ${idx + 1}: Keys ${lokey}-${hikey}, ${velocityZones} velocity zones${needsMerge ? ' (NEEDS MERGE)' : ''}`);
+        
+        return {
+            index: idx,
+            lokey: lokey,
+            hikey: hikey,
+            regions: groupRegions,
+            velocityZones: velocityZones,
+            needsMerge: needsMerge
+        };
+    });
+    
+    const hasMultipleLayers = layers.length > 1;
+    
+    console.log('=== ANALYSIS RESULT ===');
+    console.log('Multiple layers:', hasMultipleLayers);
+    console.log('Total layers:', layers.length);
+    
+    return {
+        hasMultipleLayers: hasMultipleLayers,
+        layers: layers,
+        totalLayers: layers.length
+    };
+}
+
+/**
+ * Prompts user to map SFZ layers to pads with shared MIDI channel
+ * 
+ * @param {Array} layers - Analyzed layer data
+ * @param {HTMLElement} targetPad - Initial target pad
+ * @returns {Promise<Object>} {cancelled, mappings, midiChannel}
+ */
+async function promptLayerMappingAdvanced(layers, targetPad) {
+    const { presetData } = window.BitboxerData;
+    
+    // Build available pads list
+    const availablePads = [];
+    for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 4; col++) {
+            const pad = presetData.pads[row][col];
+            const padNum = row * 4 + col + 1;
+            const isEmpty = !pad.filename || pad.type === 'samtempl';
+            availablePads.push({ 
+                row, col, padNum, isEmpty, 
+                currentName: pad.filename || 'Empty' 
+            });
+        }
+    }
+    
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.style.zIndex = '3000';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h2>Map SFZ Layers to Pads</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p style="margin-bottom: 15px; color: var(--color-text-primary);">
+                        This SFZ has <strong>${layers.length} layer(s)</strong> with overlapping key ranges.
+                        Choose destination pads:
+                    </p>
+                    
+                    <!-- MIDI Channel Selection -->
+                    <div style="background: var(--color-bg-primary); padding: 12px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--color-accent-blue); font-weight: 600;">
+                            🎹 Shared MIDI Channel (all layers):
+                        </label>
+                        <select id="sharedMidiChannel" class="select" style="width: 100%;">
+                            <option value="0">None</option>
+                            <option value="1" selected>Ch 1 (omni)</option>
+                            <option value="2">Ch 2</option>
+                            <option value="3">Ch 3</option>
+                            <option value="4">Ch 4</option>
+                            <option value="5">Ch 5</option>
+                            <option value="6">Ch 6</option>
+                            <option value="7">Ch 7</option>
+                            <option value="8">Ch 8</option>
+                            <option value="9">Ch 9</option>
+                            <option value="10">Ch 10</option>
+                            <option value="11">Ch 11</option>
+                            <option value="12">Ch 12</option>
+                            <option value="13">Ch 13</option>
+                            <option value="14">Ch 14</option>
+                            <option value="15">Ch 15</option>
+                            <option value="16">Ch 16</option>
+                        </select>
+                        <small style="display: block; margin-top: 6px; color: var(--color-text-secondary); font-size: 0.85em;">
+                            All layers will respond to this MIDI channel
+                        </small>
+                    </div>
+                    
+                    <!-- Layer Mappings -->
+                    <div id="layerMappingContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                        <!-- Populated by JS -->
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" id="importLayersBtn" style="flex: 1;">Import Layers</button>
+                        <button class="btn" id="cancelLayersBtn" style="flex: 1;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const container = document.getElementById('layerMappingContainer');
+        const selectedDestinations = new Set();
+        
+        // Build layer rows
+        layers.forEach((layer, idx) => {
+            const keyRangeName = midiNoteToName(layer.lokey) + '-' + midiNoteToName(layer.hikey);
+            const warningBadge = layer.needsMerge 
+                ? `<span style="color: var(--color-accent-yellow); margin-left: 8px;">⚠️ ${layer.velocityZones} zones → 16</span>`
+                : `<span style="color: var(--color-text-secondary); margin-left: 8px;">(${layer.velocityZones} zones)</span>`;
+            
+            const rowHtml = `
+                <div style="display: grid; grid-template-columns: 2fr auto 2fr; gap: 10px; align-items: center; padding: 12px; background: var(--color-bg-tertiary); border-radius: var(--radius-md);">
+                    <div>
+                        <div style="color: var(--color-accent-blue); font-weight: 600;">Layer ${idx + 1}</div>
+                        <div style="color: var(--color-text-secondary); font-size: 0.85em;">Keys: ${keyRangeName}${warningBadge}</div>
+                    </div>
+                    <div style="color: var(--color-text-secondary);">→</div>
+                    <select class="select layer-target" data-layer-idx="${idx}" style="width: 100%;">
+                        <!-- Populated by updateOptions -->
+                    </select>
+                </div>
+            `;
+            container.innerHTML += rowHtml;
+        });
+        
+        const targetSelects = container.querySelectorAll('.layer-target');
+        
+        // Update dropdown options
+        function updateAllOptions() {
+            targetSelects.forEach(select => {
+                const currentValue = select.value;
+                let options = '<option value="">-- Skip This Layer --</option>';
+                
+                availablePads.forEach(p => {
+                    const slotKey = `${p.row},${p.col}`;
+                    const isSelected = selectedDestinations.has(slotKey) && currentValue !== slotKey;
+                    
+                    if (!isSelected) {
+                        const label = p.isEmpty 
+                            ? `Pad ${p.padNum} (Empty)` 
+                            : `Pad ${p.padNum} (${p.currentName.split(/[/\\]/).pop().replace(/\.(wav|WAV)$/, '')}) ⚠️`;
+                        options += `<option value="${slotKey}" ${currentValue === slotKey ? 'selected' : ''}>${label}</option>`;
+                    }
+                });
+                
+                select.innerHTML = options;
+            });
+        }
+        
+        updateAllOptions();
+        
+        // Auto-fill empty pads
+        const emptyPads = availablePads.filter(p => p.isEmpty);
+        targetSelects.forEach((select, idx) => {
+            if (idx < emptyPads.length) {
+                const p = emptyPads[idx];
+                const slotKey = `${p.row},${p.col}`;
+                select.value = slotKey;
+                selectedDestinations.add(slotKey);
+            }
+        });
+        
+        updateAllOptions();
+        
+        // Listen for changes
+        targetSelects.forEach(select => {
+            select.addEventListener('change', () => {
+                selectedDestinations.clear();
+                targetSelects.forEach(s => {
+                    if (s.value) selectedDestinations.add(s.value);
+                });
+                updateAllOptions();
+            });
+        });
+        
+        // Import button
+        document.getElementById('importLayersBtn').onclick = () => {
+            const mappings = [];
+            targetSelects.forEach(select => {
+                if (select.value) {
+                    const [row, col] = select.value.split(',').map(Number);
+                    const layerIdx = parseInt(select.dataset.layerIdx);
+                    mappings.push({ 
+                        layer: layers[layerIdx], 
+                        row, 
+                        col 
+                    });
+                }
+            });
+            
+            if (mappings.length === 0) {
+                window.BitboxerUtils.setStatus('No layers selected', 'error');
+                return;
+            }
+            
+            const midiChannel = document.getElementById('sharedMidiChannel').value;
+            
+            document.body.removeChild(modal);
+            resolve({ 
+                cancelled: false, 
+                mappings: mappings,
+                midiChannel: midiChannel
+            });
+        };
+        
+        // Cancel button
+        document.getElementById('cancelLayersBtn').onclick = () => {
+            document.body.removeChild(modal);
+            resolve({ cancelled: true });
+        };
+    });
+}
+
+/**
+ * Merges velocity zones to maximum of 16
+ * Distributes regions evenly across velocity range
+ * 
+ * @param {Array} regions - Regions to merge
+ * @returns {Array} Merged regions (max 16)
+ */
+function mergeVelocityZones(regions) {
+    if (regions.length <= 16) return regions;
+    
+    console.log(`Merging ${regions.length} zones → 16`);
+    
+    // Sort by velocity
+    const sorted = regions.slice().sort((a, b) => {
+        const aVel = a.lovel !== undefined ? parseInt(a.lovel) : 0;
+        const bVel = b.lovel !== undefined ? parseInt(b.lovel) : 0;
+        return aVel - bVel;
+    });
+    
+    const merged = [];
+    const binSize = Math.ceil(sorted.length / 16);
+    
+    for (let i = 0; i < 16; i++) {
+        const binStart = i * binSize;
+        const binEnd = Math.min(binStart + binSize, sorted.length);
+        const binRegions = sorted.slice(binStart, binEnd);
+        
+        if (binRegions.length === 0) break;
+        
+        // Use closest sample (first in bin)
+        const representative = binRegions[0];
+        
+        // Calculate new velocity range for this bin
+        const newLoVel = Math.floor((i / 16) * 127);
+        const newHiVel = Math.floor(((i + 1) / 16) * 127) - 1;
+        
+        merged.push({
+            ...representative,
+            lovel: newLoVel,
+            hivel: i === 15 ? 127 : newHiVel // Last bin gets 127
+        });
+        
+        console.log(`  Bin ${i + 1}: Vel ${newLoVel}-${newHiVel} (from ${binRegions.length} samples)`);
+    }
+    
+    return merged;
+}
+
+/**
+ * Loads a single layer to a specific pad
+ * Handles multisample creation with velocity zones
+ * 
+ * @param {Object} layer - Layer data with regions
+ * @param {number} row - Target pad row
+ * @param {number} col - Target pad column
+ * @param {string} midiChannel - MIDI channel (0-16)
+ * @param {string} sfzName - SFZ filename (for folder naming)
+ */
+function loadLayerToPad(layer, row, col, midiChannel, sfzName) {
+    const { presetData, assetCells } = window.BitboxerData;
+    const pad = presetData.pads[row][col];
+    
+    let regions = layer.regions;
+    
+    // Merge if >16 zones
+    if (layer.needsMerge) {
+        regions = mergeVelocityZones(regions);
+        console.log(`Layer merged: ${layer.velocityZones} → ${regions.length} zones`);
+    }
+    
+    // Single velocity zone = simple sample
+    if (regions.length === 1) {
+        const region = regions[0];
+        pad.type = 'sample';
+        pad.filename = region.wavFile.name;
+        pad.params.multisammode = '0';
+        pad.params.midimode = midiChannel;
+        
+        applySFZOpcodesToPad(pad, region, region.wavFile.metadata || {});
+        
+        console.log(`✓ Loaded single sample: ${region.wavFile.name} to Pad ${row * 4 + col + 1}`);
+        return;
+    }
+    
+    // Multiple velocity zones = multisample
+    pad.type = 'sample';
+    pad.params.multisammode = '1';
+    pad.params.midimode = midiChannel;
+    
+    const multisamFolder = `${sfzName.replace('.sfz', '')}_Layer${layer.index + 1}`;
+    pad.filename = `.\\${multisamFolder}`;
+    
+    // Create asset cells
+    regions.forEach((region, idx) => {
+        const asset = createAssetFromSFZRegion(region, row, col, assetCells.length);
+        
+        // Override folder path
+        const sampleFileName = region.sample.split(/[/\\]/).pop();
+        asset.filename = `.\\${multisamFolder}\\${sampleFileName}`;
+        
+        assetCells.push(asset);
+    });
+    
+    console.log(`✓ Loaded multisample: ${regions.length} zones to Pad ${row * 4 + col + 1}`);
+}
+
+/**
+ * Helper: Convert MIDI note number to name
+ */
+function midiNoteToName(midi) {
+    if (midi < 0 || midi > 127) return '---';
+    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const octave = Math.floor(midi / 12) - 1;
+    const note = notes[midi % 12];
+    return `${note}${octave}`;
+}
+
+// ============================================
 // EXPORT FILE HANDLER
 // ============================================
 window.BitboxerFileHandler = {
@@ -797,9 +1216,9 @@ window.BitboxerFileHandler = {
     SFZParser,
     WAVParser,
     NoteNameParser,
-
-    analyzeSFZLayers,      
-    promptLayerMapping,    
-    loadLayerToPad,        
-    mergeVelocityZones     
+    // Advanced SFZ
+    analyzeSFZLayersAdvanced,
+    promptLayerMappingAdvanced,
+    mergeVelocityZones,
+    loadLayerToPad
 };

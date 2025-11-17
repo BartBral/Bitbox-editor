@@ -121,8 +121,6 @@
                         <div class="btn-container-dual">
                             <!-- Export Selected: Exports selected pads to JSON/ZIP -->
                             <button class="btn btn-primary" id="exportPadBtn" disabled>Export Selected</button>
-
-
                             <!-- Import to Pad -->
                             <div>
                                 <button class="btn btn-primary" id="importToPadBtn" disabled>
@@ -131,6 +129,12 @@
                                 <input type="file" id="padImportInput" accept=".xml,.sfz,.wav,.zip" multiple>
                             </div>
                         </div>
+
+
+<!-- NEW: Export as SFZ -->
+<button class="btn" id="exportSFZBtn" disabled>Export as SFZ</button>
+
+
                         <div class="btn-container-dual">
                             <!-- Copy: Copies selected pads to clipboard -->
                             <button class="btn btn-primary" id="copyPadBtn" disabled>Copy</button>
@@ -1698,6 +1702,9 @@
 
     <!-- 6. XML Handler: XML import/export logic -->
     <script src="js/xml-handler.js"></script>
+
+    <!-- NEW: SFZ Exporter -->
+    <script src="js/sfz-exporter.js"></script>
 
     <!-- 7. Pad Editor: Pad editing and modulation -->
     <script src="js/pad-editor.js"></script>

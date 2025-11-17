@@ -374,6 +374,7 @@ function setupEventListeners() {
     
     // Pad operations
     document.getElementById('exportPadBtn').addEventListener('click', window.BitboxerXML.exportSelectedPads);
+    document.getElementById('exportSFZBtn').addEventListener('click', window.BitboxerSFZExport.exportSelectedAsSFZ);
     document.getElementById('copyPadBtn').addEventListener('click', window.BitboxerPadOps.copySelectedPads);
     document.getElementById('pastePadBtn').addEventListener('click', window.BitboxerPadOps.pasteToSelected);
     document.getElementById('deletePadBtn').addEventListener('click', window.BitboxerPadOps.deleteSelectedPads);
