@@ -1,0 +1,21 @@
+// Single layer with key-mapped regions (like trumpet)
+// Should load to 1 pad as multisample
+
+// Expected:
+// ✅ Single layer detected (no overlap)
+// ✅ No modal shown
+// ✅ Loads to 1 pad with 6 key zones
+
+// Actual:
+// ✅ Single layer detected (no overlap)
+// ✅ No modal shown
+// ✅ Loads to 1 pad with 6 key zones
+
+<group>
+
+<region> sample=sample_01.wav pitch_keycenter=c2  lokey=c2  hikey=e2
+<region> sample=sample_02.wav pitch_keycenter=f2  lokey=f2  hikey=a2
+<region> sample=sample_03.wav pitch_keycenter=a#2 lokey=a#2 hikey=d3
+<region> sample=sample_04.wav pitch_keycenter=d#3 lokey=d#3 hikey=g3
+<region> sample=sample_05.wav pitch_keycenter=g#3 lokey=g#3 hikey=c4
+<region> sample=sample_06.wav pitch_keycenter=c#4 lokey=c#4 hikey=c5

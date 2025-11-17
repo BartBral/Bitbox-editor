@@ -1,0 +1,43 @@
+// 20 Velocity Layer Test SFZ
+// Proper multisample format with pitch_keycenter, lokey, hikey
+// All regions cover same key range (C2-C5) with different velocity layers
+
+// What This Tests:
+// ✅ pitch_keycenter = C3 (all samples tuned to C3)
+// ✅ lokey/hikey = C2 to C5 (3 octave range)
+// ✅ lovel/hivel = 20 velocity layers (0-127 split evenly)
+// ✅ Single key range = No overlap, should be 1 layer with 20 zones
+// ✅ Should merge to 16 = Show "⚠️ 20 zones → 16" warning
+
+// Expected Result
+// Detection: Single layer (no overlap)
+// Modal: NOT shown (direct load)
+// Import: 1 pad with 16 velocity zones (merged from 20)
+// Console: Shows merge bins (e.g., "Bin 1: Vel 0-7 uses  sample_01.wav")
+
+// Actual results:
+// Please see the comments in test_19_layers.sfz as this has exactly the same behaviour.
+// Pads are not initialized before the import of a pad, so layers get added, this is a bug.
+
+<group>
+
+<region> sample= sample_01.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=0   hivel=6
+<region> sample= sample_02.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=7   hivel=13
+<region> sample= sample_03.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=14  hivel=20
+<region> sample= sample_04.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=21  hivel=27
+<region> sample= sample_05.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=28  hivel=34
+<region> sample= sample_06.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=35  hivel=41
+<region> sample= sample_07.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=42  hivel=48
+<region> sample= sample_08.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=49  hivel=55
+<region> sample= sample_09.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=56  hivel=62
+<region> sample= sample_10.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=63  hivel=69
+<region> sample= sample_11.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=70  hivel=76
+<region> sample= sample_12.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=77  hivel=83
+<region> sample= sample_13.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=84  hivel=90
+<region> sample= sample_14.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=91  hivel=97
+<region> sample= sample_15.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=98  hivel=104
+<region> sample= sample_16.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=105 hivel=111
+<region> sample= sample_17.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=112 hivel=115
+<region> sample= sample_18.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=116 hivel=119
+<region> sample= sample_19.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=120 hivel=123
+<region> sample= sample_20.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=124 hivel=127

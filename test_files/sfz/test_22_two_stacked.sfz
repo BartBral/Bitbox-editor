@@ -1,0 +1,21 @@
+// Two layers covering same key range
+// Should prompt for 2 pad selection
+
+// Expected:
+// ✅ 2 layers detected (overlap)
+// ✅ Modal shows: "Layer 1: C2-C5 (3 zones)" and "Layer 2: C2-C5 (3 zones)"
+// ✅ Shared MIDI channel dropdown
+// ✅ Loads to 2 pads
+
+
+<group> // Layer 1
+
+<region> sample= sample_01.wav pitch_keycenter=c3 lokey=c2 hikey=b2
+<region> sample= sample_02.wav pitch_keycenter=c3 lokey=c3 hikey=b3
+<region> sample= sample_03.wav pitch_keycenter=c4 lokey=c4 hikey=c5
+
+<group> // Layer 2
+
+<region> sample= sample_04.wav pitch_keycenter=c3 lokey=c2 hikey=b2
+<region> sample= sample_05.wav pitch_keycenter=c3 lokey=c3 hikey=b3
+<region> sample= sample_06.wav pitch_keycenter=c4 lokey=c4 hikey=c5

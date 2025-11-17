@@ -1,0 +1,11 @@
+// Old SFZ format with no <group> tags
+// All regions should be treated as group 0
+
+// Expected:
+// ✅ Single layer (all in group 0)
+// ✅ No modal
+// ✅ Loads to 1 pad with 3 zones
+
+<region> sample=sample_01.wav pitch_keycenter=c2 lokey=c2 hikey=e2
+<region> sample=sample_02.wav pitch_keycenter=f2 lokey=f2 hikey=a2
+<region> sample=sample_03.wav pitch_keycenter=c3 lokey=a#2 hikey=c4

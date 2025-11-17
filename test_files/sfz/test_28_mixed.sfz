@@ -1,0 +1,19 @@
+// Two groups: one key-mapped (3 regions), one with 3 velocity zones
+// Tests if grouping works correctly
+
+// Expected:
+// ✅ 2 layers detected (key ranges overlap)
+// ✅ Modal shows: "Layer 1: C2-C4 (3 zones)" and "Layer 2: C2-C4 (3 zones)"
+// ✅ Loads to 2 pads
+
+<group> // Group 1: Key-mapped (C2-C4)
+
+<region> sample=sample_01.wav  pitch_keycenter=c2 lokey=c2  hikey=g2
+<region> sample=sample_02.wav  pitch_keycenter=c3 lokey=g#2 hikey=g3
+<region> sample=sample_03.wav  pitch_keycenter=c4 lokey=g#3 hikey=c4
+
+<group> // Group 2: Velocity layers (C2-C4, overlaps!)
+
+<region> sample=sample_04.wav   pitch_keycenter=c3 lokey=c2 hikey=c4 lovel=0   hivel=42
+<region> sample=sample_05.wav   pitch_keycenter=c3 lokey=c2 hikey=c4 lovel=43  hivel=84
+<region> sample=sample_06.wav   pitch_keycenter=c3 lokey=c2 hikey=c4 lovel=85  hivel=127

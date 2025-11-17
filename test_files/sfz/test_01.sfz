@@ -1,0 +1,3 @@
+<group> lokey=c3 hikey=c4
+  <region> sample=sample_01.wav lovel=0   hivel=6   key=c3
+  <region> sample=sample_02.wav lovel=7   hivel=13  key=c3

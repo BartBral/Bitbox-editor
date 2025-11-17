@@ -1,0 +1,14 @@
+// Regions with no lovel/hikey specified
+// Should default to 0-127 (full velocity range)
+
+// Expected:
+
+// ✅ Single layer
+// ✅ No modal
+// ✅ Loads to 1 pad with 3 key zones (each responds to full velocity)
+
+<group>
+
+<region> sample=sample_01.wav pitch_keycenter=c3 lokey=c2 hikey=c3
+<region> sample=sample_02.wav pitch_keycenter=c4 lokey=c#3 hikey=c4
+<region> sample=sample_03.wav pitch_keycenter=c5 lokey=c#4 hikey=c5

@@ -1,0 +1,29 @@
+// Single layer with exactly 16 velocity zones
+// Should load directly without merge
+
+// Expected:
+// ✅ Single layer
+// ✅ No modal
+// ✅ Loads to 1 pad with exactly 16 zones
+// ✅ No merge warning
+
+// Plays on Hardware; Checked ✅ 
+
+<group>
+
+<region> sample=sample_01.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=0   hivel=7
+<region> sample=sample_02.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=8   hivel=15
+<region> sample=sample_03.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=16  hivel=23
+<region> sample=sample_04.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=24  hivel=31
+<region> sample=sample_05.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=32  hivel=39
+<region> sample=sample_06.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=40  hivel=47
+<region> sample=sample_07.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=48  hivel=55
+<region> sample=sample_08.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=56  hivel=63
+<region> sample=sample_09.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=64  hivel=71
+<region> sample=sample_10.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=72  hivel=79
+<region> sample=sample_11.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=80  hivel=87
+<region> sample=sample_12.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=88  hivel=95
+<region> sample=sample_13.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=96  hivel=103
+<region> sample=sample_14.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=104 hivel=111
+<region> sample=sample_15.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=112 hivel=119
+<region> sample=sample_16.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=120 hivel=127

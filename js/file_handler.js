@@ -388,6 +388,15 @@ class SFZParser {
                 if (!line) continue;
             }
 
+            // Handle <control> headers
+            if (line.includes('<control>')) {
+                currentRegion = null;
+                currentGroup = {};
+                
+                line = line.substring(line.indexOf('<control>') + 9).trim();
+                if (!line) continue;
+            }
+
             // Handle <global> headers
             if (line.includes('<global>')) {
                 currentRegion = null;
@@ -405,13 +414,17 @@ class SFZParser {
                 console.log('Found important opcode:', opcodes);
             }
 
+            // Special handling for default_path (control-level only)
             if (opcodes.default_path) {
                 defaultPath = opcodes.default_path;
                 if (!defaultPath.endsWith('/') && !defaultPath.endsWith('\\')) {
                     defaultPath += '/';
                 }
+                // Don't assign default_path to regions/groups - it's control-level
+                delete opcodes.default_path;
             }
 
+            // Assign opcodes to appropriate context
             if (currentRegion) {
                 Object.assign(currentRegion, opcodes);
             } else if (Object.keys(currentGroup).length > 0) {
@@ -543,72 +556,83 @@ class NoteNameParser {
 
 
 
+/**
+ * Converts SFZ to single pad (with advanced layer detection)
+ * Handles stacked layers vs velocity layers
+ * 
+ * @param {Object} sfzData - Parsed SFZ data
+ * @param {Array} wavFiles - Array of WAV file data
+ * @param {HTMLElement} targetPad - Target pad element
+ */
 async function convertSFZToPad(sfzData, wavFiles, targetPad) {
     const row = parseInt(targetPad.dataset.row);
     const col = parseInt(targetPad.dataset.col);
-    const { presetData, assetCells } = window.BitboxerData;
+    const { presetData } = window.BitboxerData;
     
     const validRegions = sfzData.regions.filter(r => r.wavFile);
     
     if (validRegions.length === 0) {
-        window.BitboxerUtils.setStatus('No valid samples found in SFZ', 'error');
+        window.BitboxerUtils.setStatus('No valid samples in SFZ', 'error');
         return;
     }
     
-    // Analyze layer structure
-    const layerAnalysis = analyzeSFZLayers(validRegions);
-
-    // If single layer with multiple velocity zones, load to target pad
-    if (!layerAnalysis.isStacked && layerAnalysis.totalLayers === 1) {
-        window.BitboxerUtils.setStatus('Loading single layer with velocity zones...', 'info');
-        await loadLayerToPad(layerAnalysis.layers[0], row, col, '0'); // No MIDI channel
+    // Use advanced layer analysis
+    const analysis = window.BitboxerFileHandler.analyzeSFZLayersAdvanced(validRegions);
+    
+    // Single layer - load directly
+    if (!analysis.hasMultipleLayers) {
+        const layer = analysis.layers[0];
+        
+        // FIXED: Pass totalLayers count and sfzName
+        window.BitboxerFileHandler.loadLayerToPad(
+            layer, 
+            row, 
+            col, 
+            '1',                    // Default MIDI channel
+            sfzData.file.name,      // SFZ filename
+            analysis.totalLayers    // Total layer count (1 in this case)
+        );
+        
         window.BitboxerUI.updatePadDisplay();
         window.BitboxerUtils.setStatus(
-            `Imported layer with ${layerAnalysis.layers[0].regions.length} velocity zone(s)`,
+            layer.needsMerge 
+                ? `Imported ${layer.velocityZones} zones (merged to 16)` 
+                : `Imported ${layer.velocityZones} velocity zone(s)`,
             'success'
         );
         return;
     }
-
-    // If multiple layers detected, prompt for mapping
-    if (layerAnalysis.isStacked && layerAnalysis.totalLayers > 1) {
-        window.BitboxerUtils.setStatus('Loading single layer with velocity zones...', 'info');
-        await window.BitboxerFileHandler.loadLayerToPad(layerAnalysis.layers[0], row, col, '0');
-        window.BitboxerUI.updatePadDisplay();
-        window.BitboxerUtils.setStatus(
-            `Imported layer with ${layerAnalysis.layers[0].regions.length} velocity zone(s)`,
-            'success'
-        );
+    
+    // Multiple layers - prompt user
+    window.BitboxerUtils.setStatus('Multiple layers detected...', 'info');
+    const result = await window.BitboxerFileHandler.promptLayerMappingAdvanced(
+        analysis.layers, 
+        targetPad
+    );
+    
+    if (result.cancelled) {
+        window.BitboxerUtils.setStatus('Import cancelled', 'info');
         return;
     }
-
-    // If multiple layers detected, prompt for mapping
-    if (layerAnalysis.isStacked && layerAnalysis.totalLayers > 1) {
-        window.BitboxerUtils.setStatus('Multiple layers detected - choose pads & MIDI channel...', 'info');
-
-        const mappings = await window.BitboxerFileHandler.promptLayerMapping(layerAnalysis.layers, targetPad);
-        
-        if (!mappings || mappings.length === 0) {
-            window.BitboxerUtils.setStatus('SFZ import cancelled', 'info');
-            return;
-        }
-        
-        // Load each layer to its assigned pad
-        for (const mapping of mappings) {
-            await window.BitboxerFileHandler.loadLayerToPad(mapping.layer, mapping.row, mapping.col, mapping.midiChannel);
-        }
-        
-        window.BitboxerUI.updatePadDisplay();
-        
-        const channelText = mappings[0].midiChannel === '0' ? 'None' : mappings[0].midiChannel;
-        const totalVelZones = mappings.reduce((sum, m) => sum + m.layer.regions.length, 0);
-        
-        window.BitboxerUtils.setStatus(
-            `✓ Imported ${mappings.length} layer(s), ${totalVelZones} velocity zone(s) total | MIDI Ch ${channelText}`,
-            'success'
+    
+    // Load each layer to selected pad
+    result.mappings.forEach(mapping => {
+        // FIXED: Pass totalLayers count and sfzName
+        window.BitboxerFileHandler.loadLayerToPad(
+            mapping.layer,
+            mapping.row,
+            mapping.col,
+            result.midiChannel,       // Shared MIDI channel
+            sfzData.file.name,        // SFZ filename
+            result.mappings.length    // Total layers being imported
         );
-        return;
-    }
+    });
+    
+    window.BitboxerUI.updatePadDisplay();
+    window.BitboxerUtils.setStatus(
+        `Imported ${result.mappings.length} layer(s) to ${result.mappings.length} pad(s)`,
+        'success'
+    );
 }
 
 // ============================================
@@ -793,6 +817,13 @@ class FileImporter {
  * Analyzes SFZ regions for advanced layer structure
  * Detects key-based overlaps and velocity layer distribution
  * 
+ * LOGIC:
+ * 1. Group by <group> tags (if present)
+ * 2. Within each group:
+ *    - Different vel ranges + key overlap = Velocity layers (1 pad)
+ *    - Same vel ranges + key overlap = Stacked layers (N pads)
+ *    - No key overlap = Key-mapped (1 pad)
+ * 
  * @param {Array} regions - SFZ regions to analyze
  * @returns {Object} Analysis result with layer structure
  */
@@ -800,51 +831,7 @@ function analyzeSFZLayersAdvanced(regions) {
     console.log('=== ADVANCED SFZ LAYER ANALYSIS ===');
     console.log('Total regions:', regions.length);
     
-    // First pass: Check if ANY key ranges overlap
-    let hasOverlap = false;
-    
-    for (let i = 0; i < regions.length; i++) {
-        const r1_lokey = regions[i].lokey !== undefined ? parseInt(regions[i].lokey) : 0;
-        const r1_hikey = regions[i].hikey !== undefined ? parseInt(regions[i].hikey) : 127;
-        
-        for (let j = i + 1; j < regions.length; j++) {
-            const r2_lokey = regions[j].lokey !== undefined ? parseInt(regions[j].lokey) : 0;
-            const r2_hikey = regions[j].hikey !== undefined ? parseInt(regions[j].hikey) : 127;
-            
-            // Check if ranges overlap
-            if (!(r1_hikey < r2_lokey || r1_lokey > r2_hikey)) {
-                hasOverlap = true;
-                console.log(`Overlap detected: Region ${i} (${r1_lokey}-${r1_hikey}) overlaps Region ${j} (${r2_lokey}-${r2_hikey})`);
-                break;
-            }
-        }
-        if (hasOverlap) break;
-    }
-    
-    // No overlap = single key-mapped layer (multisample)
-    if (!hasOverlap) {
-        console.log('No key overlap detected → Single key-mapped multisample');
-        
-        const lokey = Math.min(...regions.map(r => r.lokey !== undefined ? parseInt(r.lokey) : 0));
-        const hikey = Math.max(...regions.map(r => r.hikey !== undefined ? parseInt(r.hikey) : 127));
-        
-        return {
-            hasMultipleLayers: false,
-            layers: [{
-                index: 0,
-                lokey: lokey,
-                hikey: hikey,
-                regions: regions,
-                velocityZones: regions.length,
-                needsMerge: regions.length > 16
-            }],
-            totalLayers: 1
-        };
-    }
-    
-    // Has overlap = group by SFZ <group> sections
-    console.log('Key overlap detected → Grouping by SFZ <group> tags');
-    
+    // Step 1: Group regions by their groupIndex
     const sfzGroups = new Map();
     
     regions.forEach((region, idx) => {
@@ -858,47 +845,149 @@ function analyzeSFZLayersAdvanced(regions) {
             sfzGroups.set(groupKey, []);
         }
         
-        sfzGroups.get(groupKey).push(region);
+        sfzGroups.get(groupKey).push({
+            ...region,
+            lokey: lokey,
+            hikey: hikey
+        });
     });
     
-    console.log(`Found ${sfzGroups.size} SFZ <group> sections`);
+    console.log(`Found ${sfzGroups.size} SFZ <group> section(s)`);
     
-    // Convert groups to layers
-    const layers = Array.from(sfzGroups.values()).map((groupRegions, idx) => {
-        const lokey = Math.min(...groupRegions.map(r => {
-            const lk = r.lokey !== undefined ? parseInt(r.lokey) : 0;
-            return isNaN(lk) ? 0 : lk;
-        }));
-        const hikey = Math.max(...groupRegions.map(r => {
-            const hk = r.hikey !== undefined ? parseInt(r.hikey) : 127;
-            return isNaN(hk) ? 127 : hk;
-        }));
-        const velocityZones = groupRegions.length;
-        const needsMerge = velocityZones > 16;
+    // Step 2: Analyze each group
+    const allLayers = [];
+    
+    for (const [groupIdx, groupRegions] of sfzGroups.entries()) {
+        console.log(`\n--- Analyzing Group ${groupIdx} (${groupRegions.length} regions) ---`);
         
-        console.log(`Layer ${idx + 1}: Keys ${lokey}-${hikey}, ${velocityZones} velocity zones${needsMerge ? ' (NEEDS MERGE)' : ''}`);
+        const groupLayers = analyzeGroup(groupRegions, groupIdx);
+        allLayers.push(...groupLayers);
+    }
+    
+    // Step 3: Return results
+    console.log('\n=== ANALYSIS RESULT ===');
+    console.log('Total layers detected:', allLayers.length);
+    allLayers.forEach((layer, idx) => {
+        console.log(`Layer ${idx + 1}: Keys ${layer.lokey}-${layer.hikey}, ${layer.velocityZones} velocity zones${layer.needsMerge ? ' (NEEDS MERGE)' : ''}`);
+    });
+    
+    return {
+        hasMultipleLayers: allLayers.length > 1,
+        layers: allLayers,
+        totalLayers: allLayers.length
+    };
+}
+
+/**
+ * Analyzes a single group for layer structure
+ * 
+ * @param {Array} groupRegions - Regions within one group
+ * @param {number} groupIdx - Group index
+ * @returns {Array} Array of detected layers
+ */
+function analyzeGroup(groupRegions, groupIdx) {
+    // Check for key overlaps
+    const hasKeyOverlap = checkKeyOverlap(groupRegions);
+    
+    if (!hasKeyOverlap) {
+        // No overlap = Key-mapped multisample (e.g., C3=kick, D3=snare)
+        console.log('→ No key overlap: Key-mapped multisample');
         
-        return {
-            index: idx,
+        const lokey = Math.min(...groupRegions.map(r => r.lokey));
+        const hikey = Math.max(...groupRegions.map(r => r.hikey));
+        
+        return [{
+            index: groupIdx,
             lokey: lokey,
             hikey: hikey,
             regions: groupRegions,
-            velocityZones: velocityZones,
-            needsMerge: needsMerge
-        };
+            velocityZones: groupRegions.length,
+            needsMerge: groupRegions.length > 16
+        }];
+    }
+    
+    // Has overlap - check velocity ranges
+    const velocityGroups = groupByVelocity(groupRegions);
+    
+    if (velocityGroups.length === 1) {
+        // All same velocity range = Stacked layers
+        console.log(`→ Key overlap + same velocity: ${groupRegions.length} stacked layers`);
+        
+        return groupRegions.map((region, idx) => ({
+            index: groupIdx * 1000 + idx, // Unique index
+            lokey: region.lokey,
+            hikey: region.hikey,
+            regions: [region],
+            velocityZones: 1,
+            needsMerge: false
+        }));
+    }
+    
+    // Different velocity ranges = Velocity layers
+    console.log(`→ Key overlap + different velocities: 1 layer with ${groupRegions.length} velocity zones`);
+    
+    const lokey = Math.min(...groupRegions.map(r => r.lokey));
+    const hikey = Math.max(...groupRegions.map(r => r.hikey));
+    
+    return [{
+        index: groupIdx,
+        lokey: lokey,
+        hikey: hikey,
+        regions: groupRegions,
+        velocityZones: groupRegions.length,
+        needsMerge: groupRegions.length > 16
+    }];
+}
+
+/**
+ * Check if any regions have overlapping key ranges
+ * 
+ * @param {Array} regions - Regions to check
+ * @returns {boolean} True if any overlap exists
+ */
+function checkKeyOverlap(regions) {
+    for (let i = 0; i < regions.length; i++) {
+        for (let j = i + 1; j < regions.length; j++) {
+            const r1 = regions[i];
+            const r2 = regions[j];
+            
+            // Check if key ranges overlap
+            if (!(r1.hikey < r2.lokey || r1.lokey > r2.hikey)) {
+                return true; // Overlap found
+            }
+        }
+    }
+    return false; // No overlap
+}
+
+/**
+ * Group regions by velocity range
+ * Regions with EXACT same velocity range = same group
+ * 
+ * @param {Array} regions - Regions to group
+ * @returns {Array} Array of velocity groups
+ */
+function groupByVelocity(regions) {
+    const velGroups = new Map();
+    
+    regions.forEach(region => {
+        const lovel = region.lovel !== undefined ? parseInt(region.lovel) : 0;
+        const hivel = region.hivel !== undefined ? parseInt(region.hivel) : 127;
+        const velKey = `${lovel}-${hivel}`; // Exact match required
+        
+        if (!velGroups.has(velKey)) {
+            velGroups.set(velKey, []);
+        }
+        
+        velGroups.get(velKey).push(region);
     });
     
-    const hasMultipleLayers = layers.length > 1;
+    console.log(`  Velocity groups found: ${velGroups.size}`);
+    velGroups.forEach((group, key) => {
+        console.log(`    ${key}: ${group.length} region(s)`);
+    });
     
-    console.log('=== ANALYSIS RESULT ===');
-    console.log('Multiple layers:', hasMultipleLayers);
-    console.log('Total layers:', layers.length);
-    
-    return {
-        hasMultipleLayers: hasMultipleLayers,
-        layers: layers,
-        totalLayers: layers.length
-    };
+    return Array.from(velGroups.values());
 }
 
 /**
@@ -1117,29 +1206,29 @@ function mergeVelocityZones(regions) {
     });
     
     const merged = [];
-    const binSize = Math.ceil(sorted.length / 16);
     
+    // FIX: Distribute samples evenly across 16 bins
     for (let i = 0; i < 16; i++) {
-        const binStart = i * binSize;
-        const binEnd = Math.min(binStart + binSize, sorted.length);
-        const binRegions = sorted.slice(binStart, binEnd);
+        const binStart = Math.floor((i / 16) * sorted.length);
+        const binEnd = Math.floor(((i + 1) / 16) * sorted.length);
         
-        if (binRegions.length === 0) break;
+        if (binStart >= sorted.length) break;
         
-        // Use closest sample (first in bin)
-        const representative = binRegions[0];
+        // Use first sample in bin as representative
+        const representative = sorted[binStart];
         
-        // Calculate new velocity range for this bin
+        // Calculate velocity range for this bin
         const newLoVel = Math.floor((i / 16) * 127);
-        const newHiVel = Math.floor(((i + 1) / 16) * 127) - 1;
+        const newHiVel = i === 15 ? 127 : Math.floor(((i + 1) / 16) * 127) - 1;
         
         merged.push({
             ...representative,
             lovel: newLoVel,
-            hivel: i === 15 ? 127 : newHiVel // Last bin gets 127
+            hivel: newHiVel
         });
         
-        console.log(`  Bin ${i + 1}: Vel ${newLoVel}-${newHiVel} (from ${binRegions.length} samples)`);
+        const samplesInBin = binEnd - binStart;
+        console.log(`  Bin ${i + 1}: Vel ${newLoVel}-${newHiVel} (from ${samplesInBin} sample${samplesInBin > 1 ? 's' : ''})`);
     }
     
     return merged;
@@ -1154,8 +1243,9 @@ function mergeVelocityZones(regions) {
  * @param {number} col - Target pad column
  * @param {string} midiChannel - MIDI channel (0-16)
  * @param {string} sfzName - SFZ filename (for folder naming)
+ * @param {number} totalLayers - Total number of layers being imported
  */
-function loadLayerToPad(layer, row, col, midiChannel, sfzName) {
+function loadLayerToPad(layer, row, col, midiChannel, sfzName, totalLayers) {
     const { presetData, assetCells } = window.BitboxerData;
     const pad = presetData.pads[row][col];
     
@@ -1186,7 +1276,12 @@ function loadLayerToPad(layer, row, col, midiChannel, sfzName) {
     pad.params.multisammode = '1';
     pad.params.midimode = midiChannel;
     
-    const multisamFolder = `${sfzName.replace('.sfz', '')}_Layer${layer.index + 1}`;
+    // FIXED: Only add "_Layer#" suffix if multiple layers
+    const baseName = sfzName.replace('.sfz', '');
+    const multisamFolder = totalLayers > 1 
+        ? `${baseName}_Layer${layer.index + 1}`
+        : baseName;
+    
     pad.filename = `.\\${multisamFolder}`;
     
     // Create asset cells

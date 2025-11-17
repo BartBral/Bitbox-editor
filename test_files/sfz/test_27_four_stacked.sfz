@@ -1,0 +1,23 @@
+// Four stacked layers covering C3-C4
+// Common in advanced sample libraries
+
+// Expected:
+// ✅ 4 layers detected
+// ✅ Modal shows 4 layers
+// ✅ Requires 4 pads (might need to overwrite occupied pads)
+
+<group> // Layer 1: Direct mic
+
+<region> sample=sample_01.wav pitch_keycenter=c3 lokey=c3 hikey=c4
+
+<group> // Layer 2: Room mic
+
+<region> sample=sample_02.wav pitch_keycenter=c3 lokey=c3 hikey=c4
+
+<group> // Layer 3: Close mic
+
+<region> sample=sample_03.wav pitch_keycenter=c3 lokey=c3 hikey=c4
+
+<group> // Layer 4: Overhead mic
+
+<region> sample=sample_04.wav pitch_keycenter=c3 lokey=c3 hikey=c4

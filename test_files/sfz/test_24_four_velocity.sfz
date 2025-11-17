@@ -1,0 +1,17 @@
+// Single layer with 4 velocity zones
+// Should load directly (no merge needed)
+
+// Expected:
+// ✅ Single layer (no overlap)
+// ✅ No modal
+// ✅ Loads to 1 pad with 4 velocity zones
+// ✅ No merge warning
+
+// Plays correctly on hardware! Checked ✅
+
+<group>
+
+<region> sample=sample_01.wav  pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=0   hivel=31
+<region> sample=sample_02.wav  pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=32  hivel=63
+<region> sample=sample_03.wav  pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=64  hivel=95
+<region> sample=sample_04.wav  pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=96  hivel=127

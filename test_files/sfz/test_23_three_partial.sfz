@@ -1,0 +1,27 @@
+// Three layers with partial key overlap
+// Layer 1: C2-C4, Layer 2: C3-C5, Layer 3: C4-C6
+
+// Expected:
+// ✅ 3 layers detected (partial overlap counts as overlap)
+// ✅ Modal shows 3 layers with different key ranges
+// ✅ Loads to 3 pads
+
+// I have experimented with this and it seems that **only** <group> is used to separate the layers, 
+// and overlapping keys are not catched (used) for separation.
+// When I remove the <group> headers and all will get only one pad, 
+// that pad will **not** play on hardware because of conflicting note ranges.
+
+<group> // Layer 1: Low
+
+<region> sample= sample_01.wav pitch_keycenter=c2 lokey=c2 hikey=c3
+<region> sample= sample_02.wav pitch_keycenter=c3 lokey=c#3 hikey=c4
+
+<group> // Layer 2: Mid
+
+<region> sample= sample_03.wav pitch_keycenter=c3 lokey=c3 hikey=c4
+<region> sample= sample_04.wav pitch_keycenter=c4 lokey=c#4 hikey=c5
+
+<group> // Layer 3: High
+
+<region> sample= sample_05.wav pitch_keycenter=c4 lokey=c4 hikey=c5
+<region> sample= sample_06.wav pitch_keycenter=c5 lokey=c#5 hikey=c6

@@ -1,0 +1,42 @@
+// 20 Velocity Layer Test SFZ
+// All regions cover C3-C4 with different velocity ranges
+
+// What to Expect:
+// • Console should show: "⚠️ 20 zones → 16"
+// • Modal should show: "Layer 1: Keys C3-C4 ⚠️ 20 zones → 16"
+// • After import: Pad should have 16 velocity zones (merged from 20)
+// • Console should log: Bin mappings showing which samples were merged
+
+// What actually happend:
+// • Console did show: "⚠️ 20 zones → 16", but it is not what it did.
+//     • 1st try: It actually merged 20 zones → 10, the rest is not in the multi.
+//     • 2nd try (on same pad, no refresh or 'new preset'): 
+//     It added another 10 zones to the previous 10, so now there are 20 zones in the pad. 
+//     There was no modal whatsoever asking. 
+//     **!!! But I guess that the pad was not initialised before import sfz was triggered!!!**
+// • Modal should show: "Layer 1: Keys C3-C4 ⚠️ 20 zones → 16" - There was no modal at all.
+// • After import: Pad should have 16 velocity zones (merged from 20) - No, it was 10.
+// • Console should log: Bin mappings showing which samples were merged - Only 10 bins are in console.
+
+<group> lokey=c3 hikey=c4
+
+<region> sample= sample_01.wav lovel=0   hivel=6   key=c3
+<region> sample= sample_02.wav lovel=7   hivel=13  key=c3
+<region> sample= sample_03.wav lovel=14  hivel=20  key=c3
+<region> sample= sample_04.wav lovel=21  hivel=27  key=c3
+<region> sample= sample_05.wav lovel=28  hivel=34  key=c3
+<region> sample= sample_06.wav lovel=35  hivel=41  key=c3
+<region> sample= sample_07.wav lovel=42  hivel=48  key=c3
+<region> sample= sample_08.wav lovel=49  hivel=55  key=c3
+<region> sample= sample_09.wav lovel=56  hivel=62  key=c3
+<region> sample= sample_10.wav lovel=63  hivel=69  key=c3
+<region> sample= sample_11.wav lovel=70  hivel=76  key=c3
+<region> sample= sample_12.wav lovel=77  hivel=83  key=c3
+<region> sample= sample_13.wav lovel=84  hivel=90  key=c3
+<region> sample= sample_14.wav lovel=91  hivel=97  key=c3
+<region> sample= sample_15.wav lovel=98  hivel=104 key=c3
+<region> sample= sample_16.wav lovel=105 hivel=111 key=c3
+<region> sample= sample_17.wav lovel=112 hivel=115 key=c3
+<region> sample= sample_18.wav lovel=116 hivel=119 key=c3
+<region> sample= sample_19.wav lovel=120 hivel=123 key=c3
+<region> sample= sample_20.wav lovel=124 hivel=127 key=c3

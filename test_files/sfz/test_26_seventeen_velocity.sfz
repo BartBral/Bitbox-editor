@@ -1,0 +1,27 @@
+// Single layer with 17 velocity zones
+// Should show merge warning
+
+// Expected:
+// ✅ Single layer
+// ✅ Shows "⚠️ 17 zones → 16"
+// ✅ Loads to 1 pad with 16 zones (merged)
+
+<group>
+
+<region> sample=sample_01.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=0   hivel=7
+<region> sample=sample_02.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=8   hivel=14
+<region> sample=sample_03.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=15  hivel=21
+<region> sample=sample_04.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=22  hivel=28
+<region> sample=sample_05.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=29  hivel=35
+<region> sample=sample_06.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=36  hivel=42
+<region> sample=sample_07.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=43  hivel=49
+<region> sample=sample_08.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=50  hivel=56
+<region> sample=sample_09.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=57  hivel=63
+<region> sample=sample_10.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=64  hivel=70
+<region> sample=sample_11.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=71  hivel=77
+<region> sample=sample_12.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=78  hivel=84
+<region> sample=sample_13.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=85  hivel=91
+<region> sample=sample_14.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=92  hivel=98
+<region> sample=sample_15.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=99  hivel=105
+<region> sample=sample_16.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=106 hivel=112
+<region> sample=sample_17.wav pitch_keycenter=c3 lokey=c2 hikey=c5 lovel=113 hivel=127
