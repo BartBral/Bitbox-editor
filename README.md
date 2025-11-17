@@ -86,7 +86,7 @@ Here is how to again import one of those:
 
 ## ⚠️ Experimental ⚠️ SFZ Layer Detection
 
-BITBOXER **tries to** "intelligently" analyzes SFZ files, but is not yet able:
+BITBOXER **tries to** analyzes SFZ files, but is not yet very able:
 
 ### Single Layer (Key-Mapped Multisample)
 - Regions have **non-overlapping key ranges**
@@ -97,6 +97,7 @@ BITBOXER **tries to** "intelligently" analyzes SFZ files, but is not yet able:
 - Regions have **overlapping key ranges**
 - Example: Two groups both covering C2-C5
 - **Result:** Shows modal to map each layer to different pads
+- ⚠️ At the moment I recommend to set a <group> before every layer. As it is not yet able to otherwise split sfz-file in to more than one layer to play multitibral patches, using samples stacked on each other.
 
 ### ⚠️ Velocity Layers
 - Multiple regions with **same key range** but different velocity ranges
@@ -104,7 +105,7 @@ BITBOXER **tries to** "intelligently" analyzes SFZ files, but is not yet able:
 - **Result:** Loads to 1 pad as velocity-switched multisample
 - **Limit:** Maximum 16 velocity zones per pad
 - **Auto-Merge:** If >16 zones, BITBOXER merges them evenly (shows ⚠️ warning)
-
+- ⚠️ At the moment I have not yet tested this out very well.
 ---
 
 ## 🎛️ Layer Mapping Modal

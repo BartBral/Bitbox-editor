@@ -369,8 +369,19 @@ class SFZParser {
 
             // Handle <group> headers
             if (line.includes('<group>')) {
+                // CRITICAL: Finalize previous region before starting new group
+                if (currentRegion) {
+                    if (defaultPath && currentRegion.sample) {
+                        if (!currentRegion.sample.includes('/') && !currentRegion.sample.includes('\\')) {
+                            currentRegion.sample = defaultPath + currentRegion.sample;
+                        }
+                    }
+                    console.log('Finished region (before new group):', currentRegion);
+                    regions.push(currentRegion);
+                }
+                
                 currentRegion = null;
-                groupIndex++; // ← INCREMENT GROUP INDEX
+                groupIndex++;
                 currentGroup = { ...globalOpcodes };
 
                 line = line.substring(line.indexOf('<group>') + 7).trim();
