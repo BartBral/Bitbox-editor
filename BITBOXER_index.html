@@ -70,7 +70,7 @@
                      ============================================ -->
                 <div class="controls">
                     <!-- Working Folder -->
-                    <button class="btn btn-primary" id="setWorkingFolderBtn" style="display:none;">
+                    <button class="btn" id="setWorkingFolderBtn" style="display:none;">
                         ⚠️ Set Working Folder! For best user experience! ⚠️
                     </button>
 
@@ -80,19 +80,19 @@
                             <button class="btn btn-primary" id="loadBtn">Load Preset</button>
                             <input type="file" id="fileInput" accept=".xml,.zip" multiple>
                         </div>
-
-                        <div><!-- Folder Import (Chrome/Edge) -->
-                            <button class="btn btn-primary" id="loadFolderBtn">Load Folder</button>
-                        </div>
-                    </div>
-
-                    <div class="btn-container-dual">
-
                         <!-- Save -->
                         <button class="btn btn-primary" id="saveBtn">Save Preset</button>
 
+                        
+                    </div>
+
+                    <div class="btn-container-dual">
+                        <div><!-- Folder Import (Chrome/Edge) -->
+                            <button class="btn" id="loadFolderBtn">Load Folder</button>
+                        </div>
+
                         <!-- New Preset -->
-                        <button class="btn btn-primary" id="newPresetBtn">New Preset</button>
+                        <button class="btn" id="newPresetBtn">New Preset</button>
                     </div>
 
                 </div>
@@ -106,7 +106,7 @@
                     <div class="controls">
                         <div class="btn-container-dual">
                             <!-- FX Settings Button: Opens FX modal -->
-                            <button class="btn btn-primary" id="fxBtn">FX & EQ Settings</button>
+                            <button class="btn" id="fxBtn">FX & EQ Settings</button>
                         </div>
                     </div>
                 </div>
@@ -119,35 +119,37 @@
                     <h3>Pad Operations</h3>
                     <div class="controls">
                         <div class="btn-container-dual">
-                            <!-- Export Selected: Exports selected pads to JSON/ZIP -->
-                            <button class="btn btn-primary" id="exportPadBtn" disabled>Export Selected</button>
                             <!-- Import to Pad -->
                             <div>
-                                <button class="btn btn-primary" id="importToPadBtn" disabled>
-                                    Import Pad
-                                </button>
+                                <button class="btn" id="importToPadBtn" disabled>Import Pad</button>
                                 <input type="file" id="padImportInput" accept=".xml,.sfz,.wav,.zip" multiple>
                             </div>
+
+                            <!-- Export Selected: Exports selected pads to JSON/ZIP -->
+                            <button class="btn" id="exportPadBtn" disabled>Export Pad(s)</button>
+
                         </div>
 
-
-<!-- NEW: Export as SFZ -->
-<button class="btn" id="exportSFZBtn" disabled>Export as SFZ</button>
-
+                        <div class="btn-container-dual">
+                            <div></div>
+                            <!-- NEW: Export as SFZ -->
+                            <button class="btn" id="exportSFZBtn" disabled>Export as SFZ</button>
+                        </div>
 
                         <div class="btn-container-dual">
                             <!-- Copy: Copies selected pads to clipboard -->
-                            <button class="btn btn-primary" id="copyPadBtn" disabled>Copy</button>
+                            <button class="btn" id="copyPadBtn" disabled>Copy</button>
 
                             <!-- Paste: Pastes clipboard to selected pads -->
-                            <button class="btn btn-primary" id="pastePadBtn" disabled>Paste</button>
+                            <button class="btn" id="pastePadBtn" disabled>Paste</button>
                         </div>
                         <div class="btn-container-dual">
+                            <div></div>
                             <div>
                                 <!-- Delete: Clears selected pads -->
-                                <button class="btn btn-primary" id="deletePadBtn" disabled>Delete</button>
+                                <button class="btn" id="deletePadBtn" disabled>Delete</button>
                             </div>
-                            <div></div>
+                            
                         </div>
                     </div>
                 </div>
@@ -1279,7 +1281,7 @@
                                 </div>
                                 <select class="select" id="fx-delaypingpong">
                                     <option value="0">Off</option>
-                                    <option value="1" selected>Stereo ping-pong delay</option>
+                                    <option value="1" selected>Stereo L-R delay</option>
                                 </select>
                             </div>
 
