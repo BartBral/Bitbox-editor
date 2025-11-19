@@ -1,0 +1,15 @@
+{
+  "name": "My delay preset",
+  "description": "a delay test",
+  "params": {
+    "delay": "200",
+    "delaymustime": "8",
+    "feedback": "150",
+    "cutoff": "800",
+    "filtquality": "500",
+    "dealybeatsync": "1",
+    "filtenable": "0",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

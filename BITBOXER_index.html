@@ -83,7 +83,7 @@
                         <!-- Save -->
                         <button class="btn btn-primary" id="saveBtn">Save Preset</button>
 
-                        
+
                     </div>
 
                     <div class="btn-container-dual">
@@ -102,12 +102,30 @@
                      Access global FX settings (Delay, Reverb, EQ)
                      ============================================ -->
                 <div class="panel">
-                    <h3>Global FX and EQ</h3>
+
                     <div class="controls">
                         <div class="btn-container-dual">
+
+                            <div>
+                                <h3>Global FX & EQ</h3>
+                            </div>
+
                             <!-- FX Settings Button: Opens FX modal -->
                             <button class="btn" id="fxBtn">FX & EQ Settings</button>
+
                         </div>
+
+                        <!-- NEW: FX Set Preset Dropdown -->
+                        <select class="select-dark" id="fxSetPresetDropdown" title="Load complete FX set">
+                            <option value="">-- FX Set --</option>
+                            <!-- Populated by JS -->
+                        </select>
+
+
+                        <!-- NEW: Load External Presets Button -->
+                        <!-- <button class="btn" id="loadExternalPresetsBtn" title="Load presets from fx-presets folder"> -->
+                        <!-- 📁 Load Preset Folder -->
+                        <!-- </button> -->
                     </div>
                 </div>
 
@@ -149,7 +167,7 @@
                                 <!-- Delete: Clears selected pads -->
                                 <button class="btn" id="deletePadBtn" disabled>Delete</button>
                             </div>
-                            
+
                         </div>
                     </div>
                 </div>
@@ -178,7 +196,7 @@
     <div class="context-menu" id="contextMenu">
         <div class="context-item" id="contextEdit">Edit Pad</div>
         <div class="context-item" id="contextRename">Rename Pad</div>
-        <div class="context-item" id="contextImport">Import to This Pad</div> <!-- ← ADD -->
+        <div class="context-item" id="contextImport">Import to This Pad</div>
         <div class="context-item separator"></div> <!-- ← ADD (visual divider) -->
         <div class="context-item" id="contextExport">Export Pad</div>
         <div class="context-item" id="contextCopy">Copy</div>
@@ -199,7 +217,7 @@
                  Shows pad number/name and close button
                  ============================================ -->
             <div class="modal-header">
-                <h2 id="modalTitle">Edit Pad</h2>
+                <h4 id="modalTitle">Edit Pad</h4>
                 <div></div>
                 <!-- Cell Mode: Determines pad behavior (Sample/Clip/Slicer/Granular) -->
                 <div class="param">
@@ -1211,6 +1229,21 @@
                  Delay/Echo effect with optional filter
                  ============================================ -->
             <div class="tab-content active" id="tab-delay">
+
+                <!-- NEW: Preset Controls (Top-Right) -->
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn" id="saveDelayPresetBtn" title="Save current delay settings">💾 Save</button>
+                    <button class="btn" id="loadDelayPresetBtn" title="Load delay preset from file">📂 Load</button>
+                    <select class="select" id="delayPresetDropdown" style="min-width: 200px;"
+                        title="Select built-in preset">
+                        <option value="">-- Delay Presets --</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+
+
+
                 <div class="param-section">
                     <h3>Delay Parameters</h3>
                     <div class="param-grid">
@@ -1358,6 +1391,18 @@
                  Reverb effect parameters
                  ============================================ -->
             <div class="tab-content" id="tab-reverb">
+
+                <!-- NEW: Preset Controls (Top-Right) -->
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn" id="saveReverbPresetBtn" title="Save current reverb settings">💾 Save</button>
+                    <button class="btn" id="loadReverbPresetBtn" title="Load reverb preset from file">📂 Load</button>
+                    <select class="select" id="reverbPresetDropdown" style="min-width: 200px;"
+                        title="Select built-in preset">
+                        <option value="">-- Reverb Presets --</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
                 <div class="param-section">
                     <h3>Reverb Parameters</h3>
                     <div class="param-grid">
@@ -1412,6 +1457,19 @@
                  4-band parametric equalizer (Bitbox mk2 only)
                  ============================================ -->
             <div class="tab-content" id="tab-eq">
+
+
+                <!-- NEW: Preset Controls (Top-Right) -->
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn" id="saveEQPresetBtn" title="Save current EQ settings">💾 Save</button>
+                    <button class="btn" id="loadEQPresetBtn" title="Load EQ preset from file">📂 Load</button>
+                    <select class="select" id="eqPresetDropdown" style="min-width: 200px;"
+                        title="Select built-in preset">
+                        <option value="">-- EQ Presets --</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
 
                 <!-- EQ Band 1 -->
                 <div class="param-section">
@@ -1714,6 +1772,12 @@
     <!-- 8. FX Editor: FX editing and modulation -->
     <script src="js/fx-editor.js"></script>
 
+    <!-- NEW: FX Presets -->
+    <script src="js/fx-presets.js"></script>
+
+    <!-- NEW: External FX Preset Scanning -->
+    <script src="js/fx-presets-external.js"></script>
+
     <!-- 9. File Handler: File import system: ZIP, SFZ, WAV and Folder uploads -->
     <script src="js/file_handler.js"></script>
 
@@ -1722,6 +1786,9 @@
 
     <!-- 11. Import Handler: File import orchestration and SFZ conversion -->
     <script src="js/import-handler.js"></script>
+
+    <!-- NEW: Startup Modal System -->
+    <script src="js/startup-modal.js"></script>
 
     <!-- 12. Main: Application initialization (MUST BE LAST!!!) -->
     <script src="js/main.js"></script>

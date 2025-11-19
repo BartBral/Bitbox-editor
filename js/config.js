@@ -178,7 +178,7 @@ const MAX_MOD_PER_DESTINATION = 3;
 /**
  * Status message auto-clear timeout (milliseconds)
  */
-const STATUS_AUTO_CLEAR_MS = 5000;
+const STATUS_AUTO_CLEAR_MS = 20000;
 
 // ============================================
 // EXPORT CONFIGURATION

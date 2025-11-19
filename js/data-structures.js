@@ -274,7 +274,11 @@ function createEmptyPreset() {
  * @returns {string} Random hex string (e.g., "A3F2")
  */
 function generateRandomHex() {
-    return Math.floor(Math.random() * 0x10000).toString(16).padStart(4, '0').toUpperCase();
+    // Use timestamp + random for true randomness
+    return Math.floor((Date.now() + Math.random() * 0x10000) % 0x10000)
+        .toString(16)
+        .padStart(4, '0')
+        .toUpperCase();
 }
 
 /**

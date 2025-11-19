@@ -837,9 +837,11 @@ function analyzeSFZLayersAdvanced(regions) {
     regions.forEach((region, idx) => {
         const lokey = region.lokey !== undefined ? parseInt(region.lokey) : 0;
         const hikey = region.hikey !== undefined ? parseInt(region.hikey) : 127;
+        const lovel = region.lovel !== undefined ? parseInt(region.lovel) : 0;
+        const hivel = region.hivel !== undefined ? parseInt(region.hivel) : 127;
         const groupKey = region.groupIndex !== undefined ? region.groupIndex : 0;
         
-        console.log(`Region ${idx}: Group ${groupKey}, Keys ${lokey}-${hikey}, Vel ${region.lovel || 0}-${region.hivel || 127}`);
+        console.log(`Region ${idx}: Group ${groupKey}, Keys ${lokey}-${hikey}, Vel ${lovel}-${hivel}, Sample: ${region.sample}`);
         
         if (!sfzGroups.has(groupKey)) {
             sfzGroups.set(groupKey, []);
@@ -848,7 +850,9 @@ function analyzeSFZLayersAdvanced(regions) {
         sfzGroups.get(groupKey).push({
             ...region,
             lokey: lokey,
-            hikey: hikey
+            hikey: hikey,
+            lovel: lovel,
+            hivel: hivel
         });
     });
     
@@ -861,82 +865,25 @@ function analyzeSFZLayersAdvanced(regions) {
         console.log(`\n--- Analyzing Group ${groupIdx} (${groupRegions.length} regions) ---`);
         
         const groupLayers = analyzeGroup(groupRegions, groupIdx);
+        
+        console.log(`Group ${groupIdx} produced ${groupLayers.length} layer(s)`);
+        groupLayers.forEach(layer => {
+            console.log(`  Layer: ${layer.regions.length} region(s), keys ${layer.lokey}-${layer.hikey}`);
+        });
+        
         allLayers.push(...groupLayers);
     }
     
     // Step 3: Return results
     console.log('\n=== ANALYSIS RESULT ===');
+    console.log('Has multiple layers:', allLayers.length > 1);
     console.log('Total layers detected:', allLayers.length);
-    allLayers.forEach((layer, idx) => {
-        console.log(`Layer ${idx + 1}: Keys ${layer.lokey}-${layer.hikey}, ${layer.velocityZones} velocity zones${layer.needsMerge ? ' (NEEDS MERGE)' : ''}`);
-    });
     
     return {
         hasMultipleLayers: allLayers.length > 1,
         layers: allLayers,
         totalLayers: allLayers.length
     };
-}
-
-/**
- * Analyzes a single group for layer structure
- * 
- * @param {Array} groupRegions - Regions within one group
- * @param {number} groupIdx - Group index
- * @returns {Array} Array of detected layers
- */
-function analyzeGroup(groupRegions, groupIdx) {
-    // Check for key overlaps
-    const hasKeyOverlap = checkKeyOverlap(groupRegions);
-    
-    if (!hasKeyOverlap) {
-        // No overlap = Key-mapped multisample (e.g., C3=kick, D3=snare)
-        console.log('→ No key overlap: Key-mapped multisample');
-        
-        const lokey = Math.min(...groupRegions.map(r => r.lokey));
-        const hikey = Math.max(...groupRegions.map(r => r.hikey));
-        
-        return [{
-            index: groupIdx,
-            lokey: lokey,
-            hikey: hikey,
-            regions: groupRegions,
-            velocityZones: groupRegions.length,
-            needsMerge: groupRegions.length > 16
-        }];
-    }
-    
-    // Has overlap - check velocity ranges
-    const velocityGroups = groupByVelocity(groupRegions);
-    
-    if (velocityGroups.length === 1) {
-        // All same velocity range = Stacked layers
-        console.log(`→ Key overlap + same velocity: ${groupRegions.length} stacked layers`);
-        
-        return groupRegions.map((region, idx) => ({
-            index: groupIdx * 1000 + idx, // Unique index
-            lokey: region.lokey,
-            hikey: region.hikey,
-            regions: [region],
-            velocityZones: 1,
-            needsMerge: false
-        }));
-    }
-    
-    // Different velocity ranges = Velocity layers
-    console.log(`→ Key overlap + different velocities: 1 layer with ${groupRegions.length} velocity zones`);
-    
-    const lokey = Math.min(...groupRegions.map(r => r.lokey));
-    const hikey = Math.max(...groupRegions.map(r => r.hikey));
-    
-    return [{
-        index: groupIdx,
-        lokey: lokey,
-        hikey: hikey,
-        regions: groupRegions,
-        velocityZones: groupRegions.length,
-        needsMerge: groupRegions.length > 16
-    }];
 }
 
 /**
@@ -958,6 +905,33 @@ function checkKeyOverlap(regions) {
         }
     }
     return false; // No overlap
+}
+
+/**
+ * Check if regions have FULL key overlap (not just partial)
+ * Full overlap = most keys are covered by multiple regions
+ */
+function checkFullKeyOverlap(regions) {
+    if (regions.length < 2) return false;
+    
+    // Count how many keys are covered by multiple regions
+    const keyCoverage = new Map();
+    
+    regions.forEach(region => {
+        for (let key = region.lokey; key <= region.hikey; key++) {
+            keyCoverage.set(key, (keyCoverage.get(key) || 0) + 1);
+        }
+    });
+    
+    // If >50% of keys are covered by 2+ regions, it's full overlap
+    const multiCoverKeys = Array.from(keyCoverage.values()).filter(count => count > 1).length;
+    const totalKeys = keyCoverage.size;
+    
+    const overlapPercentage = multiCoverKeys / totalKeys;
+    
+    console.log(`  Full overlap check: ${(overlapPercentage * 100).toFixed(1)}% keys covered by multiple regions`);
+    
+    return overlapPercentage > 0.5;  // >50% = stacked layers
 }
 
 /**
@@ -989,6 +963,271 @@ function groupByVelocity(regions) {
     
     return Array.from(velGroups.values());
 }
+
+
+/**
+ * Auto-assigns regions to layers based on key overlap detection
+ * Then shows adjustment modal for user to refine
+ */
+
+/**
+ * Analyzes a single group for layer structure with auto-assignment
+ * 
+ * @param {Array} groupRegions - Regions within one group
+ * @param {number} groupIdx - Group index
+ * @returns {Array} Array of detected layers
+ */
+function analyzeGroup(groupRegions, groupIdx) {
+    // Check for key overlaps
+    const hasKeyOverlap = checkKeyOverlap(groupRegions);
+    
+    if (!hasKeyOverlap) {
+        // No overlap = Key-mapped multisample
+        console.log('→ No key overlap: Key-mapped multisample');
+        
+        const lokey = Math.min(...groupRegions.map(r => r.lokey));
+        const hikey = Math.max(...groupRegions.map(r => r.hikey));
+        
+        return [{
+            index: groupIdx,
+            lokey: lokey,
+            hikey: hikey,
+            regions: groupRegions,
+            velocityZones: groupRegions.length,
+            needsMerge: groupRegions.length > 16
+        }];
+    }
+    
+    // Has overlap - check velocity ranges
+    const velocityGroups = groupByVelocity(groupRegions);
+    
+    if (velocityGroups.length === 1) {
+        // All same velocity range - auto-assign to layers
+        const sameVelGroup = velocityGroups[0];
+        
+        console.log(`→ Auto-assigning ${sameVelGroup.length} regions to layers...`);
+        const autoLayers = autoAssignToLayers(sameVelGroup);
+        
+        console.log(`  Auto-assigned to ${autoLayers.length} layer(s)`);
+        
+        // Convert to layer format
+        return autoLayers.map((layerRegions, idx) => {
+            const lokey = Math.min(...layerRegions.map(r => r.lokey));
+            const hikey = Math.max(...layerRegions.map(r => r.hikey));
+            
+            return {
+                index: groupIdx * 1000 + idx,
+                lokey: lokey,
+                hikey: hikey,
+                regions: layerRegions,
+                velocityZones: layerRegions.length,
+                needsMerge: layerRegions.length > 16
+            };
+        });
+    }
+    
+    // Different velocity ranges = Velocity layers
+    console.log(`→ Key overlap + different velocities: 1 layer with ${groupRegions.length} velocity zones`);
+    
+    const lokey = Math.min(...groupRegions.map(r => r.lokey));
+    const hikey = Math.max(...groupRegions.map(r => r.hikey));
+    
+    return [{
+        index: groupIdx,
+        lokey: lokey,
+        hikey: hikey,
+        regions: groupRegions,
+        velocityZones: groupRegions.length,
+        needsMerge: groupRegions.length > 16
+    }];
+}
+
+/**
+ * Auto-assigns regions to layers based on key overlap
+ * Algorithm: Try to fit each region in first available layer without overlap
+ * 
+ * @param {Array} regions - Regions to assign
+ * @returns {Array} Array of layer arrays
+ */
+function autoAssignToLayers(regions) {
+    const layers = [];
+    
+    regions.forEach((region, idx) => {
+        let assigned = false;
+        
+        // Try to add to existing layers
+        for (let i = 0; i < layers.length; i++) {
+            if (!hasOverlapWithLayer(region, layers[i])) {
+                // No overlap - add to this layer
+                layers[i].push(region);
+                assigned = true;
+                console.log(`    Region ${idx} (${region.lokey}-${region.hikey}) → Layer ${i + 1}`);
+                break;
+            }
+        }
+        
+        // If overlaps with all existing layers, create new layer
+        if (!assigned) {
+            layers.push([region]);
+            console.log(`    Region ${idx} (${region.lokey}-${region.hikey}) → NEW Layer ${layers.length}`);
+        }
+    });
+    
+    return layers;
+}
+
+/**
+ * Checks if a region overlaps with any region in a layer
+ */
+function hasOverlapWithLayer(region, layer) {
+    return layer.some(r => {
+        // Overlap exists if NOT (r1 ends before r2 starts OR r2 ends before r1 starts)
+        return !(region.hikey < r.lokey || r.hikey < region.lokey);
+    });
+}
+
+/**
+ * Shows layer adjustment modal for user to refine auto-assignment
+ * 
+ * @param {Array} layers - Auto-assigned layers
+ * @param {HTMLElement} targetPad - Target pad element
+ * @returns {Promise<Object>} User-adjusted layers or cancelled
+ */
+async function showLayerAdjustmentModal(layers, targetPad) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.style.zIndex = '3000';
+        
+        let currentLayers = JSON.parse(JSON.stringify(layers)); // Deep clone
+        
+        function renderModal() {
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-header">
+                        <h2>Detected ${currentLayers.length} Layer(s) - Adjust if Needed</h2>
+                    </div>
+                    <div style="padding: 20px;">
+                        <p style="color: var(--color-text-secondary); margin-bottom: 15px;">
+                            Regions were auto-assigned to layers based on key overlap. 
+                            You can move regions between layers before importing.
+                        </p>
+                        
+                        <div id="layerAdjustContainer" style="display: flex; flex-direction: column; gap: 15px;">
+                            ${currentLayers.map((layer, layerIdx) => `
+                                <div class="layer-adjust-group" style="background: var(--color-bg-tertiary); padding: 15px; border-radius: var(--radius-md);">
+                                    <h3 style="color: var(--color-accent-blue); margin-bottom: 10px;">
+                                        Layer ${layerIdx + 1} (${layer.regions.length} region${layer.regions.length > 1 ? 's' : ''})
+                                    </h3>
+                                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        ${layer.regions.map((region, regionIdx) => {
+                                            const sampleName = region.sample.split(/[/\\]/).pop();
+                                            const keyRange = `${midiNoteToName(region.lokey)}-${midiNoteToName(region.hikey)}`;
+                                            
+                                            return `
+                                                <div style="display: flex; align-items: center; gap: 10px; padding: 8px; background: var(--color-bg-secondary); border-radius: var(--radius-sm);">
+                                                    <div style="flex: 1; font-size: 0.9em;">
+                                                        <strong>${sampleName}</strong><br>
+                                                        <span style="color: var(--color-text-secondary);">Keys: ${keyRange}</span>
+                                                    </div>
+                                                    <select class="select region-move-select" 
+                                                            data-layer="${layerIdx}" 
+                                                            data-region="${regionIdx}"
+                                                            style="width: 150px;">
+                                                        <option value="">-- Move to --</option>
+                                                        ${currentLayers.map((_, targetLayerIdx) => 
+                                                            targetLayerIdx !== layerIdx 
+                                                                ? `<option value="${targetLayerIdx}">Layer ${targetLayerIdx + 1}</option>` 
+                                                                : ''
+                                                        ).join('')}
+                                                        <option value="new">New Layer</option>
+                                                    </select>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="btn btn-primary" id="confirmLayersBtn" style="flex: 1;">
+                                ✓ Continue with These Layers
+                            </button>
+                            <button class="btn" id="cancelLayersBtn" style="flex: 1;">
+                                Cancel Import
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (modal.parentElement) {
+                // Re-render in place
+                return;
+            }
+            
+            document.body.appendChild(modal);
+            
+            // Setup move listeners
+            modal.querySelectorAll('.region-move-select').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const fromLayer = parseInt(e.target.dataset.layer);
+                    const regionIdx = parseInt(e.target.dataset.region);
+                    const toLayerValue = e.target.value;
+                    
+                    if (!toLayerValue) return;
+                    
+                    // Move region
+                    const region = currentLayers[fromLayer].regions[regionIdx];
+                    currentLayers[fromLayer].regions.splice(regionIdx, 1);
+                    
+                    if (toLayerValue === 'new') {
+                        // Create new layer
+                        currentLayers.push({
+                            index: currentLayers.length,
+                            lokey: region.lokey,
+                            hikey: region.hikey,
+                            regions: [region],
+                            velocityZones: 1,
+                            needsMerge: false
+                        });
+                    } else {
+                        // Move to existing layer
+                        const toLayer = parseInt(toLayerValue);
+                        currentLayers[toLayer].regions.push(region);
+                        
+                        // Update layer bounds
+                        currentLayers[toLayer].lokey = Math.min(...currentLayers[toLayer].regions.map(r => r.lokey));
+                        currentLayers[toLayer].hikey = Math.max(...currentLayers[toLayer].regions.map(r => r.hikey));
+                        currentLayers[toLayer].velocityZones = currentLayers[toLayer].regions.length;
+                    }
+                    
+                    // Remove empty layers
+                    currentLayers = currentLayers.filter(layer => layer.regions.length > 0);
+                    
+                    // Re-render
+                    renderModal();
+                });
+            });
+            
+            // Confirm button
+            document.getElementById('confirmLayersBtn').onclick = () => {
+                document.body.removeChild(modal);
+                resolve({ cancelled: false, layers: currentLayers });
+            };
+            
+            // Cancel button
+            document.getElementById('cancelLayersBtn').onclick = () => {
+                document.body.removeChild(modal);
+                resolve({ cancelled: true });
+            };
+        }
+        
+        renderModal();
+    });
+}
+
 
 /**
  * Prompts user to map SFZ layers to pads with shared MIDI channel
@@ -1326,5 +1565,9 @@ window.BitboxerFileHandler = {
     analyzeSFZLayersAdvanced,
     promptLayerMappingAdvanced,
     mergeVelocityZones,
-    loadLayerToPad
+    loadLayerToPad,
+    // NEW: Auto-assignment functions
+    autoAssignToLayers,
+    showLayerAdjustmentModal
+
 };

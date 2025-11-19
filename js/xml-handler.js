@@ -528,10 +528,15 @@ function generatePresetXML(data) {
     // Asset cells - preserve multi-sample references
     const { assetCells } = window.BitboxerData;
     assetCells.forEach((asset, index) => {
-        xml += `        <cell row="${index}" filename="${asset.filename}" type="asset">\n`;
+        // CRITICAL FIX: Ensure .\ prefix
+        let filename = asset.filename;
+        if (filename && !filename.startsWith('.\\') && !filename.startsWith('./')) {
+            filename = `.\\${filename}`;
+        }
+
+        xml += `        <cell row="${index}" filename="${filename}" type="asset">\n`;
         xml += `            <params rootnote="${asset.params.rootnote}" keyrangebottom="${asset.params.keyrangebottom}" keyrangetop="${asset.params.keyrangetop}" velroot="${asset.params.velroot}" velrangebottom="${asset.params.velrangebottom}" velrangetop="${asset.params.velrangetop}" asssrcrow="${asset.params.asssrcrow}" asssrccol="${asset.params.asssrccol}"/>\n`;
-        xml += '        </cell>\n';
-    });
+        });
 
     // Layer 8 - Inputs
     for (let i = 0; i < 8; i++) {
@@ -570,18 +575,16 @@ function generatePresetXML(data) {
  * @returns {string} XML string
  */
 function generatePadCellXML(row, col, pad) {
-    // Determine correct type: 'sample' if loaded, 'samtempl' if empty
     const isLoaded = pad.filename && pad.filename !== '';
     const cellType = isLoaded ? 'sample' : 'samtempl';
     
-    let xml = `        <cell row="${row}" column="${col}" layer="0" filename="${pad.filename}" type="${cellType}">\n`;
-    
-    // Parameters
-    xml += '            <params';
-    for (let [key, value] of Object.entries(pad.params)) {
-        xml += ` ${key}="${value}"`;
+    // CRITICAL FIX: Ensure .\ prefix for local files
+    let filename = pad.filename;
+    if (filename && !filename.startsWith('.\\') && !filename.startsWith('./')) {
+        filename = `.\\${filename}`;
     }
-    xml += '/>\n';
+    
+    let xml = `        <cell row="${row}" column="${col}" layer="0" filename="${filename}" type="${cellType}">\n`;
 
     // Modulation sources (filter out 'none' slots)
     if (pad.modsources?.length > 0) {

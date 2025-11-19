@@ -1,0 +1,15 @@
+{
+  "name": "Delay_test_01",
+  "description": "a delay test",
+  "params": {
+    "delay": "400",
+    "delaymustime": "7",
+    "feedback": "500",
+    "cutoff": "600",
+    "filtquality": "700",
+    "dealybeatsync": "1",
+    "filtenable": "1",
+    "delaypingpong": "1"
+  },
+  "modsources": []
+}

@@ -1,0 +1,22 @@
+{
+  "name": "SuperDeluxeDelayTest",
+  "description": "SuperDeluxeDelayTest test",
+  "params": {
+    "delay":        "200",
+    "delaymustime":   "8",
+    "feedback":     "150",
+    "cutoff":       "800",
+    "filtquality":  "500",
+    "dealybeatsync":  "1",
+    "filtenable":     "0",
+    "delaypingpong":  "0"
+  },
+  "modsources": [
+    {
+      "dest": "delaymustime",
+      "src":          "mod1",
+      "slot":            "0",
+      "amount":        "383"
+    }
+  ]
+}

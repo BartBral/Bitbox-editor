@@ -52,6 +52,9 @@ function openEditModal(pad) {
     // Render multisample list
     renderMultisampleList();
 
+    // NEW: Ensure slider max values are updated after modal opens
+    updateSliderMaxValues(padData);
+
     // Show modal
     window.BitboxerUI.openModal('editModal');
 
@@ -410,9 +413,9 @@ function renderMultisampleList() {
     let html = '';
     assets.forEach((asset, idx) => {
         const sampleName = asset.filename.split(/[/\\]/).pop();
-        const rootNote = midiToNoteName(parseInt(asset.params.rootnote));
-        const keyBottom = midiToNoteName(parseInt(asset.params.keyrangebottom));
-        const keyTop = midiToNoteName(parseInt(asset.params.keyrangetop));
+        const rootNote = midiNoteToName(parseInt(asset.params.rootnote));
+        const keyBottom = midiNoteToName(parseInt(asset.params.keyrangebottom));
+        const keyTop = midiNoteToName(parseInt(asset.params.keyrangetop));
         const velBottom = asset.params.velrangebottom;
         const velTop = asset.params.velrangetop;
 
@@ -431,16 +434,7 @@ function renderMultisampleList() {
     container.innerHTML = html;
 }
 
-/**
- * Convert MIDI number to note name
- */
-function midiToNoteName(midi) {
-    if (midi < 0 || midi > 127) return '---';
-    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const octave = Math.floor(midi / 12) - 1;
-    const note = notes[midi % 12];
-    return `${note}${octave}`;
-}
+
 
 // ============================================
 // MODULATION SLOT RENDERING

@@ -18,27 +18,21 @@ function setupWorkingFolder() {
     const btn = document.getElementById('setWorkingFolderBtn');
     if (btn) {
         btn.style.display = '';
-        btn.classList.add('blink-warning');
         
-        btn.addEventListener('click', async () => {
-            try {
-                const dirHandle = await window.showDirectoryPicker({
-                    mode: 'read',
-                    startIn: 'downloads'
-                });
-                
-                window.BitboxerData.workingFolderHandle = dirHandle;
-                btn.textContent = `📁 ${dirHandle.name}`;
-                btn.classList.remove('blink-warning');
-                btn.classList.add('active');
-                
-                window.BitboxerUtils.setStatus(`Working folder: ${dirHandle.name}`, 'success');
-            } catch (error) {
-                if (error.name !== 'AbortError') {
-                    console.error('Folder error:', error);
-                    window.BitboxerUtils.setStatus('Failed to set folder', 'error');
-                }
-            }
+        // If already set, show folder name (no blink)
+        if (window.BitboxerData.workingFolderHandle) {
+            btn.textContent = `📁 ${window.BitboxerData.workingFolderHandle.name}`;
+            btn.classList.add('active');
+            btn.classList.remove('blink-warning');
+        } else {
+            // Not set - BLINK to get attention!
+            btn.textContent = '⚠️ Set Working Folder!';
+            btn.classList.add('blink-warning');
+        }
+        
+        // Clicking reopens startup modal
+        btn.addEventListener('click', () => {
+            window.BitboxerStartup.showStartupModal();
         });
     }
 }
@@ -46,10 +40,14 @@ function setupWorkingFolder() {
 /**
  * Main initialization - called on DOMContentLoaded
  */
-function initializeApp() {
+async function initializeApp() {
     console.log('BITBOXER: Initializing...');
     
     try {
+        // FIRST: Show startup modal (blocks until user clicks "Start")
+        await window.BitboxerStartup.initStartupModal();
+        
+        // THEN: Continue with normal initialization
         window.BitboxerData.createEmptyPreset();
         
         if (!window.BitboxerData.presetData) {
@@ -59,7 +57,10 @@ function initializeApp() {
         setupWorkingFolder();
         createPadGrid();
         setupEventListeners();
-        window.BitboxerData.initializeProject();
+        
+        // Project name already set by modal
+        window.BitboxerData.updateProjectTitle();
+        
         setupModalTabs();
         setupGlobalDragDrop();
         window.BitboxerUtils.setStatus('Ready');
@@ -460,7 +461,130 @@ function setupModalTabs() {
     window.BitboxerUI.setupModalTabs(editModal);
 }
 
+/**
+ * FX Preset UI Initialization
+ * Add this to main.js in setupEventListeners() function
+ */
+
+// ============================================
+// POPULATE FX PRESET DROPDOWNS
+// ============================================
+// UPDATED: Now uses external preset system
+function populateFXPresetDropdowns() {
+    // Initial population with built-in presets
+    window.BitboxerFXPresetsExternal.refreshAllPresetDropdowns();
+}
+
+// ============================================
+// SETUP FX PRESET EVENT LISTENERS
+// ============================================
+function setupFXPresetListeners() {
+    // Delay save/load
+    const saveDelayBtn = document.getElementById('saveDelayPresetBtn');
+    const loadDelayBtn = document.getElementById('loadDelayPresetBtn');
+    const delayDropdown = document.getElementById('delayPresetDropdown');
+    
+    if (saveDelayBtn) {
+        saveDelayBtn.addEventListener('click', () => {
+            window.BitboxerFXPresets.saveFXPreset('delay');
+        });
+    }
+    
+    if (loadDelayBtn) {
+        loadDelayBtn.addEventListener('click', () => {
+            window.BitboxerFXPresets.loadFXPreset('delay');
+        });
+    }
+    
+    if (delayDropdown) {
+        delayDropdown.addEventListener('change', (e) => {
+            if (e.target.value) {
+                window.BitboxerFXPresetsExternal.applyPreset('delay', e.target.value);
+                e.target.value = '';
+            }
+        });
+    }
+    
+    // Reverb save/load
+    const saveReverbBtn = document.getElementById('saveReverbPresetBtn');
+    const loadReverbBtn = document.getElementById('loadReverbPresetBtn');
+    const reverbDropdown = document.getElementById('reverbPresetDropdown');
+    
+    if (saveReverbBtn) {
+        saveReverbBtn.addEventListener('click', () => {
+            window.BitboxerFXPresets.saveFXPreset('reverb');
+        });
+    }
+    
+    if (loadReverbBtn) {
+        loadReverbBtn.addEventListener('click', () => {
+            window.BitboxerFXPresets.loadFXPreset('reverb');
+        });
+    }
+    
+    if (reverbDropdown) {
+        reverbDropdown.addEventListener('change', (e) => {
+            if (e.target.value) {
+                window.BitboxerFXPresetsExternal.applyPreset('reverb', e.target.value);
+                e.target.value = '';
+            }
+        });
+    }
+    
+    // EQ save/load
+    const saveEQBtn = document.getElementById('saveEQPresetBtn');
+    const loadEQBtn = document.getElementById('loadEQPresetBtn');
+    const eqDropdown = document.getElementById('eqPresetDropdown');
+    
+    if (saveEQBtn) {
+        saveEQBtn.addEventListener('click', () => {
+            window.BitboxerFXPresets.saveFXPreset('eq');
+        });
+    }
+    
+    if (loadEQBtn) {
+        loadEQBtn.addEventListener('click', () => {
+            window.BitboxerFXPresets.loadFXPreset('eq');
+        });
+    }
+    
+    if (eqDropdown) {
+        eqDropdown.addEventListener('change', (e) => {
+            if (e.target.value) {
+                window.BitboxerFXPresetsExternal.applyPreset('eq', e.target.value);
+                e.target.value = '';
+            }
+        });
+    }
+    
+    // FX Set dropdown
+    const setDropdown = document.getElementById('fxSetPresetDropdown');
+    if (setDropdown) {
+        setDropdown.addEventListener('change', (e) => {
+            if (e.target.value) {
+                window.BitboxerFXPresetsExternal.applyPreset('sets', e.target.value);
+                e.target.value = '';
+            }
+        });
+    }
+    
+    // Load external presets button
+    const loadExternalBtn = document.getElementById('loadExternalPresetsBtn');
+    if (loadExternalBtn) {
+        loadExternalBtn.addEventListener('click', async () => {
+            const success = await window.BitboxerFXPresetsExternal.selectPresetsFolder();
+            if (success) {
+                window.BitboxerFXPresetsExternal.refreshAllPresetDropdowns();
+            }
+        });
+    }
+}
+
 // ============================================
 // DOM READY
 // ============================================
-document.addEventListener('DOMContentLoaded', initializeApp);
+document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+    populateFXPresetDropdowns();  
+    setupFXPresetListeners();    
+});

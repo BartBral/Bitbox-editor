@@ -1,0 +1,112 @@
+{
+    "name": "Je Moeder",
+    "description": "Jullie Mam",
+    "delay": {
+        "params": {
+            "delay": "400",
+            "delaymustime": "7",
+            "feedback": "500",
+            "cutoff": "600",
+            "filtquality": "700",
+            "dealybeatsync": "1",
+            "filtenable": "1",
+            "delaypingpong": "1"
+        },
+        "modsources": [
+            {
+                "dest": "delaymustime",
+                "src": "mod1",
+                "slot": "0",
+                "amount": "383"
+            }
+        ]
+    },
+    "reverb": {
+        "params": {
+            "decay": "700",
+            "predelay": "35",
+            "damping": "550"
+        },
+        "modsources": [
+            {
+                "dest": "decay",
+                "src": "mod1",
+                "slot": "0",
+                "amount": "-554"
+            },
+            {
+                "dest": "decay",
+                "src": "mod2",
+                "slot": "1",
+                "amount": "-328"
+            },
+            {
+                "dest": "decay",
+                "src": "mod3",
+                "slot": "2",
+                "amount": "224"
+            },
+            {
+                "dest": "predelay",
+                "src": "mod4",
+                "slot": "3",
+                "amount": "302"
+            },
+            {
+                "dest": "predelay",
+                "src": "mod5",
+                "slot": "4",
+                "amount": "404"
+            },
+            {
+                "dest": "predelay",
+                "src": "mod6",
+                "slot": "5",
+                "amount": "550"
+            },
+            {
+                "dest": "damping",
+                "src": "mod7",
+                "slot": "6",
+                "amount": "655"
+            },
+            {
+                "dest": "damping",
+                "src": "mod8",
+                "slot": "7",
+                "amount": "502"
+            },
+            {
+                "dest": "damping",
+                "src": "lfo1",
+                "slot": "8",
+                "amount": "410"
+            }
+        ]
+    },
+    "eq": {
+        "params": {
+            "eqgain": "0",
+            "eqcutoff": "200",
+            "eqres": "400",
+            "eqenable": "1",
+            "eqtype": "1",
+            "eqgain2": "0",
+            "eqcutoff2": "400",
+            "eqres2": "400",
+            "eqenable2": "1",
+            "eqtype2": "3",
+            "eqgain3": "0",
+            "eqcutoff3": "600",
+            "eqres3": "400",
+            "eqenable3": "1",
+            "eqtype3": "3",
+            "eqgain4": "0",
+            "eqcutoff4": "800",
+            "eqres4": "400",
+            "eqenable4": "1",
+            "eqtype4": "4"
+        },
+        "modsources": []
+    }
+}

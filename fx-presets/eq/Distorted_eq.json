@@ -1,0 +1,28 @@
+{
+  "name": "Distorted",
+  "description": "test",
+  "params": {
+    "eqactband": "0",
+    "eqgain": "12826",
+    "eqcutoff": "200",
+    "eqres": "647",
+    "eqenable": "1",
+    "eqtype": "1",
+    "eqgain2": "15067",
+    "eqcutoff2": "500",
+    "eqres2": "617",
+    "eqenable2": "1",
+    "eqtype2": "3",
+    "eqgain3": "13930",
+    "eqcutoff3": "600",
+    "eqres3": "613",
+    "eqenable3": "1",
+    "eqtype3": "3",
+    "eqgain4": "15215",
+    "eqcutoff4": "850",
+    "eqres4": "578",
+    "eqenable4": "1",
+    "eqtype4": "4"
+  },
+  "modsources": []
+}

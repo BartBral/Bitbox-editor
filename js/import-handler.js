@@ -197,6 +197,15 @@ async function unifiedImportHandler(files, source, targetPad = null) {
                 }
                 
                 window.BitboxerUI.updatePadDisplay();
+
+                // NEW: Update slider ranges based on sample length
+                if (targetPad && window.BitboxerData.currentEditingPad === targetPad) {
+                    const row = parseInt(targetPad.dataset.row);
+                    const col = parseInt(targetPad.dataset.col);
+                    const padData = window.BitboxerData.presetData.pads[row][col];
+                    window.BitboxerPadEditor.updateSliderMaxValues(padData);
+                }
+
                 window.BitboxerUtils.setStatus(`Loaded ${wavData.name}`, 'success');
             } catch (error) {
                 console.error('WAV import error:', error);
@@ -354,10 +363,26 @@ async function convertSFZToPad(sfzData, wavFiles, targetPad) {
         return;
     }
     
-    // Multiple layers - prompt user
+    // Multiple layers - show adjustment modal FIRST
     window.BitboxerUtils.setStatus('Multiple layers detected...', 'info');
-    const result = await window.BitboxerFileHandler.promptLayerMappingAdvanced(
+    
+    // NEW: Show layer adjustment modal
+    const adjustResult = await window.BitboxerFileHandler.showLayerAdjustmentModal(
         analysis.layers, 
+        targetPad
+    );
+    
+    if (adjustResult.cancelled) {
+        window.BitboxerUtils.setStatus('Import cancelled', 'info');
+        return;
+    }
+    
+    // Use adjusted layers
+    const finalLayers = adjustResult.layers;
+    
+    // Now show pad mapping modal
+    const result = await window.BitboxerFileHandler.promptLayerMappingAdvanced(
+        finalLayers, 
         targetPad
     );
     
@@ -373,7 +398,8 @@ async function convertSFZToPad(sfzData, wavFiles, targetPad) {
             mapping.row,
             mapping.col,
             result.midiChannel,
-            sfzData.file.name
+            sfzData.file.name,
+            result.mappings.length
         );
     });
     
@@ -871,7 +897,7 @@ async function searchWorkingFolderForSamples(targetSampleNames) {
             window.BitboxerUtils.setStatus('Select folder with samples...', 'info');
             dirHandle = await window.showDirectoryPicker({ 
                 mode: 'read',
-                startIn: 'downloads'
+                startIn: 'documents'
             });
             
             window.BitboxerData.workingFolderHandle = dirHandle;
