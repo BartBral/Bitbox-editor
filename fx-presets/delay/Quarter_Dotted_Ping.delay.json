@@ -1,0 +1,22 @@
+{
+  "name": "Quarter_Dotted_Ping",
+  "description": "Rhythmic, wide stereo delay using quarter notes on one side and dotted eighths on the other.",
+  "params": {
+    "delay": "500",
+    "delaymustime": "7",
+    "feedback": "400",
+    "cutoff": "1000",
+    "filtquality": "500",
+    "dealybeatsync": "1",
+    "filtenable": "0",
+    "delaypingpong": "1"
+  },
+  "modsources": [
+    {
+      "dest": "delaymustime",
+      "src": "mod1",
+      "slot": "0",
+      "amount": "1"
+    }
+  ]
+}

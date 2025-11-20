@@ -1,0 +1,15 @@
+{
+  "name": "Ping_Pong_Wide",
+  "description": "Bouncing stereo effect, good for adding width to mono signals like synths or vocals.",
+  "params": {
+    "delay": "300",
+    "delaymustime": "6",
+    "feedback": "500",
+    "cutoff": "800",
+    "filtquality": "500",
+    "dealybeatsync": "1",
+    "filtenable": "0",
+    "delaypingpong": "1"
+  },
+  "modsources": []
+}

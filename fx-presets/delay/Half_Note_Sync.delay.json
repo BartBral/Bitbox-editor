@@ -1,0 +1,15 @@
+{
+  "name": "Half_Note_Sync",
+  "description": "Slow, long repeats synced to the tempo for dramatic phrases or rhythmic space.",
+  "params": {
+    "delay": "800",
+    "delaymustime": "8",
+    "feedback": "300",
+    "cutoff": "1000",
+    "filtquality": "0",
+    "dealybeatsync": "1",
+    "filtenable": "0",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

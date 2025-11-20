@@ -1,0 +1,15 @@
+{
+  "name": "Run_Like_Hell_Rhythm",
+  "description": "Short, rhythmic delay for creating a driving, percussive groove (popular in funk/disco).",
+  "params": {
+    "delay": "300",
+    "delaymustime": "6",
+    "feedback": "300",
+    "cutoff": "1000",
+    "filtquality": "0",
+    "dealybeatsync": "1",
+    "filtenable": "0",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Slapback_Vocal",
+  "description": "Short, single repeat delay for presence, classic rockabilly style.",
+  "params": {
+    "delay": "100",
+    "delaymustime": "0",
+    "feedback": "0",
+    "cutoff": "300",
+    "filtquality": "100",
+    "dealybeatsync": "0",
+    "filtenable": "1",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

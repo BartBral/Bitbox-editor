@@ -1130,7 +1130,7 @@ async function showLayerAdjustmentModal(layers, targetPad) {
                                                         <strong>${sampleName}</strong><br>
                                                         <span style="color: var(--color-text-secondary);">Keys: ${keyRange}</span>
                                                     </div>
-                                                    <select class="select region-move-select" 
+                                                    <select class="select-dark region-move-select" 
                                                             data-layer="${layerIdx}" 
                                                             data-region="${regionIdx}"
                                                             style="width: 150px;">

@@ -1,0 +1,15 @@
+{
+  "name": "Feedback_Riser",
+  "description": "A preset designed to be tweaked live, pushing the feedback towards self-oscillation (requires user interaction).",
+  "params": {
+    "delay": "200",
+    "delaymustime": "0",
+    "feedback": "950",
+    "cutoff": "700",
+    "filtquality": "700",
+    "dealybeatsync": "0",
+    "filtenable": "1",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

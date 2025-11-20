@@ -1,0 +1,15 @@
+{
+  "name": "Wide_Stereo_Doubler",
+  "description": "Short, offset delays in L/R channels for an expansive, thickening effect on synths/pads.",
+  "params": {
+    "delay": "60",
+    "delaymustime": "0",
+    "feedback": "0",
+    "cutoff": "1000",
+    "filtquality": "0",
+    "dealybeatsync": "0",
+    "filtenable": "0",
+    "delaypingpong": "1"
+  },
+  "modsources": []
+}

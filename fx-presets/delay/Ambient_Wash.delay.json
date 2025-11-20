@@ -1,0 +1,15 @@
+{
+  "name": "Ambient_Wash",
+  "description": "Very long delay with high feedback for creating drone-like, atmospheric pads.",
+  "params": {
+    "delay": "1000",
+    "delaymustime": "9",
+    "feedback": "900",
+    "cutoff": "400",
+    "filtquality": "700",
+    "dealybeatsync": "1",
+    "filtenable": "1",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

@@ -1,0 +1,15 @@
+{
+  "name": "BBD_Analog_Dark",
+  "description": "Warm, dark analog sound emulation with prominent high-end rolloff on repeats.",
+  "params": {
+    "delay": "300",
+    "delaymustime": "0",
+    "feedback": "600",
+    "cutoff": "400",
+    "filtquality": "600",
+    "dealybeatsync": "0",
+    "filtenable": "1",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

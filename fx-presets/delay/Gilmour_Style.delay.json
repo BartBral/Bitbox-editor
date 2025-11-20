@@ -1,0 +1,15 @@
+{
+  "name": "Gilmour_Style",
+  "description": "Medium-long delay with multiple repeats, great for atmospheric lead guitars/synths.",
+  "params": {
+    "delay": "480",
+    "delaymustime": "0",
+    "feedback": "550",
+    "cutoff": "700",
+    "filtquality": "300",
+    "dealybeatsync": "0",
+    "filtenable": "1",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Dub_Techno_Long",
+  "description": "Long, filtered, high-feedback delay for atmospheric build-ups and soundscapes.",
+  "params": {
+    "delay": "800",
+    "delaymustime": "7",
+    "feedback": "700",
+    "cutoff": "200",
+    "filtquality": "800",
+    "dealybeatsync": "1",
+    "filtenable": "1",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Filtered_Rhythm",
+  "description": "Quarter note synced delay with a strong filter to keep the repeats out of the way of the main signal.",
+  "params": {
+    "delay": "500",
+    "delaymustime": "7",
+    "feedback": "400",
+    "cutoff": "300",
+    "filtquality": "600",
+    "dealybeatsync": "1",
+    "filtenable": "1",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

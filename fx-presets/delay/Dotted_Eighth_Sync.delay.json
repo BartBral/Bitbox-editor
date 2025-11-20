@@ -1,0 +1,15 @@
+{
+  "name": "Dotted_Eighth_Sync",
+  "description": "Rhythmic delay.",
+  "params": {
+    "delay": "600",
+    "delaymustime": "5",
+    "feedback": "400",
+    "cutoff": "1000",
+    "filtquality": "100",
+    "dealybeatsync": "1",
+    "filtenable": "0",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

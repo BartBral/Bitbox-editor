@@ -1,0 +1,15 @@
+{
+  "name": "Analog_Tape_Emulation",
+  "description": "Warm repeats with high-end rolloff, mimicking vintage tape units.",
+  "params": {
+    "delay": "450",
+    "delaymustime": "0",
+    "feedback": "450",
+    "cutoff": "500",
+    "filtquality": "100",
+    "dealybeatsync": "0",
+    "filtenable": "1",
+    "delaypingpong": "0"
+  },
+  "modsources": []
+}

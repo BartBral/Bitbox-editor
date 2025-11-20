@@ -1,0 +1,16 @@
+{
+  "name": "Modulated_Chorus_Verb",
+  "description": "Very short delay with subtle pitch modulation (if mod sources allow) to create a dense chorus/reverb texture.",
+  "params": {
+    "delay": "25",
+    "delaymustime": "0",
+    "feedback": "800",
+    "cutoff": "600",
+    "filtquality": "500",
+    "dealybeatsync": "0",
+    "filtenable": "1",
+    "delaypingpong": "0"
+  },
+  "modsources": [
+  ]
+}
