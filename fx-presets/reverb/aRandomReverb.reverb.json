@@ -1,0 +1,23 @@
+{
+  "name": "aDelayRandom",
+  "description": "Just random",
+  "params": {
+    "decay": "600",
+    "predelay": "40",
+    "damping": "500"
+  },
+  "modsources": [
+    {
+      "dest": "decay",
+      "src": "mod1",
+      "slot": "0",
+      "amount": "500"
+    },
+    {
+      "dest": "predelay",
+      "src": "velocity",
+      "slot": "1",
+      "amount": "-500"
+    }
+  ]
+}

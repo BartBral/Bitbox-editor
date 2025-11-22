@@ -216,11 +216,16 @@
                  MODAL HEADER
                  Shows pad number/name and close button
                  ============================================ -->
-            <div class="modal-header">
-                <h4 id="modalTitle">Edit Pad</h4>
-                <div></div>
-                <!-- Cell Mode: Determines pad behavior (Sample/Clip/Slicer/Granular) -->
-                <div class="param">
+                <div class="modal-header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg id="modalIcon" width="32" height="32" viewBox="0 0 32 32" fill="white" style="display: block;"></svg>
+                        <h4 id="modalTitle">Edit Pad</h4>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn" id="savePadPresetBtn">💾 Save</button>
+                        <button class="btn" id="loadPadPresetBtn">📂 Load</button>
+                    </div>
+                    <!-- Cell Mode: Determines pad behavior (Sample/Clip/Slicer/Granular) -->                <div class="param">
                     <div class="label-value-container">
                         <label class="param-label">Cell Mode</label>
                     </div>
@@ -232,10 +237,6 @@
                         <option value="3">Granular</option>
                     </select>
                 </div>
-
-
-                <!-- Close Button: Saves changes and closes modal -->
-                <button class="close-btn" id="closeModal">✓</button>
             </div>
 
             <!-- ============================================
@@ -1194,8 +1195,11 @@
                 </div>
             </div>
 
-            <!-- Status Bar for Edit Modal -->
-            <div class="status-bar" id="editModalStatusBar"></div>
+            <!-- Status Bar + Close Button -->
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
+                <div class="status-bar" id="editModalStatusBar" style="flex: 1; margin: 0;"></div>
+                <button class="close-btn" id="closeModal">✓</button>
+            </div>
 
         </div>
     </div>
@@ -1212,9 +1216,11 @@
                  ============================================ -->
             <div class="modal-header">
                 <h2>Global FX Settings</h2>
-                <button class="close-btn" id="closeFxModal">✓</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn" id="saveFXSetBtn">💾 Save Set</button>
+                    <button class="btn" id="loadFXSetBtn">📂 Load Set</button>
+                </div>
             </div>
-
             <!-- ============================================
                  FX TAB NAVIGATION
                  ============================================ -->
@@ -1734,8 +1740,11 @@
 
             </div>
 
-            <!-- Status Bar for FX Modal -->
-            <div class="status-bar" id="fxModalStatusBar"></div>
+            <!-- Status Bar + Close Button -->
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
+                <div class="status-bar" id="fxModalStatusBar" style="flex: 1; margin: 0;"></div>
+                <button class="close-btn" id="closeFxModal">✓</button>
+            </div>
 
         </div>
     </div>

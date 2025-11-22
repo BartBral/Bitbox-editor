@@ -351,9 +351,39 @@ async function convertSFZToPad(sfzData, wavFiles, targetPad) {
     // Single layer - load directly
     if (!analysis.hasMultipleLayers) {
         const layer = analysis.layers[0];
-        window.BitboxerFileHandler.loadLayerToPad(layer, row, col, '1', sfzData.file.name);
-        
+
+        // Read WAV metadata FIRST
+        const wavMetadata = await readLayerWAVMetadata(layer);
+
+        if (!wavMetadata.samlen) {
+            window.BitboxerUtils.setStatus('⚠️ Could not read sample length, aborting import', 'error');
+            return;
+        }
+
+        // Pass metadata through
+        window.BitboxerFileHandler.loadLayerToPad(
+            layer, 
+            row, 
+            col, 
+            '1',
+            sfzData.file.name,
+            analysis.totalLayers,
+            wavMetadata  // NEW: Pass WAV metadata
+        );
+
         window.BitboxerUI.updatePadDisplay();
+
+        // Update slider ranges immediately if modal is open
+        if (window.BitboxerData.currentEditingPad) {
+            const editingRow = parseInt(window.BitboxerData.currentEditingPad.dataset.row);
+            const editingCol = parseInt(window.BitboxerData.currentEditingPad.dataset.col);
+
+            if (editingRow === row && editingCol === col) {
+                const padData = window.BitboxerData.presetData.pads[row][col];
+                window.BitboxerPadEditor.updateSliderMaxValues(padData);
+            }
+        }
+
         window.BitboxerUtils.setStatus(
             layer.needsMerge 
                 ? `Imported ${layer.velocityZones} zones (merged to 16)` 
@@ -365,49 +395,152 @@ async function convertSFZToPad(sfzData, wavFiles, targetPad) {
     
     // Multiple layers - show adjustment modal FIRST
     window.BitboxerUtils.setStatus('Multiple layers detected...', 'info');
-    
+
     // NEW: Show layer adjustment modal
     const adjustResult = await window.BitboxerFileHandler.showLayerAdjustmentModal(
         analysis.layers, 
         targetPad
     );
-    
+
     if (adjustResult.cancelled) {
         window.BitboxerUtils.setStatus('Import cancelled', 'info');
         return;
     }
-    
+
     // Use adjusted layers
     const finalLayers = adjustResult.layers;
-    
+
     // Now show pad mapping modal
     const result = await window.BitboxerFileHandler.promptLayerMappingAdvanced(
         finalLayers, 
         targetPad
     );
-    
+
     if (result.cancelled) {
         window.BitboxerUtils.setStatus('Import cancelled', 'info');
         return;
     }
-    
+
     // Load each layer to selected pad
-    result.mappings.forEach(mapping => {
+    for (const mapping of result.mappings) {
+        // Read WAV metadata for THIS layer
+        const wavMetadata = await readLayerWAVMetadata(mapping.layer);
+
+        if (!wavMetadata.samlen) {
+            window.BitboxerUtils.setStatus(
+                `⚠️ Could not read sample length for layer, using defaults`, 
+                'error'
+            );
+        }
+
         window.BitboxerFileHandler.loadLayerToPad(
             mapping.layer,
             mapping.row,
             mapping.col,
             result.midiChannel,
             sfzData.file.name,
-            result.mappings.length
+            result.mappings.length,
+            wavMetadata  // NEW: Pass metadata
         );
-    });
+
+        // Update slider ranges if this pad is currently being edited
+        if (window.BitboxerData.currentEditingPad) {
+            const editingRow = parseInt(window.BitboxerData.currentEditingPad.dataset.row);
+            const editingCol = parseInt(window.BitboxerData.currentEditingPad.dataset.col);
+
+            if (editingRow === mapping.row && editingCol === mapping.col) {
+                const padData = window.BitboxerData.presetData.pads[mapping.row][mapping.col];
+                window.BitboxerPadEditor.updateSliderMaxValues(padData);
+            }
+        }
+    }
     
     window.BitboxerUI.updatePadDisplay();
     window.BitboxerUtils.setStatus(
         `Imported ${result.mappings.length} layer(s) to ${result.mappings.length} pad(s)`,
         'success'
     );
+}
+
+/**
+ * Reads WAV metadata for a layer's first region
+ * @param {Object} layer - Layer with regions containing wavFile references
+ * @returns {Promise<Object>} WAV metadata object
+ */
+async function readLayerWAVMetadata(layer) {
+    const metadata = {
+        samlen: null,
+        loopPoints: null,
+        slices: [],
+        tempo: null,
+        rootNote: null
+    };
+    
+    if (!layer.regions || layer.regions.length === 0) {
+        console.warn('No regions in layer');
+        return metadata;
+    }
+    
+    const firstRegion = layer.regions[0];
+    if (!firstRegion.wavFile) {
+        console.warn('No WAV file attached to region');
+        return metadata;
+    }
+    
+    try {
+        // The wavFile structure has the File object directly, not nested
+        const wavFileObj = firstRegion.wavFile.file || firstRegion.wavFile;
+        
+        console.log('WAV file object type:', wavFileObj.constructor.name);
+        console.log('WAV file name:', wavFileObj.name);
+        
+        // Check if we have metadata already parsed
+        if (firstRegion.wavFile.metadata && firstRegion.wavFile.metadata.duration) {
+            const wavMeta = firstRegion.wavFile.metadata;
+            
+            // Calculate sample length from existing metadata
+            if (wavMeta.duration && wavMeta.sampleRate) {
+                metadata.samlen = Math.floor(wavMeta.sampleRate * wavMeta.duration);
+            }
+            
+            // Copy other metadata
+            metadata.loopPoints = wavMeta.loopPoints;
+            metadata.slices = wavMeta.slices || [];
+            metadata.tempo = wavMeta.tempo;
+            
+            console.log(`✓ Used cached WAV metadata: ${metadata.samlen} samples`);
+            return metadata;
+        }
+        
+        // No cached metadata - need to parse WAV file
+        let arrayBuffer;
+        if (typeof wavFileObj.arrayBuffer === 'function') {
+            arrayBuffer = await wavFileObj.arrayBuffer();
+        } else {
+            console.error('WAV file object has no arrayBuffer method');
+            return metadata;
+        }
+        
+        const wavMeta = window.BitboxerFileHandler.WAVParser.parseMetadata(arrayBuffer);
+        
+        // Calculate sample length
+        if (wavMeta.duration && wavMeta.sampleRate) {
+            metadata.samlen = Math.floor(wavMeta.sampleRate * wavMeta.duration);
+        }
+        
+        // Copy other metadata
+        metadata.loopPoints = wavMeta.loopPoints;
+        metadata.slices = wavMeta.slices || [];
+        metadata.tempo = wavMeta.tempo;
+        
+        console.log(`✓ Read WAV metadata: ${metadata.samlen} samples`);
+        
+    } catch (error) {
+        console.error('WAV metadata read failed:', error);
+        window.BitboxerUtils.setStatus(`⚠️ Could not read WAV: ${error.message}`, 'error');
+    }
+    
+    return metadata;
 }
 
 /**
@@ -640,6 +773,44 @@ function createAssetFromSFZRegion(region, padRow, padCol, assetIndex) {
             asssrccol: padCol.toString()
         }
     };
+}
+
+/**
+ * Applies WAV metadata to pad (called BEFORE SFZ opcodes)
+ * @param {Object} pad - Pad data
+ * @param {Object} wavMetadata - WAV file metadata
+ */
+function applyWAVMetadataToPad(pad, wavMetadata) {
+    // Sample length (CRITICAL)
+    if (wavMetadata.samlen) {
+        pad.params.samlen = wavMetadata.samlen.toString();
+        
+        // Set loop end to match if not already set
+        if (pad.params.loopend === '0') {
+            pad.params.loopend = wavMetadata.samlen.toString();
+        }
+    }
+    
+    // Loop points
+    if (wavMetadata.loopPoints) {
+        pad.params.loopstart = wavMetadata.loopPoints.start.toString();
+        pad.params.loopend = wavMetadata.loopPoints.end.toString();
+        pad.params.loopmode = '1';
+        if (wavMetadata.loopPoints.type === 1) {
+            pad.params.loopmodes = '2'; // Bidirectional
+        }
+    }
+    
+    // Slices
+    if (wavMetadata.slices && wavMetadata.slices.length > 1) {
+        pad.params.cellmode = '2';
+        pad.slices = wavMetadata.slices.map(pos => ({ pos: pos.toString() }));
+    }
+    
+    // Tempo
+    if (wavMetadata.tempo) {
+        window.BitboxerData.presetData.tempo = Math.round(wavMetadata.tempo).toString();
+    }
 }
 
 /**

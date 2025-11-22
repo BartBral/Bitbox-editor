@@ -1,0 +1,29 @@
+{
+  "name": "anotherRandomReverb",
+  "description": "again just random",
+  "params": {
+    "decay": "600",
+    "predelay": "40",
+    "damping": "500"
+  },
+  "modsources": [
+    {
+      "dest": "predelay",
+      "src": "modwheel",
+      "slot": "0",
+      "amount": "500"
+    },
+    {
+      "dest": "damping",
+      "src": "velocity",
+      "slot": "1",
+      "amount": "-500"
+    },
+    {
+      "dest": "decay",
+      "src": "mod3",
+      "slot": "2",
+      "amount": "1000"
+    }
+  ]
+}

@@ -347,7 +347,7 @@ function saveFXPreset(fxType) {
     
     let presetData;  // ← This is the parameter variable (different scope)
     
-    if (fxType === 'set') {
+    if (fxType === 'sets') {
         // Save complete FX set
         presetData = {
             name: name,
@@ -382,12 +382,12 @@ function saveFXPreset(fxType) {
     const a = document.createElement('a');
     a.href = url;
     
-    a.download = `${name.replace(/\s+/g, '_')}_${fxType}.json`;
+    a.download = `${name.replace(/\s+/g, '_')}.${fxType}.json`;
     a.click();
     URL.revokeObjectURL(url);
     
     // Also show JSON for copy/paste
-    showJSONCopyDialog(json, name);
+    showJSONCopyDialog(json, name, fxType);
     
     window.BitboxerUtils.setStatus(`Saved ${name}`, 'success');
 }
@@ -395,31 +395,29 @@ function saveFXPreset(fxType) {
 /**
  * Shows dialog with JSON for copy/paste
  */
-function showJSONCopyDialog(json, name) {
+function showJSONCopyDialog(json, name, fxType) {
     const modal = document.createElement('div');
     modal.className = 'modal show';
     modal.style.zIndex = '4000';
     modal.innerHTML = `
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                <h2>Load ${fxType.charAt(0).toUpperCase() + fxType.slice(1)} Preset</h2>
+                <h2>✓ Saved: ${name}</h2>
             </div>
             <div style="padding: 20px;">
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <button class="btn btn-primary" id="loadFileBtn">Load from File</button>
-                    <input type="file" id="fxPresetFileInput" accept=".json" style="display: none;">
-
-                    <div style="text-align: center; color: var(--color-text-secondary);">— or —</div>
-
-                    <textarea id="fxPresetJSON" placeholder="Paste JSON here..." style="width: 100%; height: 200px; font-family: monospace; font-size: 0.85em; padding: 10px; background: var(--color-bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius-md);"></textarea>
-
-                    <!-- NEW: Error console -->
-                    <div id="loadModalConsole" style="display: none; padding: 10px; background: var(--color-bg-primary); border: 1px solid var(--color-accent-red); border-radius: var(--radius-md); color: var(--color-accent-red); font-size: 0.9em; max-height: 100px; overflow-y: auto;"></div>
-
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-primary" id="loadJSONBtn" style="flex: 1;">Load from Text</button>
-                        <button class="btn" id="cancelLoadBtn" style="flex: 1;">Cancel</button>
-                    </div>
+                <p style="color: var(--color-accent-green); margin-bottom: 15px;">
+                    FX preset saved as: <strong>${name.replace(/\s+/g, '_')}.${fxType}.json</strong>
+                </p>
+                
+                <p style="color: var(--color-text-secondary); margin-bottom: 10px;">
+                    You can also copy the JSON below to share or back up:
+                </p>
+                
+                <textarea readonly style="width: 100%; height: 200px; font-family: monospace; font-size: 0.85em; padding: 10px; background: var(--color-bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text-primary);">${json}</textarea>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn btn-primary" id="copyJSONBtn" style="flex: 1;">📋 Copy to Clipboard</button>
+                    <button class="btn" id="closeJSONDialog" style="flex: 1;">Close</button>
                 </div>
             </div>
         </div>
@@ -427,6 +425,7 @@ function showJSONCopyDialog(json, name) {
     
     document.body.appendChild(modal);
     
+    // Copy button
     document.getElementById('copyJSONBtn').onclick = () => {
         const textarea = modal.querySelector('textarea');
         textarea.select();
@@ -434,11 +433,18 @@ function showJSONCopyDialog(json, name) {
         window.BitboxerUtils.setStatus('Copied to clipboard', 'success');
     };
     
+    // Close button
     document.getElementById('closeJSONDialog').onclick = () => {
         document.body.removeChild(modal);
     };
+    
+    // Click outside to close
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    };
 }
-
 // ============================================
 // LOAD FX PRESET
 // ============================================

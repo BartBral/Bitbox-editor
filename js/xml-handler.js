@@ -586,6 +586,13 @@ function generatePadCellXML(row, col, pad) {
     
     let xml = `        <cell row="${row}" column="${col}" layer="0" filename="${filename}" type="${cellType}">\n`;
 
+    // CRITICAL FIX: Add <params> tag with ALL parameters!
+    xml += '            <params';
+    for (let [key, value] of Object.entries(pad.params)) {
+        xml += ` ${key}="${value}"`;
+    }
+    xml += '/>\n';
+
     // Modulation sources (filter out 'none' slots)
     if (pad.modsources?.length > 0) {
         const activeModSlots = pad.modsources.filter(mod =>

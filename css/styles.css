@@ -973,3 +973,29 @@ input[type="file"] {
 .multisample-layer-info span {
     color: var(--color-accent-blue);
 }
+
+
+/* ============================================
+   MODAL ICON SCALING
+   ============================================ */
+#modalIcon {
+    display: block;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+#modalIcon * {
+    vector-effect: non-scaling-stroke;
+}
+
+/* ============================================
+   MODAL ICON CLASSES
+   ============================================ */
+#modalIcon .cls-1 {
+    fill: white;
+}
+
+#modalIcon .cls-2 {
+    fill: black;
+}

@@ -1484,7 +1484,7 @@ function mergeVelocityZones(regions) {
  * @param {string} sfzName - SFZ filename (for folder naming)
  * @param {number} totalLayers - Total number of layers being imported
  */
-function loadLayerToPad(layer, row, col, midiChannel, sfzName, totalLayers) {
+function loadLayerToPad(layer, row, col, midiChannel, sfzName, totalLayers, wavMetadata = {}) {
     const { presetData, assetCells } = window.BitboxerData;
     const pad = presetData.pads[row][col];
     
@@ -1504,7 +1504,11 @@ function loadLayerToPad(layer, row, col, midiChannel, sfzName, totalLayers) {
         pad.params.multisammode = '0';
         pad.params.midimode = midiChannel;
         
-        applySFZOpcodesToPad(pad, region, region.wavFile.metadata || {});
+        // Apply WAV metadata FIRST
+        applyWAVMetadataToPad(pad, wavMetadata);
+        
+        // Then SFZ opcodes override
+        applySFZOpcodesToPad(pad, region, wavMetadata);
         
         console.log(`✓ Loaded single sample: ${region.wavFile.name} to Pad ${row * 4 + col + 1}`);
         return;

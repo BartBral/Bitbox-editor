@@ -98,8 +98,9 @@ function createPadGrid() {
             
             pad.innerHTML = `
                 <svg class="pad-mode-icon" width="16" height="16" viewBox="0 0 16 16">
-                    <circle cx="8" cy="8" r="6" fill="#888" />
+                    <rect class="cls-1" width="16" height="16" rx="2.98" ry="2.98" fill="#888888a7" />
                 </svg>
+
                 <span class="pad-number">${padNum}</span>
                 <span class="pad-label">Empty</span>
                 <span class="pad-status"></span>
@@ -448,6 +449,27 @@ function setupEventListeners() {
     // Pad editor modulation
     document.getElementById('addModSlotBtn').addEventListener('click', window.BitboxerPadEditor.addModSlot);
     
+    // Pad preset save/load
+    document.getElementById('savePadPresetBtn').addEventListener('click', () => {
+        const { currentEditingPad } = window.BitboxerData;
+        if (currentEditingPad) {
+            window.BitboxerXML.exportSelectedPads();
+        }
+    });
+
+    document.getElementById('loadPadPresetBtn').addEventListener('click', () => {
+        document.getElementById('padImportInput').click();
+    });
+
+    // FX set save/load
+    document.getElementById('saveFXSetBtn').addEventListener('click', () => {
+        window.BitboxerFXPresets.saveFXPreset('sets');
+    });
+
+    document.getElementById('loadFXSetBtn').addEventListener('click', () => {
+        window.BitboxerFXPresets.loadFXPreset('sets');
+    });
+
     // Setup parameter listeners
     window.BitboxerPadEditor.setupParameterListeners();
     window.BitboxerFXEditor.setupFxParameterListeners();

@@ -1,0 +1,28 @@
+{
+  "name": "My eq preset",
+  "description": "bladibla",
+  "params": {
+    "eqactband": "0",
+    "eqgain": "0",
+    "eqcutoff": "200",
+    "eqres": "400",
+    "eqenable": "1",
+    "eqtype": "0",
+    "eqgain2": "0",
+    "eqcutoff2": "400",
+    "eqres2": "400",
+    "eqenable2": "1",
+    "eqtype2": "0",
+    "eqgain3": "0",
+    "eqcutoff3": "600",
+    "eqres3": "400",
+    "eqenable3": "1",
+    "eqtype3": "0",
+    "eqgain4": "0",
+    "eqcutoff4": "800",
+    "eqres4": "400",
+    "eqenable4": "1",
+    "eqtype4": "0"
+  },
+  "modsources": []
+}

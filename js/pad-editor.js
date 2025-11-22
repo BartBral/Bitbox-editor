@@ -30,6 +30,18 @@ function openEditModal(pad) {
     // Set current editing pad
     window.BitboxerData.currentEditingPad = pad;
 
+    // Update modal icon
+    const modalIcon = document.getElementById('modalIcon');
+    const isMulti = padData.params.multisammode === '1';
+    const mode = isMulti ? '0-multi' : (padData.params.cellmode || '0');
+    
+    // Update modal icon
+    updateModalIcon(padData);
+    
+    // if (modalIcon) {
+    //     modalIcon.innerHTML = icons[mode] || icons['0'];
+    // }
+
     // Update modal title
     document.getElementById('modalTitle').textContent =
         `Pad ${pad.dataset.padnum} - ${padData.filename || 'Empty'}`;
@@ -218,6 +230,9 @@ function setupParameterListeners() {
                         const row = parseInt(currentEditingPad.dataset.row);
                         const col = parseInt(currentEditingPad.dataset.col);
                         renderModSlots(presetData.pads[row][col]);
+
+                        // Update modal icon
+                        updateModalIcon(presetData.pads[row][col]);
                     }
                 }
                 
@@ -786,6 +801,27 @@ function updateModSlotAppearance(slotElement) {
     }
 }
 
+/**
+ * Updates the modal icon based on current pad mode
+ */
+function updateModalIcon(padData) {
+    const modalIcon = document.getElementById('modalIcon');
+    if (!modalIcon) return;
+    
+    const isMulti = padData.params.multisammode === '1';
+    const mode = isMulti ? '0-multi' : (padData.params.cellmode || '0');
+    
+    const icons = {
+        '0': '<rect class="cls-1" width="32" height="32" rx="5.96" ry="5.96"/><polygon class="cls-2" points="25.78 16 25.78 15.11 24.89 15.11 24.89 13.33 24 13.33 24 15.11 23.12 15.11 23.12 16 22.23 16 22.23 17.78 21.34 17.78 21.34 16 20.45 16 20.45 13.33 19.56 13.33 19.56 9.77 18.67 9.77 18.67 13.33 17.78 13.33 17.78 16 16.89 16 16.89 21.34 16 21.34 16 20.45 16 19.56 16 18.67 16 17.78 16 16.89 15.11 16.89 15.11 16 15.11 15.11 14.22 15.11 14.22 9.77 13.33 9.77 13.33 6.22 12.44 6.22 12.44 9.77 11.55 9.77 11.55 16 10.66 16 9.77 16 9.77 15.11 8.88 15.11 8.88 13.33 8 13.33 8 15.11 7.11 15.11 7.11 16 5.33 16 5.33 15.11 4.44 15.11 4.44 16 3.55 16 3.55 16.89 6.22 16.89 6.22 17.78 7.11 17.78 7.11 16.89 8 16.89 8 16 8.88 16 8.88 16.89 9.77 16.89 9.77 19.56 10.66 19.56 10.66 17.78 11.55 17.78 11.55 16.89 12.44 16.89 12.44 11.55 13.33 11.55 13.33 16.89 14.22 16.89 14.22 17.78 15.11 17.78 15.11 23.12 16 23.12 16 25.78 16.89 25.78 16.89 23.12 17.78 23.12 17.78 16.89 18.67 16.89 18.67 15.11 19.56 15.11 19.56 16.89 20.45 16.89 20.45 18.67 21.34 18.67 21.34 19.56 22.23 19.56 22.23 18.67 23.12 18.67 23.12 16.89 24 16.89 24 16 24.89 16 24.89 16.89 25.78 16.89 25.78 17.78 26.67 17.78 26.67 16.89 28.45 16.89 28.45 16 25.78 16"/>',
+        '1': '<rect class="cls-1" width="32" height="32" rx="5.96" ry="5.96"/><path class="cls-2" d="M28.9,25.34V6.66H3.1v18.68h25.79ZM28.01,15.56h-2.67v-1.78h-.89v-1.78h-.89v1.78h-.89v1.78h-2.67v-1.78h-.89v-1.78h-.89v1.78h-.89v1.78h-2.67v-1.78h-.89v-1.78h-.89v1.78h-.89v1.78h-2.67v-1.78h-.89v-1.78h-.89v1.78h-.89v1.78h-2.67v-6.23h24.01v6.23ZM3.99,16.44h2.67v1.78h.89v1.78h.89v-1.78h.89v-1.78h2.67v1.78h.89v1.78h.89v-1.78h.89v-1.78h2.67v1.78h.89v1.78h.89v-1.78h.89v-1.78h2.67v1.78h.89v1.78h.89v-1.78h.89v-1.78h2.67v6.23H3.99v-6.23Z"/>',
+        '2': '<rect class="cls-1" width="32" height="32" rx="5.96" ry="5.96"/><polygon class="cls-2" points="12.44 4.44 11.55 4.44 11.55 27.56 20.45 27.56 20.45 20.45 12.44 20.45 12.44 4.44"/>',
+        '3': '<rect class="cls-1" width="32" height="32" rx="5.96" ry="5.96"/><path class="cls-2" d="M3.1,5.77v20.46h25.79V5.77H3.1ZM28.01,24.45h-.89v.89H5.77v-.89h-1.78V6.66h11.56v.89h1.78v-.89h10.67v17.79Z"/><rect class="cls-2" x="5.77" y="23.56" width=".89" height=".89"/><rect class="cls-2" x="6.66" y="22.67" width=".89" height=".89"/><rect class="cls-2" x="7.55" y="20.89" width=".89" height=".89"/><rect class="cls-2" x="8.44" y="19.11" width=".89" height=".89"/><rect class="cls-2" x="9.33" y="17.33" width=".89" height=".89"/><rect class="cls-2" x="10.22" y="14.67" width=".89" height=".89"/><rect class="cls-2" x="11.11" y="12.89" width=".89" height=".89"/><rect class="cls-2" x="12" y="11.11" width=".89" height=".89"/><rect class="cls-2" x="12.89" y="9.33" width=".89" height=".89"/><rect class="cls-2" x="13.78" y="8.44" width=".89" height=".89"/><rect class="cls-2" x="14.67" y="7.55" width=".89" height=".89"/><rect class="cls-2" x="17.33" y="7.55" width=".89" height=".89"/><rect class="cls-2" x="18.22" y="8.44" width=".89" height=".89"/><rect class="cls-2" x="19.11" y="9.33" width=".89" height=".89"/><rect class="cls-2" x="20" y="11.11" width=".89" height=".89"/><rect class="cls-2" x="20.89" y="12.89" width=".89" height=".89"/><rect class="cls-2" x="21.78" y="14.67" width=".89" height=".89"/><rect class="cls-2" x="22.67" y="17.33" width=".89" height=".89"/><rect class="cls-2" x="23.56" y="19.11" width=".89" height=".89"/><rect class="cls-2" x="24.45" y="20.89" width=".89" height=".89"/><rect class="cls-2" x="25.34" y="22.67" width=".89" height=".89"/><rect class="cls-2" x="26.23" y="23.56" width=".89" height=".89"/>',
+        '0-multi': '<rect class="cls-1" width="32" height="32" rx="5.96" ry="5.96"/><polygon class="cls-2" points="19.11 8 17.33 8 17.33 8.88 16.44 8.88 16.44 9.77 15.56 9.77 15.56 10.66 14.67 10.66 14.67 11.55 13.78 11.55 13.78 12.44 12.89 12.44 12.89 13.33 12 13.33 12 14.22 10.22 14.22 10.22 13.33 9.33 13.33 9.33 12.44 8.44 12.44 8.44 11.55 7.55 11.55 7.55 10.66 6.66 10.66 6.66 9.77 5.77 9.77 5.77 8.88 4.88 8.88 4.88 8 3.1 8 3.1 24 5.77 24 5.77 13.33 6.66 13.33 6.66 14.22 7.55 14.22 7.55 15.11 8.44 15.11 8.44 16 9.33 16 9.33 16.89 10.22 16.89 10.22 17.78 12 17.78 12 16.89 12.89 16.89 12.89 16 13.78 16 13.78 15.11 14.67 15.11 14.67 14.22 15.56 14.22 15.56 13.33 16.44 13.33 16.44 24 19.11 24 19.11 8"/><polygon class="cls-2" points="27.12 15.11 27.12 16 26.23 16 26.23 16.89 25.34 16.89 25.34 17.78 23.56 17.78 23.56 16.89 22.67 16.89 22.67 16 21.78 16 21.78 15.11 20 15.11 20 16.89 20.89 16.89 20.89 17.78 21.78 17.78 21.78 18.67 22.67 18.67 22.67 20.45 21.78 20.45 21.78 21.34 20.89 21.34 20.89 22.23 20 22.23 20 24 21.78 24 21.78 23.12 22.67 23.12 22.67 22.23 23.56 22.23 23.56 21.34 25.34 21.34 25.34 22.23 26.23 22.23 26.23 23.12 27.12 23.12 27.12 24 28.9 24 28.9 22.23 28.01 22.23 28.01 21.34 27.12 21.34 27.12 20.45 26.23 20.45 26.23 18.67 27.12 18.67 27.12 17.78 28.01 17.78 28.01 16.89 28.9 16.89 28.9 15.11 27.12 15.11"/>'
+    };
+    
+    modalIcon.innerHTML = icons[mode] || icons['0'];
+}
+
 // ============================================
 // EXPORT PAD EDITOR
 // ============================================
@@ -799,5 +835,7 @@ window.BitboxerPadEditor = {
     addModSlot,
     removeModSlot,
     updateModSlotAppearance,
-    renderMultisampleList 
+    renderMultisampleList,
+    updateModalIcon
+ 
 };
