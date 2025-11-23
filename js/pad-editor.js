@@ -19,7 +19,7 @@
  * 
  * @param {HTMLElement} pad - Pad element to edit
  */
-function openEditModal(pad) {
+async function openEditModal(pad) {
     const { presetData } = window.BitboxerData;
     const row = parseInt(pad.dataset.row);
     const col = parseInt(pad.dataset.col);
@@ -61,11 +61,28 @@ function openEditModal(pad) {
     // Render modulation slots
     renderModSlots(padData);
     
+    // Initialize sample editor
+    await initSampleEditor(padData);
+
     // Render multisample list
     renderMultisampleList();
 
     // NEW: Ensure slider max values are updated after modal opens
     updateSliderMaxValues(padData);
+
+    // Initialize sample editor
+    await initSampleEditor(padData);
+
+    // Show modal
+    window.BitboxerUI.openModal('editModal');
+
+    // FIX: Force render after modal is visible
+    setTimeout(() => {
+        if (window.BitboxerSampleEditor.renderer) {
+            window.BitboxerSampleEditor.renderer.resize();
+            window.BitboxerSampleEditor.render();
+        }
+    }, 50);
 
     // Show modal
     window.BitboxerUI.openModal('editModal');
@@ -148,17 +165,25 @@ function loadParamsToModal(padData) {
  * @param {Object} padData - Pad data object
  */
 function updateSliderMaxValues(padData) {
-    const samlen = parseInt(padData.params.samlen) || 0;
+    // CRITICAL FIX: Get actual audio buffer length, not samlen param
+    let actualSampleLength = 4294967295; // Default fallback
     
-    // If sample has length, use it. Otherwise use default 4GB
-    const maxValue = samlen > 0 ? samlen : 4294967295;
+    // Try to get actual sample length from loaded audio
+    if (window.BitboxerSampleEditor && 
+        window.BitboxerSampleEditor.audioEngine && 
+        window.BitboxerSampleEditor.audioEngine.audioBuffer) {
+        actualSampleLength = window.BitboxerSampleEditor.audioEngine.audioBuffer.length;
+        console.log(`Using actual audio buffer length: ${actualSampleLength}`);
+    } else {
+        console.log(`No audio buffer available, using default max: ${actualSampleLength}`);
+    }
     
-    // Update position sliders
+    // Update position sliders - ALL use actual sample length as max
     ['samstart', 'samlen', 'loopstart', 'loopend'].forEach(param => {
         const slider = document.getElementById(param);
         if (slider) {
-            slider.max = maxValue;
-            console.log(`Set ${param} max to ${maxValue}`);
+            slider.max = actualSampleLength;
+            console.log(`Set ${param} max to ${actualSampleLength}`);
         }
     });
 }
@@ -197,6 +222,51 @@ function setupParameterListeners() {
         }
     });
 
+    // Position/loop slider parameters that affect marker visualization
+    const markerParams = ['samstart', 'samlen', 'loopstart', 'loopend'];
+
+    markerParams.forEach(param => {
+        const slider = document.getElementById(param);
+        if (slider) {
+            // Add additional listener specifically for canvas updates
+            slider.addEventListener('input', () => {
+                // Update the sample editor markers and render
+                if (window.BitboxerSampleEditor && window.BitboxerSampleEditor.markerController) {
+                    const { currentEditingPad, presetData } = window.BitboxerData;
+                    if (currentEditingPad) {
+                        const row = parseInt(currentEditingPad.dataset.row);
+                        const col = parseInt(currentEditingPad.dataset.col);
+                        const pad = presetData.pads[row][col];
+
+                        // Sync markers from current pad params
+                        window.BitboxerSampleEditor.markerController.syncFromPadParams(pad);
+
+                        // Re-render canvas
+                        window.BitboxerSampleEditor.render();
+                    }
+                }
+            });
+        }
+    });
+
+    // Granular parameter listeners (update visualization)
+    ['grainsizeperc', 'gainssrcwin'].forEach(param => {
+        const slider = document.getElementById(param);
+        if (slider) {
+            slider.addEventListener('input', () => {
+                window.BitboxerSampleEditor.updateGranularParams();
+            });
+        }
+    });
+
+    // Clip mode parameter listeners
+    const beatcountSlider = document.getElementById('beatcount');
+    if (beatcountSlider) {
+        beatcountSlider.addEventListener('input', () => {
+            window.BitboxerSampleEditor.updateGranularParams(); // Reuses same update mechanism
+        });
+    }
+
     // Dropdown parameters
     const dropdownParams = [
         'cellmode', 'loopmodes', 'loopmode', 'samtrigtype', 'polymode',
@@ -211,36 +281,56 @@ function setupParameterListeners() {
         if (select) {
             select.addEventListener('change', () => {
                 const value = select.value;
-    
+            
                 // Handle multisample special case
-                if (value === '0-multi') {
-                    updateParamAndSave('cellmode', '0');
-                    updateParamAndSave('multisammode', '1');
-                } else {
-                    updateParamAndSave('cellmode', value);
-                    updateParamAndSave('multisammode', '0');
-                }
-
-                // Update visibility based on changes
                 if (param === 'cellmode') {
+                    if (value === '0-multi') {
+                        updateParamAndSave('cellmode', '0');
+                        updateParamAndSave('multisammode', '1');
+                    } else {
+                        updateParamAndSave('cellmode', value);
+                        updateParamAndSave('multisammode', '0');
+                    }
+                
+                    // Update visibility based on changes
                     window.BitboxerUI.updateTabVisibility();
+                    window.BitboxerUI.updatePosConditionalVisibility();
+                    
+                    // Force browser to recalculate styles
+                    document.getElementById('tab-pos').offsetHeight;
+                    
                     // Refresh mod destinations when cell mode changes
                     const { currentEditingPad, presetData } = window.BitboxerData;
                     if (currentEditingPad) {
                         const row = parseInt(currentEditingPad.dataset.row);
                         const col = parseInt(currentEditingPad.dataset.col);
                         renderModSlots(presetData.pads[row][col]);
-
+                    
                         // Update modal icon
                         updateModalIcon(presetData.pads[row][col]);
+                    
+                        // Re-init sample editor with new mode
+                        const padData = presetData.pads[row][col];
+                        initSampleEditor(padData);
                     }
+                    
+                    // Refresh sample editor canvas with new mode
+                    if (window.BitboxerSampleEditor) {
+                        const modeValue = value === '0-multi' ? '0' : value;
+                        window.BitboxerSampleEditor.setMode(modeValue);
+                        window.BitboxerSampleEditor.render();
+                    }
+                } else {
+                    // For all other dropdowns, just save the value
+                    updateParamAndSave(param, value);
                 }
                 
+                // Update visibility for other specific parameters
                 if (param === 'lfobeatsync') {
                     window.BitboxerUI.updateLFOParameterVisibility();
                 }
-                if (param === 'cellmode' || param === 'loopmodes') {
-                    window.BitboxerUI.updateTabVisibility();
+                
+                if (param === 'loopmodes') {
                     window.BitboxerUI.updatePosConditionalVisibility();
                 }
             });
@@ -822,6 +912,181 @@ function updateModalIcon(padData) {
     modalIcon.innerHTML = icons[mode] || icons['0'];
 }
 
+// Sample Editor Integration
+async function initSampleEditor(padData) {
+    const container = document.getElementById('sampleEditorContainer');
+    if (!container) return;
+
+    const cellmode = padData.params.cellmode;
+    const isMulti = padData.params.multisammode === '1';
+    
+    if (isMulti || !padData.filename) {
+        container.style.display = 'none';
+        return;
+    }
+
+    // Force visible with dimensions
+    container.style.display = 'block';
+    container.style.minHeight = '200px';
+    container.offsetHeight; // Force reflow
+
+    // Initialize editor
+    await window.BitboxerSampleEditor.init('waveformCanvas');
+
+    // CRITICAL: Load the sample
+    const wavName = padData.filename.split(/[/\\]/).pop();
+    let sampleLoaded = false;
+    
+    if (window._lastImportedFiles && window._lastImportedFiles.has(wavName)) {
+        const wavFile = window._lastImportedFiles.get(wavName);
+        sampleLoaded = await window.BitboxerSampleEditor.loadSample(wavFile);
+    }
+    
+    // If sample didn't load, show message
+    if (!sampleLoaded) {
+        const canvas = document.getElementById('waveformCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#d0c2b9';
+        ctx.font = '14px monospace';
+        ctx.fillText('Sample not loaded. Import the sample first.', 10, 100);
+        return;
+    }
+
+    // Set mode
+    window.BitboxerSampleEditor.setMode(cellmode);
+
+    // Setup playback controls
+    document.getElementById('playBtn').onclick = () => window.BitboxerSampleEditor.play();
+    document.getElementById('stopBtn').onclick = () => window.BitboxerSampleEditor.stop();
+    document.getElementById('playSelectionBtn').onclick = () => window.BitboxerSampleEditor.playSelection();
+
+    // Zoom controls
+    const zoomSlider = document.getElementById('zoomSlider');
+    const zoomValue = document.getElementById('zoomValue');
+    zoomSlider.oninput = () => {
+        const zoom = parseFloat(zoomSlider.value);
+        window.BitboxerSampleEditor.setZoom(zoom);
+        zoomValue.textContent = zoom.toFixed(1) + 'x';
+    };
+    zoomSlider.value = 1;
+    zoomValue.textContent = '1x';
+
+    const scrollBar = document.getElementById('scrollBar');
+    scrollBar.oninput = () => {
+        window.BitboxerSampleEditor.setScroll(scrollBar.value / 100);
+    };
+
+    // Mode-specific UI (your existing code from Fix 5)
+    const slicerControls = document.getElementById('slicerControls');
+    const granularControls = document.getElementById('granularControls');
+    const clipControls = document.getElementById('clipControls');
+    const editorHints = document.getElementById('editorHints');
+    const sliceCount = document.getElementById('sliceCount');
+
+    requestAnimationFrame(() => {
+        slicerControls.style.display = 'none';
+        if (granularControls) granularControls.style.display = 'none';
+        if (clipControls) clipControls.style.display = 'none';
+
+        if (cellmode === '2') {
+            slicerControls.style.display = 'flex';
+            editorHints.textContent = 'Shift+Click to add slice | Right-click to delete | Drag to move';
+            
+            const updateSliceCount = () => {
+                const count = window.BitboxerSampleEditor.markerController.sliceMarkers.length;
+                sliceCount.textContent = `${count} slice${count !== 1 ? 's' : ''}`;
+            };
+            updateSliceCount();
+
+            document.getElementById('autoSliceBtn').onclick = () => {
+                const threshold = prompt('Auto-detect threshold (0.01 - 0.5):', '0.1');
+                if (threshold) {
+                    window.BitboxerSampleEditor.autoDetectSlices(parseFloat(threshold));
+                    updateSliceCount();
+                }
+            };
+
+            document.getElementById('clearSlicesBtn').onclick = () => {
+                if (confirm('Clear all slices?')) {
+                    window.BitboxerSampleEditor.markerController.sliceMarkers = [];
+                    window.BitboxerSampleEditor.markerController.updateSlicesToPad();
+                    window.BitboxerSampleEditor.render();
+                    updateSliceCount();
+                }
+            };
+        } else if (cellmode === '3') {
+            if (granularControls) granularControls.style.display = 'flex';
+            editorHints.textContent = 'Yellow box = grain window | Animated = grain playback | Drag markers to adjust';
+        } else if (cellmode === '1') {
+            if (clipControls) clipControls.style.display = 'flex';
+            editorHints.textContent = 'Blue lines = beats | Light lines = subdivisions | Adjust Beat Count slider to change';
+
+            const { currentEditingPad, presetData } = window.BitboxerData;
+            const row = parseInt(currentEditingPad.dataset.row);
+            const col = parseInt(currentEditingPad.dataset.col);
+            const pad = presetData.pads[row][col];
+
+            const updateBeatInfo = () => {
+                const beatCount = parseInt(pad.params.beatcount) || 0;
+                const tempo = presetData.tempo || '120';
+                const beatInfo = document.getElementById('beatInfo');
+                if (beatCount === 0) {
+                    beatInfo.textContent = 'Auto @ ' + tempo + ' BPM';
+                } else {
+                    beatInfo.textContent = beatCount + ' beats @ ' + tempo + ' BPM';
+                }
+            };
+            updateBeatInfo();
+
+            let tapTimes = [];
+            document.getElementById('tapTempoBtn').onclick = () => {
+                const now = Date.now();
+                tapTimes.push(now);
+                
+                if (tapTimes.length > 4) tapTimes.shift();
+                
+                if (tapTimes.length >= 2) {
+                    let totalInterval = 0;
+                    for (let i = 1; i < tapTimes.length; i++) {
+                        totalInterval += tapTimes[i] - tapTimes[i-1];
+                    }
+                    const avgInterval = totalInterval / (tapTimes.length - 1);
+                    const bpm = Math.round(60000 / avgInterval);
+                    
+                    presetData.tempo = bpm.toString();
+                    window.BitboxerSampleEditor.render();
+                    updateBeatInfo();
+                }
+                
+                setTimeout(() => { tapTimes = []; }, 2000);
+            };
+
+            document.getElementById('detectBeatsBtn').onclick = () => {
+                const audioBuffer = window.BitboxerSampleEditor.audioEngine.audioBuffer;
+                if (!audioBuffer) return;
+                
+                const durationSec = audioBuffer.length / audioBuffer.sampleRate;
+                const tempo = parseFloat(presetData.tempo) || 120;
+                const beatsPerSec = tempo / 60;
+                const estimatedBeats = Math.round(durationSec * beatsPerSec);
+                
+                pad.params.beatcount = estimatedBeats.toString();
+                
+                const beatcountSlider = document.getElementById('beatcount');
+                if (beatcountSlider) {
+                    beatcountSlider.value = estimatedBeats;
+                    window.BitboxerUtils.updateParamDisplay('beatcount', estimatedBeats);
+                }
+                
+                window.BitboxerSampleEditor.render();
+                updateBeatInfo();
+            };
+        } else {
+            editorHints.textContent = 'Drag markers to adjust positions. Mouse wheel to zoom.';
+        }
+    });
+}
+
 // ============================================
 // EXPORT PAD EDITOR
 // ============================================
@@ -836,6 +1101,7 @@ window.BitboxerPadEditor = {
     removeModSlot,
     updateModSlotAppearance,
     renderMultisampleList,
-    updateModalIcon
+    updateModalIcon,
+    initSampleEditor
  
 };

@@ -84,6 +84,17 @@ function setupModalTabs(modalElement) {
             if (btn.dataset.tab === 'env') {
                 drawEnvelope();
             }
+
+            // FIX: Refresh sample editor canvas when switching to POS tab
+            if (btn.dataset.tab === 'pos') {
+                // Use requestAnimationFrame to ensure DOM has updated with new visibility
+                requestAnimationFrame(() => {
+                    if (window.BitboxerSampleEditor && window.BitboxerSampleEditor.renderer) {
+                        window.BitboxerSampleEditor.renderer.resize();
+                        window.BitboxerSampleEditor.render();
+                    }
+                });
+            }
         });
     });
 }

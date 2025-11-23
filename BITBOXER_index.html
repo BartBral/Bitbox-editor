@@ -567,6 +567,52 @@
                  Sample playback position and loop controls
                  ============================================ -->
             <div class="tab-content" id="tab-pos">
+                
+                <!-- Sample Editor -->
+                <div id="sampleEditorContainer" style="margin-bottom: 20px; display: none;">
+                    <canvas id="waveformCanvas" style="width: 100%; height: 200px; background: #1a1614; border-radius: 6px; cursor: crosshair;"></canvas>
+
+                    <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap;">
+                        <button class="btn" id="playBtn">▶ Play</button>
+                        <button class="btn" id="stopBtn">⏹ Stop</button>
+                        <button class="btn" id="playSelectionBtn">▶ Selection</button>
+
+                        <!-- Slicer mode controls (hidden by default) -->
+                        <div id="slicerControls" style="display: none; gap: 10px; align-items: center;">
+                            <button class="btn" id="autoSliceBtn">🔪 Auto Detect</button>
+                            <button class="btn" id="clearSlicesBtn">✕ Clear All</button>
+                            <span style="color: var(--color-text-secondary); font-size: 0.85em;" id="sliceCount">0 slices</span>
+                        </div>
+
+                        <!-- Granular mode controls (hidden by default) -->
+                        <div id="granularControls" style="display: none; gap: 10px; align-items: center;">
+                            <span style="color: var(--color-accent-yellow); font-size: 0.85em;">🌾 Granular Mode Active</span>
+                        </div>
+
+                        <!-- Clip mode controls (hidden by default) -->
+                        <div id="clipControls" style="display: none; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button class="btn" id="tapTempoBtn">🎵 Tap Tempo</button>
+                            <button class="btn" id="detectBeatsBtn">🔍 Detect Beats</button>
+                            <span style="color: var(--color-accent-blue); font-size: 0.85em;" id="beatInfo">-- beats @ -- BPM</span>
+                        </div>
+
+                        <div style="flex: 1; display: flex; gap: 10px; align-items: center;">
+                            <label style="color: var(--color-text-secondary); font-size: 0.85em;">Zoom:</label>
+                            <input type="range" id="zoomSlider" min="1" max="100" value="1" style="flex: 1;">
+                            <span id="zoomValue" style="color: var(--color-accent-blue); min-width: 40px;">1x</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 5px; color: var(--color-text-secondary); font-size: 0.8em;" id="editorHints">
+                        Drag markers to adjust positions. Mouse wheel to zoom.
+                    </div>
+
+                    <div style="margin-top: 5px;">
+                        <input type="range" id="scrollBar" min="0" max="100" value="0" style="width: 100%;">
+                    </div>
+                </div>
+                
+                
                 <div class="param-section">
                     <h3>Position & Loop</h3>
                     <div class="param-grid">
@@ -1774,6 +1820,9 @@
 
     <!-- NEW: SFZ Exporter -->
     <script src="js/sfz-exporter.js"></script>
+
+    <!-- Sample Editor -->
+    <script src="js/sample-editor.js"></script>
 
     <!-- 7. Pad Editor: Pad editing and modulation -->
     <script src="js/pad-editor.js"></script>
