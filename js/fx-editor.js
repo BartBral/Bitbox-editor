@@ -229,10 +229,10 @@ function setupFxParameterListeners() {
  * @returns {string} HTML string
  */
 function createFxModSlotHTML(modData, index, fxType) {
-    const { MOD_SOURCES, FX_MOD_DESTINATIONS } = window.BITBOXER_CONFIG;
+    const { MOD_SOURCES_FX, FX_MOD_DESTINATIONS } = window.BITBOXER_CONFIG;
     const destinations = FX_MOD_DESTINATIONS[fxType] || [];
 
-    const sourceOptions = MOD_SOURCES.map(src =>
+    const sourceOptions = MOD_SOURCES_FX.map(src =>
         `<option value="${src.value}" ${modData.src === src.value ? 'selected' : ''}>${src.label}</option>`
     ).join('');
 

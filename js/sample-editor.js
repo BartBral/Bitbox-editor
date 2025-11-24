@@ -134,14 +134,12 @@ class WaveformRenderer {
     sampleToX(sample) {
         if (!this.waveformData) return 0;
         
-        // FIX: Use this.width directly instead of destructuring to ensure we get current value
-        // Also guard against width being 0 or invalid
         const width = this.width;
         if (!width || width <= 0) {
-            console.warn('sampleToX called with invalid width:', width);
+            // Don't log warning - just return 0 silently (happens during resize)
             return 0;
         }
-
+        
         const { length } = this.waveformData;
         const { zoom, scrollPos } = this;
         const totalVisible = length / zoom;
@@ -151,10 +149,23 @@ class WaveformRenderer {
 
     xToSample(x) {
         if (!this.waveformData) return 0;
-        const { length, zoom, scrollPos, width } = this;
+        
+        const { length } = this.waveformData;
+        const { zoom, scrollPos, width } = this;
+        
+        // Guard against invalid width
+        if (!width || width <= 0) {
+            console.warn('xToSample: invalid width', width);
+            return 0;
+        }
+
         const totalVisible = length / zoom;
         const startSample = scrollPos * (length - totalVisible);
-        return Math.floor(startSample + (x / width) * totalVisible);
+
+        // Convert screen x-coordinate to sample position
+        const sample = Math.floor(startSample + (x / width) * totalVisible);
+
+        return Math.max(0, Math.min(length, sample));
     }
 }
 
@@ -263,12 +274,22 @@ class MarkerController {
         };
         this.dragging = null;
         this.sliceMarkers = []; // For slicer mode
+        this.isUpdatingFromDrag = false;
     }
 
     setMarker(name, sample) {
-        if (this.markers[name]) {
-            this.markers[name].sample = Math.max(0, Math.min(this.renderer.waveformData.length, sample));
+        if (!this.markers[name]) return;
+        if (!this.renderer.waveformData) return;
+        
+        // Guard against NaN
+        if (isNaN(sample) || sample === null || sample === undefined) {
+            console.error(`Invalid sample value for marker ${name}: ${sample}`);
+            return;
         }
+        
+        // Clamp to valid range
+        const validSample = Math.max(0, Math.min(this.renderer.waveformData.length, sample));
+        this.markers[name].sample = validSample;
     }
 
     findZeroCrossing(targetSample, channelData) {
@@ -303,7 +324,6 @@ class MarkerController {
         return this.findZeroCrossing(sample, channelData);
     }
 
-    // draw() {
     //     const { ctx, width, height } = this.renderer;
 
     //     // FIX: Don't draw if canvas width is invalid
@@ -360,27 +380,20 @@ class MarkerController {
     draw() {
         const { ctx, width, height } = this.renderer;
         
-        // FIX: Don't draw if canvas width is invalid
+        // Don't draw if canvas width is invalid
         if (!width || width <= 0) {
-            // console.warn('Skipping marker draw - invalid canvas width:', width);
             return;
         }
 
-        // DEBUG: Log marker drawing
-        console.log('=== MARKER DRAW DEBUG ===');
-        console.log('Canvas dimensions:', width, 'x', height);
-        console.log('Waveform data exists:', !!this.renderer.waveformData);
-        console.log('Markers:', this.markers);
-        
-        // Get current cell mode
+        // Get current cell mode to determine marker visibility
         const { currentEditingPad, presetData } = window.BitboxerData;
-        let cellmode = '0'; // Default to sample mode
+        let cellmode = '0';
         if (currentEditingPad) {
             const row = parseInt(currentEditingPad.dataset.row);
             const col = parseInt(currentEditingPad.dataset.col);
             cellmode = presetData.pads[row][col]?.params?.cellmode || '0';
         }
-
+        
         // Decide which markers to show based on mode
         const showStandardMarkers = (cellmode === '0' || cellmode === '3'); // Sample or Granular
         const showSliceMarkers = (cellmode === '2'); // Slicer
@@ -439,27 +452,27 @@ class MarkerController {
 
 
     drawGranularOverlay(padParams) {
-        const { ctx, width, height } = this;
-        if (!this.waveformData) return;
-        
-        const totalLength = this.waveformData.length;
-        const sampleRate = this.waveformData.sampleRate;
-        
+        const { ctx, width, height } = this.renderer;
+        if (!this.renderer.waveformData) return;
+
+        const totalLength = this.renderer.waveformData.length;
+        const sampleRate = this.renderer.waveformData.sampleRate;
+
         // Get grain parameters
         const samstart = parseInt(padParams.samstart) || 0;
         const samlen = parseInt(padParams.samlen) || totalLength;
         const grainSourceWindow = parseFloat(padParams.gainssrcwin) / 1000; // 0-1
         
-        // FIX: Calculate grain window within the actual sample bounds
+        // Calculate grain window within the actual sample bounds
         const sampleEnd = Math.min(samstart + samlen, totalLength);
         const effectiveLength = sampleEnd - samstart;
         const sourceWindowSamples = Math.floor(effectiveLength * grainSourceWindow);
         const windowStart = samstart + Math.floor((effectiveLength - sourceWindowSamples) / 2);
         const windowEnd = windowStart + sourceWindowSamples;
-        
-        // Convert to screen coordinates using sampleToX
-        const x1 = this.sampleToX(windowStart);
-        const x2 = this.sampleToX(windowEnd);
+
+        // Convert to screen coordinates
+        const x1 = this.renderer.sampleToX(windowStart);
+        const x2 = this.renderer.sampleToX(windowEnd);
 
         // Draw semi-transparent overlay outside grain window
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
@@ -486,15 +499,15 @@ class MarkerController {
         // Draw grain size indicator (animated grain)
         const grainSizePerc = parseFloat(padParams.grainsizeperc) / 1000; // 0-1
         const grainSizeSamples = Math.floor(sampleRate * 0.1 * grainSizePerc); // Up to 100ms
-        const grainWidth = (grainSizeSamples / totalLength) * width * this.renderer.zoom;
+        const grainWidth = this.renderer.sampleToX(samstart + grainSizeSamples) - this.renderer.sampleToX(samstart);
 
         // Animate grain position (simple ping-pong)
         const time = Date.now() / 1000;
         const animSpeed = 0.5; // seconds per cycle
         const animPos = (Math.sin(time * Math.PI * 2 / animSpeed) + 1) / 2; // 0-1
-        
-        const grainX = x1 + animPos * (x2 - x1 - grainWidth);
-        
+
+        const grainX = x1 + animPos * Math.max(0, (x2 - x1 - grainWidth));
+
         ctx.fillStyle = 'rgba(255, 234, 94, 0.3)';
         ctx.fillRect(grainX, 0, grainWidth, height);
 
@@ -603,49 +616,114 @@ class MarkerController {
         return subdivisionMap[synctype] || 1;
     }
 
-    handleMouseDown(x, y, mode) {
-        // Check if clicking near a marker handle (top 20px)
-        if (y <= 20) {
+    handleMouseDown(x, y, mode, shiftKey = false) {
+        console.log(`handleMouseDown: x=${x}, y=${y}, mode=${mode}, shift=${shiftKey}`);
+        
+        // Get current cell mode
+        const { currentEditingPad, presetData } = window.BitboxerData;
+        let cellmode = '0';
+        if (currentEditingPad) {
+            const row = parseInt(currentEditingPad.dataset.row);
+            const col = parseInt(currentEditingPad.dataset.col);
+            cellmode = presetData.pads[row][col]?.params?.cellmode || '0';
+        }
+
+        console.log(`Cellmode: ${cellmode}`);
+
+        // Shift+Click in slicer mode = add slice marker
+        if (shiftKey && cellmode === '2') {
+            console.log('Shift+Click detected, adding slice');
+            const result = this.addSliceAtPosition(x);
+            console.log(`addSliceAtPosition returned: ${result}`);
+            return true;
+        }
+
+        // Check if clicking near a standard marker handle (top 20px)
+        if (y <= 20 && (cellmode === '0' || cellmode === '3')) {
             const threshold = 10;
-            
+            console.log('Checking standard markers (top 20px zone)');
+
             for (const [name, marker] of Object.entries(this.markers)) {
                 const markerX = this.renderer.sampleToX(marker.sample);
+                console.log(`  Marker ${name}: x=${markerX}, distance=${Math.abs(x - markerX)}`);
+
                 if (Math.abs(x - markerX) < threshold) {
                     this.dragging = { type: 'marker', name };
+                    console.log(`✓ Started dragging ${name} marker`);
                     return true;
                 }
             }
         }
 
-        // In slicer mode, check slice markers (can click anywhere in height)
-        if (mode === '2') {
+        // In slicer mode, check for dragging slice markers
+        if (cellmode === '2') {
             const threshold = 10;
+            console.log(`Checking slice markers (${this.sliceMarkers.length} slices)`);
+
             for (let i = 0; i < this.sliceMarkers.length; i++) {
                 const markerX = this.renderer.sampleToX(this.sliceMarkers[i]);
+                console.log(`  Slice ${i}: x=${markerX}, distance=${Math.abs(x - markerX)}`);
+
                 if (Math.abs(x - markerX) < threshold) {
                     this.dragging = { type: 'slice', index: i };
+                    console.log(`✓ Started dragging slice marker ${i}`);
                     return true;
                 }
             }
         }
-        
+
+        console.log('✗ No marker grabbed, returning false');
+        return false;
+    }
+
+    handleRightClick(x, y) {
+        // Only for deleting slice markers in slicer mode
+        const { currentEditingPad, presetData } = window.BitboxerData;
+        let cellmode = '0';
+        if (currentEditingPad) {
+            const row = parseInt(currentEditingPad.dataset.row);
+            const col = parseInt(currentEditingPad.dataset.col);
+            cellmode = presetData.pads[row][col]?.params?.cellmode || '0';
+        }
+
+        // Only allow deletion in slicer mode
+        if (cellmode !== '2') {
+            console.log('Right-click ignored - not in slicer mode');
+            return false;
+        }
+
+        const threshold = 10;
+
+        for (let i = 0; i < this.sliceMarkers.length; i++) {
+            const markerX = this.renderer.sampleToX(this.sliceMarkers[i]);
+            if (Math.abs(x - markerX) < threshold) {
+                console.log(`Right-click: Deleting slice marker ${i}`);
+                this.removeSliceAtIndex(i);
+                return true;
+            }
+        }
+
+        console.log('Right-click: No slice marker found at position');
         return false;
     }
 
     handleMouseMove(x) {
         if (!this.dragging) return false;
-
+        
         let sample = this.renderer.xToSample(x);
-
+        
         if (this.dragging.type === 'marker') {
             const marker = this.markers[this.dragging.name];
             sample = this.snapToZeroCrossing(sample, marker);
+            
+            // Just set the marker - don't worry about other markers
             this.setMarker(this.dragging.name, sample);
             this.updatePadParams();
         } else if (this.dragging.type === 'slice') {
-            // Snap slice to zero crossing (always enabled for slices)
             const channelData = this.renderer.waveformData.channelData[0];
             sample = this.findZeroCrossing(sample, channelData);
+            
+            // Just update this slice - don't sort or check others
             this.sliceMarkers[this.dragging.index] = sample;
             this.updateSlicesToPad();
         }
@@ -669,13 +747,29 @@ class MarkerController {
         const col = parseInt(currentEditingPad.dataset.col);
         const pad = presetData.pads[row][col];
 
-        // Update pad params
-        pad.params.samstart = this.markers.start.sample.toString();
-        pad.params.samlen = (this.markers.end.sample - this.markers.start.sample).toString();
-        pad.params.loopstart = this.markers.loopStart.sample.toString();
-        pad.params.loopend = this.markers.loopEnd.sample.toString();
+        // Set flag to prevent circular updates - MUST be set BEFORE any slider updates
+        this.isUpdatingFromDrag = true;
 
-        // Update sliders
+        // Validate marker samples before using them
+        const startSample = this.markers.start.sample;
+        const endSample = this.markers.end.sample;
+        const loopStartSample = this.markers.loopStart.sample;
+        const loopEndSample = this.markers.loopEnd.sample;
+        
+        // Guard against NaN/invalid values
+        if (isNaN(startSample) || isNaN(endSample) || isNaN(loopStartSample) || isNaN(loopEndSample)) {
+            console.error('Invalid marker samples detected, skipping update');
+            this.isUpdatingFromDrag = false;
+            return;
+        }
+
+        // Update pad params
+        pad.params.samstart = startSample.toString();
+        pad.params.samlen = Math.max(0, endSample - startSample).toString();
+        pad.params.loopstart = loopStartSample.toString();
+        pad.params.loopend = loopEndSample.toString();
+
+        // Update sliders (this will trigger input events, but flag prevents sync)
         ['samstart', 'samlen', 'loopstart', 'loopend'].forEach(param => {
             const slider = document.getElementById(param);
             if (slider) {
@@ -683,6 +777,9 @@ class MarkerController {
                 window.BitboxerUtils.updateParamDisplay(param, pad.params[param]);
             }
         });
+
+        // Clear flag immediately after slider updates (synchronous)
+        this.isUpdatingFromDrag = false;
     }
 
     updateSlicesToPad() {
@@ -701,17 +798,31 @@ class MarkerController {
     }
 
     syncFromPadParams(pad) {
-        const samstart = parseInt(pad.params.samstart) || 0;
-        const samlen = parseInt(pad.params.samlen) || 0;
+        // Parse and validate all values
+        const samstart = parseInt(pad.params.samstart);
+        const samlen = parseInt(pad.params.samlen);
+        const loopstart = parseInt(pad.params.loopstart);
+        const loopend = parseInt(pad.params.loopend);
         
-        this.setMarker('start', samstart);
-        this.setMarker('end', samstart + samlen);
-        this.setMarker('loopStart', parseInt(pad.params.loopstart) || 0);
-        this.setMarker('loopEnd', parseInt(pad.params.loopend) || samlen);
-
+        // Guard against NaN - use 0 as fallback
+        const validStart = isNaN(samstart) ? 0 : samstart;
+        const validLen = isNaN(samlen) ? 0 : samlen;
+        const validLoopStart = isNaN(loopstart) ? 0 : loopstart;
+        const validLoopEnd = isNaN(loopend) ? validLen : loopend;
+        
+        console.log(`syncFromPadParams: start=${validStart}, len=${validLen}, loopStart=${validLoopStart}, loopEnd=${validLoopEnd}`);
+        
+        this.setMarker('start', validStart);
+        this.setMarker('end', validStart + validLen);
+        this.setMarker('loopStart', validLoopStart);
+        this.setMarker('loopEnd', validLoopEnd);
+        
         // Load slices if in slicer mode
         if (pad.params.cellmode === '2' && pad.slices) {
-            this.sliceMarkers = pad.slices.map(slice => parseInt(slice.pos));
+            this.sliceMarkers = pad.slices.map(slice => {
+                const pos = parseInt(slice.pos);
+                return isNaN(pos) ? 0 : pos;
+            }).filter(pos => pos > 0); // Remove invalid slices
         } else {
             this.sliceMarkers = [];
         }
@@ -723,12 +834,19 @@ class MarkerController {
         const snappedSample = this.findZeroCrossing(sample, channelData);
         
         // Don't add if too close to existing slice
-        const minDistance = 100; // samples
+        const minDistance = 1000; // samples
         const tooClose = this.sliceMarkers.some(s => Math.abs(s - snappedSample) < minDistance);
-        if (tooClose) return;
+        if (tooClose) {
+            console.log('Slice too close to existing marker, ignoring');
+            return false;
+        }
 
         this.sliceMarkers.push(snappedSample);
+        this.sliceMarkers.sort((a, b) => a - b); // Keep sorted
         this.updateSlicesToPad();
+
+        console.log(`Added slice marker at sample ${snappedSample}`);
+        return true;
     }
 
     removeSliceAtIndex(index) {
@@ -824,6 +942,16 @@ class SampleEditor {
         this.animationFrame = null;
         this.currentMode = '0';
         this.granularAnimating = false;
+
+        // Selection state
+        this.selectionStart = null;  
+        this.selectionEnd = null; 
+
+        // Prevent duplicate event listeners   
+        this._eventListenersAttached = false;  
+
+        // Render throttling
+        this._renderScheduled = false;
     }
 
     async init(canvasId) {
@@ -838,89 +966,161 @@ class SampleEditor {
         this.renderer.resize();
     }
 
-    setupEventListeners(canvas) {
-        // Mouse events
-        let isDragging = false;
-        let currentMode = '0';
+    scheduleRender() {
+        if (this._renderScheduled) return;
+        
+        this._renderScheduled = true;
+        requestAnimationFrame(() => {
+            this._renderScheduled = false;
+            this.render();
+        });
+    }
 
+    setupEventListeners(canvas) {
+        // CRITICAL: Remove any existing listeners to prevent duplicates
+        if (this._eventListenersAttached) {
+            console.warn('Event listeners already attached, skipping duplicate setup');
+            return;
+        }
+        this._eventListenersAttached = true;
+
+        // Mouse state variables
+        let isDragging = false;
+        let isSelecting = false;
+        let lastMouseX = null;
+        let lastMouseY = null;
+
+        // ==================== MOUSEDOWN ====================
         canvas.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+
+            // Reset mouse tracking
+            lastMouseX = null;
+            lastMouseY = null;
+
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
             // Get current mode
             const { currentEditingPad, presetData } = window.BitboxerData;
+            let currentMode = '0';
             if (currentEditingPad) {
                 const row = parseInt(currentEditingPad.dataset.row);
                 const col = parseInt(currentEditingPad.dataset.col);
                 currentMode = presetData.pads[row][col].params.cellmode || '0';
             }
-            
-            if (this.markerController.handleMouseDown(x, y, currentMode)) {
-                isDragging = true;
-            } else if (currentMode === '2' && e.shiftKey) {
-                // Shift+Click in slicer mode = add slice
-                this.markerController.addSliceAtPosition(x);
-                this.render();
-            }
-        });
 
-        canvas.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            
-            if (this.markerController.handleMouseMove(x)) {
-                this.render();
-            }
-        });
-
-        canvas.addEventListener('mouseup', () => {
-            if (isDragging) {
-                this.markerController.handleMouseUp();
-                isDragging = false;
-            }
-        });
-
-        // Right-click to delete slice
-        canvas.addEventListener('contextmenu', (e) => {
-            if (currentMode !== '2') return;
-            e.preventDefault();
-
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const threshold = 10;
-
-            for (let i = 0; i < this.markerController.sliceMarkers.length; i++) {
-                const markerX = this.renderer.sampleToX(this.markerController.sliceMarkers[i]);
-                if (Math.abs(x - markerX) < threshold) {
-                    this.markerController.removeSliceAtIndex(i);
-                    this.render();
-                    break;
+            // LEFT CLICK (button 0)
+            if (e.button === 0) {
+                // Try to grab a marker first
+                if (this.markerController.handleMouseDown(x, y, currentMode, e.shiftKey)) {
+                    isDragging = true;
+                    console.log('Started dragging marker');
+                } else {
+                    // No marker grabbed - start selection
+                    isSelecting = true;
+                    const startSample = this.renderer.xToSample(x);
+                    this.selectionStart = startSample;
+                    this.selectionEnd = startSample;
+                    console.log(`Selection started at sample ${startSample}`);
                 }
             }
         });
 
-        // Zoom with mouse wheel
+        // ==================== MOUSEMOVE ====================
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Check if mouse actually moved
+            const moved = (lastMouseX === null || Math.abs(x - lastMouseX) > 1 || Math.abs(y - lastMouseY) > 1);
+            lastMouseX = x;
+            lastMouseY = y;
+
+            if (!moved) return;
+
+            if (isDragging) {
+                if (this.markerController.handleMouseMove(x)) {
+                    this.scheduleRender();  // ← Changed from this.render()
+                }
+            } else if (isSelecting) {
+                const endSample = this.renderer.xToSample(x);
+                this.selectionEnd = endSample;
+                this.scheduleRender();  // ← Changed from this.render()
+            }
+        });
+
+        // ==================== MOUSEUP ====================
+        canvas.addEventListener('mouseup', (e) => {
+            if (isDragging) {
+                this.markerController.handleMouseUp();
+                isDragging = false;
+                this.render();
+                console.log('Stopped dragging marker');
+            } else if (isSelecting) {
+                isSelecting = false;
+                // Ensure selection is in correct order
+                if (this.selectionStart > this.selectionEnd) {
+                    [this.selectionStart, this.selectionEnd] = [this.selectionEnd, this.selectionStart];
+                }
+                console.log(`Selection finalized: ${this.selectionStart} to ${this.selectionEnd}`);
+                this.render();
+            }
+        });
+
+        // ==================== RIGHT-CLICK (CONTEXTMENU) ====================
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Get current mode
+            const { currentEditingPad, presetData } = window.BitboxerData;
+            let currentMode = '0';
+            if (currentEditingPad) {
+                const row = parseInt(currentEditingPad.dataset.row);
+                const col = parseInt(currentEditingPad.dataset.col);
+                currentMode = presetData.pads[row][col].params.cellmode || '0';
+            }
+
+            // Handle right-click (only for slice deletion in slicer mode)
+            if (this.markerController.handleRightClick(x, y)) {
+                this.render();
+            }
+        });
+
+        // ==================== MOUSE WHEEL (ZOOM) ====================
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
-            this.zoomController.handleWheel(e.deltaY, x);
 
-            // FIX: Update slider
+            // If there's a selection, zoom toward selection center
+            let zoomPoint = x;
+            if (this.selectionStart !== null && this.selectionEnd !== null && 
+                !isNaN(this.selectionStart) && !isNaN(this.selectionEnd)) {
+                const selectionCenter = (this.selectionStart + this.selectionEnd) / 2;
+                zoomPoint = this.renderer.sampleToX(selectionCenter);
+            }
+
+            this.zoomController.handleWheel(e.deltaY, zoomPoint);
+        
+            // Update slider
             const zoomSlider = document.getElementById('zoomSlider');
             const zoomValue = document.getElementById('zoomValue');
             if (zoomSlider && zoomValue) {
-                zoomSlider.value = window.BitboxerSampleEditor.renderer.zoom;
-                zoomValue.textContent = window.BitboxerSampleEditor.renderer.zoom.toFixed(1) + 'x';
+                zoomSlider.value = this.renderer.zoom;
+                zoomValue.textContent = this.renderer.zoom.toFixed(1) + 'x';
             }
-
+        
             this.render();
         });
 
-        // Resize
+        // ==================== WINDOW RESIZE ====================
         window.addEventListener('resize', () => {
             this.renderer.resize();
             this.render();
@@ -961,6 +1161,11 @@ class SampleEditor {
     }
 
     render() {
+        // CRITICAL: Don't render if canvas width is invalid
+        if (!this.renderer || !this.renderer.width || this.renderer.width <= 0) {
+            return; // Canvas not ready, skip render
+        }
+
         this.renderer.render();
         this.markerController.draw();
 
@@ -973,13 +1178,52 @@ class SampleEditor {
         const pad = presetData.pads[row][col];
 
         if (this.currentMode === '1') {
-            // Clip mode - beat grid
             const tempo = presetData.tempo || '120';
             this.markerController.drawClipBeatGrid(pad.params, tempo);
         } else if (this.currentMode === '3') {
-            // Granular mode - grain window
             this.markerController.drawGranularOverlay(pad.params);
         }
+
+        // Draw selection overlay if exists
+        if (this.selectionStart !== null && this.selectionEnd !== null &&
+            !isNaN(this.selectionStart) && !isNaN(this.selectionEnd)) {
+            const ctx = this.renderer.ctx;
+            const x1 = this.renderer.sampleToX(this.selectionStart);
+            const x2 = this.renderer.sampleToX(this.selectionEnd);
+            const width = this.renderer.width;
+            const height = this.renderer.height;
+
+            // Draw selection highlight
+            ctx.fillStyle = 'rgba(74, 158, 255, 0.2)';
+            ctx.fillRect(x1, 0, x2 - x1, height);
+
+            // Draw selection borders
+            ctx.strokeStyle = '#4a9eff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x1, 0);
+            ctx.lineTo(x1, height);
+            ctx.moveTo(x2, 0);
+            ctx.lineTo(x2, height);
+            ctx.stroke();
+        }
+
+        // Draw playback position if playing
+        if (this.audioEngine.isPlaying) {
+            const currentSample = this.audioEngine.getCurrentSample();
+            if (!isNaN(currentSample)) {
+                const x = this.renderer.sampleToX(currentSample);
+                const ctx = this.renderer.ctx;
+                const height = this.renderer.height;
+                
+                ctx.strokeStyle = '#5eff5e';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+        }    
     }
 
     startGranularAnimation() {
@@ -987,15 +1231,25 @@ class SampleEditor {
         this.granularAnimating = true;
 
         const animate = () => {
-            if (!this.granularAnimating || (this.currentMode !== '3' && this.currentMode !== '1')) {
+            // Stop if animation disabled or mode is not granular
+            if (!this.granularAnimating || this.currentMode !== '3') {
                 this.granularAnimating = false;
+                if (this.animationFrame) {
+                    cancelAnimationFrame(this.animationFrame);
+                    this.animationFrame = null;
+                }
                 return;
             }
-            this.render();
-            requestAnimationFrame(animate);
+
+            // Only render if canvas is ready and visible
+            if (this.renderer && this.renderer.width > 0) {
+                this.render();
+            }
+
+            this.animationFrame = requestAnimationFrame(animate);
         };
 
-        animate();
+        this.animationFrame = requestAnimationFrame(animate);
     }
 
     updateGranularParams() {
@@ -1004,16 +1258,21 @@ class SampleEditor {
 
     stopGranularAnimation() {
         this.granularAnimating = false;
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+            this.animationFrame = null;
+        }
     }
 
     setMode(mode) {
         this.currentMode = mode;
         
-        // Both granular and clip modes need animation (granular for grain, clip for playhead)
-        if (mode === '3' || mode === '1') {
+        // Only granular mode needs continuous animation
+        if (mode === '3') {
             this.startGranularAnimation();
         } else {
             this.stopGranularAnimation();
+            // Single render to update display
             this.render();
         }
     }
@@ -1036,6 +1295,8 @@ class SampleEditor {
         };
 
         this.audioEngine.play(params);
+        this.startPlaybackAnimation();  // ← This animates playhead during playback
+
     }
 
     stop() {
@@ -1043,7 +1304,50 @@ class SampleEditor {
     }
 
     playSelection() {
-        this.play(); // For now, same as play (respects markers)
+        // Validate selection
+        if (this.selectionStart === null || this.selectionEnd === null ||
+            isNaN(this.selectionStart) || isNaN(this.selectionEnd) ||
+            this.selectionStart === this.selectionEnd) {
+            console.warn('No valid selection to play');
+            window.BitboxerUtils.setStatus('No selection made - drag in waveform to select', 'error');
+            return;
+        }
+
+        console.log(`Playing selection: ${this.selectionStart} to ${this.selectionEnd}`);
+
+        this.audioEngine.play({
+            startSample: Math.floor(this.selectionStart),
+            endSample: Math.floor(this.selectionEnd),
+            loopEnabled: false,
+            reverse: false
+        });
+
+        this.startPlaybackAnimation();
+    }
+
+    startPlaybackAnimation() {
+        if (this.playbackAnimationFrame) {
+            cancelAnimationFrame(this.playbackAnimationFrame);
+        }
+
+        const animate = () => {
+            if (!this.audioEngine.isPlaying) {
+                this.playbackAnimationFrame = null;
+                if (this.renderer && this.renderer.width > 0) {
+                    this.render();
+                }
+                return;
+            }
+
+            // Only render if canvas is ready
+            if (this.renderer && this.renderer.width > 0) {
+                this.render();
+            }
+
+            this.playbackAnimationFrame = requestAnimationFrame(animate);
+        };
+
+        this.playbackAnimationFrame = requestAnimationFrame(animate);
     }
 
     playSlice(sliceIndex) {

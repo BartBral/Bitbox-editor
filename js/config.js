@@ -6,7 +6,7 @@
  */
 
 // ============================================
-// MODULATION SOURCES
+// MODULATION SOURCES - For PADS
 // ============================================
 /**
  * Available modulation sources for pad and FX modulation
@@ -25,6 +25,31 @@ const MOD_SOURCES = [
     { value: 'keytrig', label: 'Key Trigger' },
     { value: 'velocity', label: 'Velocity' },
     { value: 'lfo1', label: 'LFO' },
+    { value: 'pitchbend', label: 'Pitch Bend' },
+    { value: 'modwheel', label: 'Mod Wheel' },
+    { value: 'midivol', label: 'MIDI Volume' },
+    { value: 'midipan', label: 'MIDI Pan' },
+    { value: 'midicc', label: 'MIDI CC' }
+];
+
+// ============================================
+// MODULATION SOURCES - For FX 
+// ============================================
+/**
+ * Available modulation sources for pad and FX modulation
+ * These can modulate various parameters in the Bitbox
+ */
+const MOD_SOURCES_FX = [
+    { value: 'none', label: '--- None ---' },
+    { value: 'mod1', label: 'Mod 1' },
+    { value: 'mod2', label: 'Mod 2' },
+    { value: 'mod3', label: 'Mod 3' },
+    { value: 'mod4', label: 'Mod 4' },
+    { value: 'mod5', label: 'Mod 5' },
+    { value: 'mod6', label: 'Mod 6' },
+    { value: 'mod7', label: 'Mod 7' },
+    { value: 'mod8', label: 'Mod 8' },
+    { value: 'keytrig', label: 'Key Trigger' },
     { value: 'pitchbend', label: 'Pitch Bend' },
     { value: 'modwheel', label: 'Mod Wheel' },
     { value: 'midivol', label: 'MIDI Volume' },
@@ -186,6 +211,7 @@ const STATUS_AUTO_CLEAR_MS = 20000;
 // Make all config available globally or as exports
 window.BITBOXER_CONFIG = {
     MOD_SOURCES,
+    MOD_SOURCES_FX,
     MOD_DESTINATIONS,
     FX_MOD_DESTINATIONS,
     CELL_MODE_NAMES,
