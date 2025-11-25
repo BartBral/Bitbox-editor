@@ -180,6 +180,7 @@ class AudioEngine {
         this.isPlaying = false;
         this.startTime = 0;
         this.pauseTime = 0;
+        this.playbackStartSample = 0;
     }
 
     async init() {
@@ -211,6 +212,9 @@ class AudioEngine {
         } = params;
 
         const sampleRate = this.audioBuffer.sampleRate;
+
+        // Store start sample for getCurrentSample()
+        this.playbackStartSample = startSample;
 
         this.source = this.audioContext.createBufferSource();
         this.source.buffer = this.audioBuffer;
@@ -254,8 +258,12 @@ class AudioEngine {
 
     getCurrentSample() {
         if (!this.isPlaying || !this.audioBuffer) return 0;
+        
         const elapsed = this.audioContext.currentTime - this.startTime;
-        return Math.floor(elapsed * this.audioBuffer.sampleRate);
+        const elapsedSamples = Math.floor(elapsed * this.audioBuffer.sampleRate);
+        
+        // Return absolute position in file
+        return this.playbackStartSample + elapsedSamples;
     }
 }
 
@@ -290,6 +298,26 @@ class MarkerController {
         // Clamp to valid range
         const validSample = Math.max(0, Math.min(this.renderer.waveformData.length, sample));
         this.markers[name].sample = validSample;
+    }
+
+    addSliceAtSample(sample) {
+        const channelData = this.renderer.waveformData.channelData[0];
+        const snappedSample = this.findZeroCrossing(sample, channelData);
+        
+        // Don't add if too close to existing
+        const minDistance = 100;
+        const tooClose = this.sliceMarkers.some(s => Math.abs(s - snappedSample) < minDistance);
+        if (tooClose) {
+            console.log('Slice too close to existing marker');
+            return false;
+        }
+        
+        this.sliceMarkers.push(snappedSample);
+        this.sliceMarkers.sort((a, b) => a - b);
+        this.updateSlicesToPad();
+        
+        console.log(`Added slice at sample ${snappedSample}`);
+        return true;
     }
 
     findZeroCrossing(targetSample, channelData) {
@@ -896,7 +924,7 @@ class ZoomController {
     constructor(renderer) {
         this.renderer = renderer;
         this.minZoom = 1;
-        this.maxZoom = 100;
+        this.maxZoom = 10000;
     }
 
     setZoom(zoom) {
@@ -915,17 +943,35 @@ class ZoomController {
     }
 
     handleWheel(deltaY, mouseX) {
+        if (!this.renderer.waveformData) return;
+        
         const oldZoom = this.renderer.zoom;
+        const oldScroll = this.renderer.scrollPos;
+        const width = this.renderer.width;
+        const totalSamples = this.renderer.waveformData.length;
+        
+        // Calculate zoom change
         const zoomFactor = deltaY > 0 ? 0.9 : 1.1;
         const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, oldZoom * zoomFactor));
-
-        // Zoom towards mouse position
-        const mouseRatio = mouseX / this.renderer.width;
-        const oldScroll = this.renderer.scrollPos;
-        const newScroll = oldScroll + mouseRatio * (1 / oldZoom - 1 / newZoom);
-
+        
+        // Find which sample is currently at mouseX position
+        const oldVisibleSamples = totalSamples / oldZoom;
+        const oldStartSample = oldScroll * (totalSamples - oldVisibleSamples);
+        const sampleAtMouse = oldStartSample + (mouseX / width) * oldVisibleSamples;
+        
+        // Calculate new scroll position to keep that sample at mouseX
+        const newVisibleSamples = totalSamples / newZoom;
+        const newStartSample = sampleAtMouse - (mouseX / width) * newVisibleSamples;
+        
+        // Convert to scroll position (0 to 1 - 1/zoom)
+        const maxStartSample = totalSamples - newVisibleSamples;
+        const newScroll = maxStartSample > 0 ? newStartSample / maxStartSample : 0;
+        
+        // Clamp scroll position
+        const maxScroll = Math.max(0, 1 - 1 / newZoom);
         this.renderer.zoom = newZoom;
-        this.renderer.scrollPos = Math.max(0, Math.min(1 - 1 / newZoom, newScroll));
+        this.renderer.scrollPos = Math.max(0, Math.min(maxScroll, newScroll));
+        
         this.renderer.render();
     }
 }
@@ -1073,11 +1119,11 @@ class SampleEditor {
         // ==================== RIGHT-CLICK (CONTEXTMENU) ====================
         canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-
+        
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-
+        
             // Get current mode
             const { currentEditingPad, presetData } = window.BitboxerData;
             let currentMode = '0';
@@ -1086,10 +1132,31 @@ class SampleEditor {
                 const col = parseInt(currentEditingPad.dataset.col);
                 currentMode = presetData.pads[row][col].params.cellmode || '0';
             }
+        
+            // Only handle in slicer mode
+            if (currentMode === '2') {
+                const clickSample = this.renderer.xToSample(x);
 
-            // Handle right-click (only for slice deletion in slicer mode)
-            if (this.markerController.handleRightClick(x, y)) {
-                this.render();
+                // Check if clicking on existing marker (delete it)
+                const threshold = 10;
+                for (let i = 0; i < this.markerController.sliceMarkers.length; i++) {
+                    const markerX = this.renderer.sampleToX(this.markerController.sliceMarkers[i]);
+                    if (Math.abs(x - markerX) < threshold) {
+                        // Delete marker
+                        this.markerController.removeSliceAtIndex(i);
+                        this.render();
+                        return;
+                    }
+                }
+
+                // Check if clicking within selection
+                if (this.selectionStart !== null && this.selectionEnd !== null &&
+                    clickSample >= this.selectionStart && clickSample <= this.selectionEnd) {
+                    
+                    // Show context menu for adding slices
+                    this.showSliceContextMenu(e.pageX, e.pageY);
+                    return;
+                }
             }
         });
 
@@ -1125,6 +1192,60 @@ class SampleEditor {
             this.renderer.resize();
             this.render();
         });
+    }
+
+    showSliceContextMenu(pageX, pageY) {
+        // Remove any existing context menu
+        const existing = document.getElementById('sliceContextMenu');
+        if (existing) existing.remove();
+        
+        // Create context menu
+        const menu = document.createElement('div');
+        menu.id = 'sliceContextMenu';
+        menu.className = 'context-menu show';
+        menu.style.left = pageX + 'px';
+        menu.style.top = pageY + 'px';
+        
+        menu.innerHTML = `
+            <div class="context-item" data-action="start">Add slice at selection start</div>
+            <div class="context-item" data-action="end">Add slice at selection end</div>
+            <div class="context-item" data-action="both">Add slices at both</div>
+            <div class="context-item separator"></div>
+            <div class="context-item" data-action="cancel">Cancel</div>
+        `;
+        
+        document.body.appendChild(menu);
+        
+        // Handle menu clicks
+        menu.addEventListener('click', (e) => {
+            const action = e.target.dataset.action;
+
+            if (action === 'start') {
+                this.markerController.addSliceAtSample(this.selectionStart);
+            } else if (action === 'end') {
+                this.markerController.addSliceAtSample(this.selectionEnd);
+            } else if (action === 'both') {
+                this.markerController.addSliceAtSample(this.selectionStart);
+                this.markerController.addSliceAtSample(this.selectionEnd);
+            }
+
+            // Remove menu
+            menu.remove();
+
+            // Re-render if slices were added
+            if (action !== 'cancel') {
+                this.render();
+            }
+        });
+
+        // Close menu on any other click
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeMenu), 0);
     }
 
     async loadSample(wavFile) {
@@ -1230,7 +1351,11 @@ class SampleEditor {
         if (this.granularAnimating) return;
         this.granularAnimating = true;
 
-        const animate = () => {
+        let lastFrameTime = 0;
+        const targetFPS = 24;
+        const frameInterval = 1000 / targetFPS;  // ~41.67ms
+
+        const animate = (currentTime) => {
             // Stop if animation disabled or mode is not granular
             if (!this.granularAnimating || this.currentMode !== '3') {
                 this.granularAnimating = false;
@@ -1241,9 +1366,14 @@ class SampleEditor {
                 return;
             }
 
-            // Only render if canvas is ready and visible
-            if (this.renderer && this.renderer.width > 0) {
-                this.render();
+            // Throttle to 24fps
+            if (currentTime - lastFrameTime >= frameInterval) {
+                lastFrameTime = currentTime;
+
+                // Only render if canvas is ready and visible
+                if (this.renderer && this.renderer.width > 0) {
+                    this.render();
+                }
             }
 
             this.animationFrame = requestAnimationFrame(animate);

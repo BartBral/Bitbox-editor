@@ -989,20 +989,80 @@ async function initSampleEditor(padData) {
         const zoomValue = document.getElementById('zoomValue');
         if (zoomSlider && zoomValue) {
             zoomSlider.oninput = () => {
-                const zoom = parseFloat(zoomSlider.value);
-                window.BitboxerSampleEditor.setZoom(zoom);
-                zoomValue.textContent = zoom.toFixed(1) + 'x';
+                const newZoom = parseFloat(zoomSlider.value);
+                
+                // If there's a selection, zoom toward its center
+                if (window.BitboxerSampleEditor.selectionStart !== null && 
+                    window.BitboxerSampleEditor.selectionEnd !== null) {
+                    
+                    const selectionCenter = (window.BitboxerSampleEditor.selectionStart + 
+                                            window.BitboxerSampleEditor.selectionEnd) / 2;
+                    const renderer = window.BitboxerSampleEditor.renderer;
+                    
+                    if (renderer && renderer.waveformData) {
+                        const totalSamples = renderer.waveformData.length;
+                        const oldZoom = renderer.zoom;
+                        const oldScroll = renderer.scrollPos;
+                        
+                        // Calculate new scroll to keep selection centered
+                        const oldVisibleSamples = totalSamples / oldZoom;
+                        const oldStartSample = oldScroll * (totalSamples - oldVisibleSamples);
+                        
+                        const newVisibleSamples = totalSamples / newZoom;
+                        const newStartSample = selectionCenter - newVisibleSamples / 2;
+                        
+                        const maxStartSample = totalSamples - newVisibleSamples;
+                        const newScroll = maxStartSample > 0 ? newStartSample / maxStartSample : 0;
+                        const maxScroll = Math.max(0, 1 - 1 / newZoom);
+                        
+                        renderer.zoom = newZoom;
+                        renderer.scrollPos = Math.max(0, Math.min(maxScroll, newScroll));
+                    }
+                } else {
+                    // No selection - just update zoom (keeps left edge stable)
+                    window.BitboxerSampleEditor.setZoom(newZoom);
+                }
+                
+                zoomValue.textContent = newZoom.toFixed(1) + 'x';
+                window.BitboxerSampleEditor.render();
+                
+                // ========== ADD THIS SECTION HERE ==========
+                // Update scroll bar after zoom change
+                const scrollBar = document.getElementById('scrollBar');
+                const renderer = window.BitboxerSampleEditor.renderer;
+                if (scrollBar && renderer) {
+                    const maxScrollRatio = Math.max(0, 1 - 1 / newZoom);
+                    const scrollBarValue = maxScrollRatio > 0 
+                        ? (renderer.scrollPos / maxScrollRatio) * 100 
+                        : 0;
+                    scrollBar.value = scrollBarValue;
+                }
+                // ============================================
             };
             zoomSlider.value = 1;
             zoomValue.textContent = '1x';
         }
         
-        // Setup scroll bar (one-time setup)
+
+
+        // Setup scroll bar
         const scrollBar = document.getElementById('scrollBar');
         if (scrollBar) {
             scrollBar.oninput = () => {
-                window.BitboxerSampleEditor.setScroll(scrollBar.value / 100);
+                const renderer = window.BitboxerSampleEditor.renderer;
+                if (!renderer) return;
+
+                // Interpret scrollBar.value (0-100) as percentage of scrollable range
+                const zoom = renderer.zoom;
+                const maxScrollRatio = Math.max(0, 1 - 1 / zoom);
+                const actualScroll = (scrollBar.value / 100) * maxScrollRatio;
+
+                window.BitboxerSampleEditor.setScroll(actualScroll);
             };
+
+            scrollBar.min = 0;
+            scrollBar.max = 100;  // Keep constant for performance
+            scrollBar.value = 0;
         }
     } else {
         console.log('Sample editor already initialized, syncing UI only');
@@ -1117,25 +1177,25 @@ async function initSampleEditor(padData) {
         let tapTimes = [];
         let tapResetTimeout = null;
         const tapTempoBtn = document.getElementById('tapTempoBtn');
-            
+
         if (tapTempoBtn) {
             tapTempoBtn.onclick = () => {
                 const now = Date.now();
                 tapTimes.push(now);
-                
+
                 // Clear any existing timeout
                 if (tapResetTimeout) {
                     clearTimeout(tapResetTimeout);
                 }
-                
+
                 // Keep only last 5 taps
                 if (tapTimes.length > 5) {
                     tapTimes.shift();
                 }
-                
+
                 // Update button text
                 tapTempoBtn.textContent = `🎵 Tap ${tapTimes.length}/5`;
-                
+
                 // Calculate tempo after 5 taps
                 if (tapTimes.length >= 5) {
                     let totalInterval = 0;
@@ -1144,16 +1204,16 @@ async function initSampleEditor(padData) {
                     }
                     const avgInterval = totalInterval / 4;
                     const bpm = Math.round(60000 / avgInterval);
-                    
+
                     // Update tempo
                     presetData.tempo = bpm.toString();
-                    
+
                     // Update display (but don't re-render entire canvas)
                     updateBeatInfo();
-                    
+
                     // Show success briefly
                     tapTempoBtn.textContent = `✓ ${bpm} BPM`;
-                    
+
                     // Reset after short delay
                     setTimeout(() => {
                         tapTimes = [];
