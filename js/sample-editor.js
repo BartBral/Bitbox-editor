@@ -70,14 +70,14 @@ class WaveformRenderer {
 
     render() {
         if (!this.waveformData || this.width <= 0 || this.height <= 0) return;
-        
+
         const { ctx, width, height, waveformData, zoom, scrollSample } = this;
         const { channels, length, channelData } = waveformData;
-        
+
         // Clear canvas
         ctx.fillStyle = '#1a1614';
         ctx.fillRect(0, 0, width, height);
-        
+
         // Calculate visible sample range - INTEGER MATH
         const visibleSamples = Math.max(1, Math.floor(length / zoom));
         const maxScroll = Math.max(0, length - visibleSamples);
@@ -91,16 +91,16 @@ class WaveformRenderer {
         // We render exactly what the coordinate functions expect
         
         const channelHeight = height / channels;
-        
+
         // Draw each channel
         for (let ch = 0; ch < channels; ch++) {
             const data = channelData[ch];
             const yOffset = ch * channelHeight + channelHeight / 2;
-        
+
             ctx.strokeStyle = '#ffa600';
             ctx.lineWidth = 1;
             ctx.beginPath();
-        
+
             for (let x = 0; x < width; x++) {
                 // Use EXACT inverse of sampleToX() calculation
                 // sampleToX formula: pixelPos = (offsetFromScroll / visibleSamples) * width
@@ -108,19 +108,19 @@ class WaveformRenderer {
                 const ratio = x / width;
                 const sampleOffset = ratio * visibleSamples;
                 const sampleIdxFloat = startSample + sampleOffset;
-                
+
                 // Get the sample index (floor for starting point)
                 const sampleIdx = Math.floor(sampleIdxFloat);
-                
+
                 // Calculate how many samples this pixel represents
                 const nextRatio = (x + 1) / width;
                 const nextSampleOffset = nextRatio * visibleSamples;
                 const nextSampleIdxFloat = startSample + nextSampleOffset;
                 const sampleEnd = Math.min(length, Math.ceil(nextSampleIdxFloat));
-                
+
                 // Ensure we always sample at least one sample
                 const actualEnd = Math.max(sampleIdx + 1, sampleEnd);
-            
+
                 // Find min/max in this pixel's sample range
                 let min = 1, max = -1;
                 for (let i = sampleIdx; i < actualEnd && i < length; i++) {
@@ -128,10 +128,10 @@ class WaveformRenderer {
                     if (val < min) min = val;
                     if (val > max) max = val;
                 }
-            
+
                 const y1 = yOffset + min * (channelHeight / 2) * 0.9;
                 const y2 = yOffset + max * (channelHeight / 2) * 0.9;
-            
+
                 if (x === 0) {
                     ctx.moveTo(x, y1);
                 } else {
@@ -139,9 +139,9 @@ class WaveformRenderer {
                 }
                 ctx.lineTo(x, y2);
             }
-        
+
             ctx.stroke();
-        
+
             // Draw center line
             ctx.strokeStyle = '#4a4038';
             ctx.lineWidth = 1;
@@ -149,7 +149,7 @@ class WaveformRenderer {
             ctx.moveTo(0, yOffset);
             ctx.lineTo(width, yOffset);
             ctx.stroke();
-        
+
             // Draw channel label
             ctx.fillStyle = '#d0c2b9';
             ctx.font = '10px monospace';
@@ -412,21 +412,26 @@ class MarkerController {
 
     addSliceAtSample(sample) {
         const channelData = this.renderer.waveformData.channelData[0];
-        const snappedSample = this.findZeroCrossing(sample, channelData);
+        
+        // Conditionally snap based on toggle state
+        const finalSample = this.snapToZeroCrossingEnabled
+            ? this.findZeroCrossing(sample, channelData)
+            : sample;
         
         // Don't add if too close to existing
         const minDistance = 100;
-        const tooClose = this.sliceMarkers.some(s => Math.abs(s - snappedSample) < minDistance);
+        const tooClose = this.sliceMarkers.some(s => Math.abs(s - finalSample) < minDistance);
         if (tooClose) {
             console.log('Slice too close to existing marker');
             return false;
         }
 
-        this.sliceMarkers.push(snappedSample);
+        this.sliceMarkers.push(finalSample);
         this.sliceMarkers.sort((a, b) => a - b);
         this.updateSlicesToPad();
 
-        console.log(`Added slice at sample ${snappedSample}`);
+        const snapStatus = this.snapToZeroCrossingEnabled ? 'snapped' : 'exact';
+        console.log(`Added slice at sample ${finalSample} (${snapStatus})`);
         return true;
     }
 
@@ -958,21 +963,26 @@ class MarkerController {
     addSliceAtPosition(x) {
         const sample = this.renderer.xToSample(x);
         const channelData = this.renderer.waveformData.channelData[0];
-        const snappedSample = this.findZeroCrossing(sample, channelData);
+        
+        // Conditionally snap based on toggle state
+        const finalSample = this.snapToZeroCrossingEnabled 
+            ? this.findZeroCrossing(sample, channelData)
+            : sample;
         
         // Don't add if too close to existing slice
         const minDistance = 1000; // samples
-        const tooClose = this.sliceMarkers.some(s => Math.abs(s - snappedSample) < minDistance);
+        const tooClose = this.sliceMarkers.some(s => Math.abs(s - finalSample) < minDistance);
         if (tooClose) {
             console.log('Slice too close to existing marker, ignoring');
             return false;
         }
 
-        this.sliceMarkers.push(snappedSample);
-        this.sliceMarkers.sort((a, b) => a - b); // Keep sorted
+        this.sliceMarkers.push(finalSample);
+        this.sliceMarkers.sort((a, b) => a - b);
         this.updateSlicesToPad();
 
-        console.log(`Added slice marker at sample ${snappedSample}`);
+        const snapStatus = this.snapToZeroCrossingEnabled ? 'snapped' : 'exact';
+        console.log(`Added slice marker at sample ${finalSample} (${snapStatus})`);
         return true;
     }
 
@@ -983,36 +993,40 @@ class MarkerController {
 
     autoDetectSlices(threshold = 0.1) {
         if (!this.renderer.waveformData) return;
-
+        
         const channelData = this.renderer.waveformData.channelData[0];
         const length = channelData.length;
-        const slices = []; // Don't include 0, let it be implicit
-
+        const slices = [];
+        
         let inSilence = false;
         let silenceStart = 0;
-
+        
         for (let i = 0; i < length; i++) {
             const amplitude = Math.abs(channelData[i]);
-
+        
             if (!inSilence && amplitude < threshold) {
                 inSilence = true;
                 silenceStart = i;
             } else if (inSilence && amplitude >= threshold) {
                 inSilence = false;
-                const slicePoint = this.findZeroCrossing(i, channelData);
-
-                // Only add if not too close to previous slice
+                
+                // Conditionally snap based on toggle state
+                const slicePoint = this.snapToZeroCrossingEnabled
+                    ? this.findZeroCrossing(i, channelData)
+                    : i;
+            
                 const lastSlice = slices.length > 0 ? slices[slices.length - 1] : 0;
                 if (slicePoint - lastSlice > 1000) {
                     slices.push(slicePoint);
                 }
             }
         }
-
+    
         this.sliceMarkers = slices;
         this.updateSlicesToPad();
-
-        console.log(`Auto-detected ${slices.length} slice markers`);
+    
+        const snapStatus = this.snapToZeroCrossingEnabled ? 'with snapping' : 'exact positions';
+        console.log(`Auto-detected ${slices.length} slice markers (${snapStatus})`);
     }
 }
 
