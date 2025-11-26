@@ -41,6 +41,11 @@ function closeModal(modalId) {
  * Closes the pad edit modal and cleans up state
  */
 function closeEditModal() {
+    // Clear audio data when closing modal to prevent contamination
+    if (window.BitboxerSampleEditor) {
+        window.BitboxerSampleEditor.clearAudioData();
+    }
+    
     closeModal('editModal');
     window.BitboxerData.currentEditingPad = null;
     updatePadDisplay();

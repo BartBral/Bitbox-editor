@@ -929,24 +929,22 @@ async function initSampleEditor(padData) {
     // Show container
     container.style.display = 'block';
     container.style.minHeight = '200px';
-    container.offsetHeight; // Force reflow
+    container.offsetHeight;
 
-    // ============================================================
-    // PHASE 1: ONE-TIME INITIALIZATION
-    // This section runs only once per pad
-    // ============================================================
-    
+    // Clear previous pad's audio data BEFORE loading new pad
+    if (window.BitboxerSampleEditor) {
+        window.BitboxerSampleEditor.clearAudioData();
+    }
+
+    // Check if we need full initialization
     const currentPadId = `${padData.row}-${padData.col}`;
-    const needsInitialization = (
-        window._lastInitializedPad !== currentPadId || 
-        !window.BitboxerSampleEditor._eventListenersAttached
-    );
+    const needsInitialization = (window._lastInitializedPad !== currentPadId);
     
     if (needsInitialization) {
         console.log('Initializing sample editor for pad:', currentPadId);
         window._lastInitializedPad = currentPadId;
         
-        // Initialize editor (sets up canvas, event listeners)
+        // Initialize editor
         await window.BitboxerSampleEditor.init('waveformCanvas');
         
         // Load sample
@@ -970,142 +968,144 @@ async function initSampleEditor(padData) {
         // Update slider max values now that audio is loaded
         window.BitboxerPadEditor.updateSliderMaxValues(padData);
         
-        // Setup playback controls (one-time setup)
+        // Setup playback controls (ONE-TIME)
         document.getElementById('playBtn').onclick = () => 
             window.BitboxerSampleEditor.play();
         document.getElementById('stopBtn').onclick = () => 
             window.BitboxerSampleEditor.stop();
         document.getElementById('playSelectionBtn').onclick = () => {
-            if (window.BitboxerSampleEditor.selectionStart !== null && 
-                window.BitboxerSampleEditor.selectionEnd !== null) {
+            if (window.BitboxerSampleEditor.selectionStart !== null) {
                 window.BitboxerSampleEditor.playSelection();
             } else {
                 window.BitboxerUtils.setStatus('No selection - drag in waveform', 'error');
             }
         };
         
-        // Setup zoom controls (one-time setup)
+        // Setup zoom controls (ONE-TIME)
         const zoomSlider = document.getElementById('zoomSlider');
         const zoomValue = document.getElementById('zoomValue');
         if (zoomSlider && zoomValue) {
             zoomSlider.oninput = () => {
                 const newZoom = parseFloat(zoomSlider.value);
-                
-                // If there's a selection, zoom toward its center
-                if (window.BitboxerSampleEditor.selectionStart !== null && 
-                    window.BitboxerSampleEditor.selectionEnd !== null) {
-                    
-                    const selectionCenter = (window.BitboxerSampleEditor.selectionStart + 
-                                            window.BitboxerSampleEditor.selectionEnd) / 2;
-                    const renderer = window.BitboxerSampleEditor.renderer;
-                    
-                    if (renderer && renderer.waveformData) {
-                        const totalSamples = renderer.waveformData.length;
-                        const oldZoom = renderer.zoom;
-                        const oldScroll = renderer.scrollPos;
-                        
-                        // Calculate new scroll to keep selection centered
-                        const oldVisibleSamples = totalSamples / oldZoom;
-                        const oldStartSample = oldScroll * (totalSamples - oldVisibleSamples);
-                        
-                        const newVisibleSamples = totalSamples / newZoom;
-                        const newStartSample = selectionCenter - newVisibleSamples / 2;
-                        
-                        const maxStartSample = totalSamples - newVisibleSamples;
-                        const newScroll = maxStartSample > 0 ? newStartSample / maxStartSample : 0;
-                        const maxScroll = Math.max(0, 1 - 1 / newZoom);
-                        
-                        renderer.zoom = newZoom;
-                        renderer.scrollPos = Math.max(0, Math.min(maxScroll, newScroll));
-                    }
-                } else {
-                    // No selection - just update zoom (keeps left edge stable)
-                    window.BitboxerSampleEditor.setZoom(newZoom);
-                }
-                
-                zoomValue.textContent = newZoom.toFixed(1) + 'x';
-                window.BitboxerSampleEditor.render();
-                
-                // ========== ADD THIS SECTION HERE ==========
-                // Update scroll bar after zoom change
-                const scrollBar = document.getElementById('scrollBar');
                 const renderer = window.BitboxerSampleEditor.renderer;
-                if (scrollBar && renderer) {
-                    const maxScrollRatio = Math.max(0, 1 - 1 / newZoom);
-                    const scrollBarValue = maxScrollRatio > 0 
-                        ? (renderer.scrollPos / maxScrollRatio) * 100 
-                        : 0;
-                    scrollBar.value = scrollBarValue;
+                
+                if (renderer && renderer.waveformData) {
+                    const totalSamples = renderer.waveformData.length;
+                    const oldZoom = renderer.zoom;
+                    const oldScrollSample = renderer.scrollSample;
+                    
+                    const oldVisibleSamples = Math.floor(totalSamples / oldZoom);
+                    const viewCenter = oldScrollSample + Math.floor(oldVisibleSamples / 2);
+                    
+                    renderer.zoom = newZoom;
+                    
+                    const newVisibleSamples = Math.floor(totalSamples / newZoom);
+                    const newScrollSample = viewCenter - Math.floor(newVisibleSamples / 2);
+                    const maxScrollSample = Math.max(0, totalSamples - newVisibleSamples);
+                    
+                    renderer.scrollSample = Math.max(0, Math.min(maxScrollSample, newScrollSample));
+                    
+                    zoomValue.textContent = newZoom.toFixed(1) + 'x';
+                    
+                    const scrollBar = document.getElementById('scrollBar');
+                    if (scrollBar && maxScrollSample > 0) {
+                        scrollBar.value = (renderer.scrollSample / maxScrollSample) * 100;
+                    }
+                    
+                    window.BitboxerSampleEditor.render();
                 }
-                // ============================================
             };
+            
             zoomSlider.value = 1;
             zoomValue.textContent = '1x';
         }
-        
 
-
-        // Setup scroll bar
+        // Setup scroll bar (ONE-TIME)
         const scrollBar = document.getElementById('scrollBar');
         if (scrollBar) {
             scrollBar.oninput = () => {
                 const renderer = window.BitboxerSampleEditor.renderer;
-                if (!renderer) return;
+                if (!renderer || !renderer.waveformData) return;
 
-                // Interpret scrollBar.value (0-100) as percentage of scrollable range
-                const zoom = renderer.zoom;
-                const maxScrollRatio = Math.max(0, 1 - 1 / zoom);
-                const actualScroll = (scrollBar.value / 100) * maxScrollRatio;
+                const totalSamples = renderer.waveformData.length;
+                const visibleSamples = Math.floor(totalSamples / renderer.zoom);
+                const maxScrollSample = Math.max(0, totalSamples - visibleSamples);
 
-                window.BitboxerSampleEditor.setScroll(actualScroll);
+                renderer.scrollSample = Math.floor((scrollBar.value / 100) * maxScrollSample);
+                window.BitboxerSampleEditor.render();
             };
 
             scrollBar.min = 0;
-            scrollBar.max = 100;  // Keep constant for performance
+            scrollBar.max = 100;
             scrollBar.value = 0;
         }
+        
+        // Setup snap toggle (ONE-TIME)
+        const snapCheckbox = document.getElementById('snapToZeroCheckbox');
+        if (snapCheckbox) {
+            snapCheckbox.checked = true;
+            snapCheckbox.addEventListener('change', () => {
+                if (window.BitboxerSampleEditor && window.BitboxerSampleEditor.markerController) {
+                    window.BitboxerSampleEditor.markerController.snapToZeroCrossingEnabled = snapCheckbox.checked;
+                }
+            });
+        }
     } else {
-        console.log('Sample editor already initialized, syncing UI only');
+        // NOT first time - just reload the sample for this pad
+        console.log('Reloading sample for existing pad:', currentPadId);
+        
+        const wavName = padData.filename.split(/[/\\]/).pop();
+        let sampleLoaded = false;
+        
+        if (window._lastImportedFiles && window._lastImportedFiles.has(wavName)) {
+            const wavFile = window._lastImportedFiles.get(wavName);
+            sampleLoaded = await window.BitboxerSampleEditor.loadSample(wavFile);
+        }
+        
+        if (!sampleLoaded) {
+            const canvas = document.getElementById('waveformCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#d0c2b9';
+            ctx.font = '14px monospace';
+            ctx.fillText('Sample not loaded. Import the sample first.', 10, 100);
+            return;
+        }
+        
+        // Update slider max values
+        window.BitboxerPadEditor.updateSliderMaxValues(padData);
     }
-    
-    // ============================================================
-    // PHASE 2: UI SYNCHRONIZATION
-    // This section ALWAYS runs, every time the function is called
-    // ============================================================
-    
-    // Set mode (always update)
+
+    // ALWAYS: Update mode-specific UI
     window.BitboxerSampleEditor.setMode(cellmode);
     
-    // Get references to mode-specific control containers
+    // Setup mode-specific controls
     const slicerControls = document.getElementById('slicerControls');
     const granularControls = document.getElementById('granularControls');
     const clipControls = document.getElementById('clipControls');
     const editorHints = document.getElementById('editorHints');
     
-    // Reset all mode controls to hidden
+    // Hide all
     if (slicerControls) slicerControls.style.display = 'none';
     if (granularControls) granularControls.style.display = 'none';
     if (clipControls) clipControls.style.display = 'none';
     
-    // Show and setup controls based on current mode
+    // Show appropriate controls
     if (cellmode === '2') {
-        // ===== SLICER MODE =====
+        // SLICER MODE
         if (slicerControls) slicerControls.style.display = 'flex';
         if (editorHints) {
-            editorHints.textContent = 'Shift+Click: add slice | Drag: move | Right-click: delete | Wheel: zoom';
+            editorHints.textContent = 'Shift+Click: add slice | Right-click: delete | Drag: move | Wheel: zoom';
         }
         
-        // Update slice count display
-        const sliceCount = document.getElementById('sliceCount');
         const updateSliceCount = () => {
             const count = window.BitboxerSampleEditor.markerController.sliceMarkers.length;
+            const sliceCount = document.getElementById('sliceCount');
             if (sliceCount) {
                 sliceCount.textContent = `${count} slice${count !== 1 ? 's' : ''}`;
             }
         };
         updateSliceCount();
         
-        // Setup auto-detect button
         const autoSliceBtn = document.getElementById('autoSliceBtn');
         if (autoSliceBtn) {
             autoSliceBtn.onclick = () => {
@@ -1117,7 +1117,6 @@ async function initSampleEditor(padData) {
             };
         }
         
-        // Setup clear button
         const clearSlicesBtn = document.getElementById('clearSlicesBtn');
         if (clearSlicesBtn) {
             clearSlicesBtn.onclick = () => {
@@ -1131,17 +1130,17 @@ async function initSampleEditor(padData) {
         }
         
     } else if (cellmode === '3') {
-        // ===== GRANULAR MODE =====
+        // GRANULAR MODE
         if (granularControls) granularControls.style.display = 'flex';
         if (editorHints) {
-            editorHints.textContent = 'Yellow box = grain window | Animated grain | Drag markers to adjust';
+            editorHints.textContent = 'Yellow box = grain window | Drag markers to adjust';
         }
         
     } else if (cellmode === '1') {
-        // ===== CLIP MODE =====
+        // CLIP MODE
         if (clipControls) clipControls.style.display = 'flex';
         if (editorHints) {
-            editorHints.textContent = 'Blue lines = beats | Light lines = subdivisions | Adjust Beat Count slider';
+            editorHints.textContent = 'Blue lines = beats | Adjust Beat Count slider';
         }
         
         const { currentEditingPad, presetData } = window.BitboxerData;
@@ -1149,7 +1148,6 @@ async function initSampleEditor(padData) {
         const col = parseInt(currentEditingPad.dataset.col);
         const pad = presetData.pads[row][col];
         
-        // Update beat info display
         const updateBeatInfo = () => {
             const beatCount = parseInt(pad.params.beatcount) || 0;
             const tempo = presetData.tempo || '120';
@@ -1165,7 +1163,6 @@ async function initSampleEditor(padData) {
                         if (newTempo >= 20 && newTempo <= 300) {
                             presetData.tempo = newTempo.toString();
                             window.BitboxerSampleEditor.render();
-                            updateBeatInfo();
                         }
                     });
                 }
@@ -1173,30 +1170,17 @@ async function initSampleEditor(padData) {
         };
         updateBeatInfo();
         
-        // Setup tap tempo
         let tapTimes = [];
-        let tapResetTimeout = null;
         const tapTempoBtn = document.getElementById('tapTempoBtn');
-
         if (tapTempoBtn) {
             tapTempoBtn.onclick = () => {
                 const now = Date.now();
                 tapTimes.push(now);
-
-                // Clear any existing timeout
-                if (tapResetTimeout) {
-                    clearTimeout(tapResetTimeout);
-                }
-
-                // Keep only last 5 taps
-                if (tapTimes.length > 5) {
-                    tapTimes.shift();
-                }
-
-                // Update button text
+                
+                if (tapTimes.length > 5) tapTimes.shift();
+                
                 tapTempoBtn.textContent = `🎵 Tap ${tapTimes.length}/5`;
-
-                // Calculate tempo after 5 taps
+                
                 if (tapTimes.length >= 5) {
                     let totalInterval = 0;
                     for (let i = 1; i < tapTimes.length; i++) {
@@ -1204,32 +1188,19 @@ async function initSampleEditor(padData) {
                     }
                     const avgInterval = totalInterval / 4;
                     const bpm = Math.round(60000 / avgInterval);
-
-                    // Update tempo
+                    
                     presetData.tempo = bpm.toString();
-
-                    // Update display (but don't re-render entire canvas)
                     updateBeatInfo();
-
-                    // Show success briefly
+                    
                     tapTempoBtn.textContent = `✓ ${bpm} BPM`;
-
-                    // Reset after short delay
                     setTimeout(() => {
                         tapTimes = [];
                         tapTempoBtn.textContent = '🎵 Tap Tempo';
                     }, 1000);
-                } else {
-                    // Reset if user waits too long between taps
-                    tapResetTimeout = setTimeout(() => { 
-                        tapTimes = []; 
-                        tapTempoBtn.textContent = '🎵 Tap Tempo';
-                    }, 3000);  // 3 seconds between taps
                 }
             };
         }
         
-        // Setup detect beats button
         const detectBeatsBtn = document.getElementById('detectBeatsBtn');
         if (detectBeatsBtn) {
             detectBeatsBtn.onclick = () => {
@@ -1255,13 +1226,13 @@ async function initSampleEditor(padData) {
         }
         
     } else {
-        // ===== SAMPLE MODE (mode 0) =====
+        // SAMPLE MODE
         if (editorHints) {
             editorHints.textContent = 'Drag markers to adjust positions. Mouse wheel to zoom.';
         }
     }
     
-    // Final render to update display
+    // Final render
     window.BitboxerSampleEditor.render();
 }
 

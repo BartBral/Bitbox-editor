@@ -14,7 +14,7 @@ class WaveformRenderer {
         this.ctx = canvas.getContext('2d');
         this.waveformData = null;
         this.zoom = 1; // 1 = full view, >1 = zoomed in
-        this.scrollPos = 0; // 0-1, position in waveform
+        this.scrollSample = 0;  // INTEGER sample offset (absolute position)
         this.width = 0;
         this.height = 0;
     }
@@ -36,6 +36,10 @@ class WaveformRenderer {
             this.waveformData.channelData.push(audioBuffer.getChannelData(i));
         }
 
+        // Reset scroll to start when loading new sample
+        this.scrollSample = 0;
+        this.zoom = 1;
+        
         this.render();
     }
 
@@ -43,40 +47,45 @@ class WaveformRenderer {
         const container = this.canvas.parentElement;
         const dpr = window.devicePixelRatio || 1;
         
-        // FIX: Use offsetWidth/Height instead of clientWidth/Height
         this.width = container.offsetWidth;
-        this.height = 200; // FIX: Fixed height instead of growing
+        this.height = 200;
         
-        // FIX: Set canvas size properly
+        // Only resize if container has valid dimensions
+        if (this.width <= 0 || this.height <= 0) {
+            console.warn('Canvas container has zero size, deferring resize');
+            return;
+        }
+        
         this.canvas.width = this.width * dpr;
         this.canvas.height = this.height * dpr;
         
-        // FIX: Set CSS size explicitly
         this.canvas.style.width = this.width + 'px';
         this.canvas.style.height = this.height + 'px';
         
-        // Scale context for DPR
-        this.ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.scale(dpr, dpr);
         
         this.render();
     }
 
     render() {
-        if (!this.waveformData) return;
+        if (!this.waveformData || this.width <= 0 || this.height <= 0) return;
 
-        const { ctx, width, height, waveformData, zoom, scrollPos } = this;
+        const { ctx, width, height, waveformData, zoom, scrollSample } = this;
         const { channels, length, channelData } = waveformData;
 
         // Clear canvas
         ctx.fillStyle = '#1a1614';
         ctx.fillRect(0, 0, width, height);
 
-        // Calculate visible sample range
-        const totalSamplesVisible = Math.floor(length / zoom);
-        const startSample = Math.floor(scrollPos * (length - totalSamplesVisible));
-        const endSample = Math.min(length, startSample + totalSamplesVisible);
-        const samplesPerPixel = Math.max(1, Math.floor((endSample - startSample) / width));
+        // Calculate visible sample range - ALL INTEGERS
+        const visibleSamples = Math.max(1, Math.floor(length / zoom));
+        const maxScroll = Math.max(0, length - visibleSamples);
+        const clampedScrollSample = Math.max(0, Math.min(maxScroll, scrollSample));
+        
+        const startSample = clampedScrollSample;
+        const endSample = Math.min(length, startSample + visibleSamples);
+        const samplesPerPixel = Math.max(1, Math.ceil((endSample - startSample) / width));
 
         const channelHeight = height / channels;
 
@@ -126,46 +135,52 @@ class WaveformRenderer {
             ctx.font = '10px monospace';
             ctx.fillText(channels === 1 ? 'MONO' : `CH ${ch + 1}`, 5, yOffset - channelHeight / 2 + 15);
         }
-
-        // FIX: Canvas is now ready for marker drawing in screen coordinates
-        // Context is already at correct DPR scale from resize()
     }
 
+    /**
+     * FIXED: Converts absolute sample position to screen X coordinate
+     * Returns pixel position relative to current scroll/zoom viewport
+     */
     sampleToX(sample) {
-        if (!this.waveformData) return 0;
-        
-        const width = this.width;
-        if (!width || width <= 0) {
-            // Don't log warning - just return 0 silently (happens during resize)
-            return 0;
-        }
+        if (!this.waveformData || this.width <= 0) return 0;
         
         const { length } = this.waveformData;
-        const { zoom, scrollPos } = this;
-        const totalVisible = length / zoom;
-        const startSample = scrollPos * (length - totalVisible);
-        return ((sample - startSample) / totalVisible) * width;
+        const { zoom, scrollSample, width } = this;
+        
+        // Calculate visible range
+        const visibleSamples = Math.max(1, Math.floor(length / zoom));
+        
+        // Calculate offset from scroll position
+        const offsetFromScroll = sample - scrollSample;
+        
+        // Convert to pixel position
+        const pixelPos = (offsetFromScroll / visibleSamples) * width;
+        
+        return pixelPos;
     }
 
+    /**
+     * FIXED: Converts screen X coordinate to absolute sample position
+     * Returns integer sample index in full audio buffer
+     */
     xToSample(x) {
-        if (!this.waveformData) return 0;
+        if (!this.waveformData || this.width <= 0) return 0;
         
         const { length } = this.waveformData;
-        const { zoom, scrollPos, width } = this;
+        const { zoom, scrollSample, width } = this;
         
-        // Guard against invalid width
-        if (!width || width <= 0) {
-            console.warn('xToSample: invalid width', width);
-            return 0;
-        }
-
-        const totalVisible = length / zoom;
-        const startSample = scrollPos * (length - totalVisible);
-
-        // Convert screen x-coordinate to sample position
-        const sample = Math.floor(startSample + (x / width) * totalVisible);
-
-        return Math.max(0, Math.min(length, sample));
+        // Calculate visible range
+        const visibleSamples = Math.max(1, Math.floor(length / zoom));
+        
+        // Convert pixel to sample offset
+        const ratio = x / width;
+        const sampleOffset = Math.floor(ratio * visibleSamples);
+        
+        // Add to scroll position for absolute sample
+        const absoluteSample = scrollSample + sampleOffset;
+        
+        // Clamp to valid range
+        return Math.max(0, Math.min(length - 1, absoluteSample));
     }
 }
 
@@ -179,8 +194,13 @@ class AudioEngine {
         this.source = null;
         this.isPlaying = false;
         this.startTime = 0;
-        this.pauseTime = 0;
         this.playbackStartSample = 0;
+        this.playbackEndSample = 0;
+        this.loopStartSample = 0;
+        this.loopEndSample = 0;
+        this.loopEnabled = false;
+        this.isReversed = false;
+        this.reversedBuffer = null;
     }
 
     async init() {
@@ -191,16 +211,37 @@ class AudioEngine {
 
     async loadAudio(arrayBuffer) {
         await this.init();
-        console.log('Loading audio, input size:', arrayBuffer.byteLength); // DEBUG
-        this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer.slice(0)); // Force copy
-        console.log('Decoded audio:', this.audioBuffer.length, 'samples at', this.audioBuffer.sampleRate, 'Hz'); // DEBUG
+        this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer.slice(0));
+        this.reversedBuffer = null; // Clear any cached reversed buffer
         return this.audioBuffer;
+    }
+
+    /**
+     * Creates a reversed copy of the audio buffer
+     */
+    createReversedBuffer(buffer) {
+        const reversedBuffer = this.audioContext.createBuffer(
+            buffer.numberOfChannels,
+            buffer.length,
+            buffer.sampleRate
+        );
+
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const inputData = buffer.getChannelData(channel);
+            const outputData = reversedBuffer.getChannelData(channel);
+            
+            for (let i = 0; i < buffer.length; i++) {
+                outputData[i] = inputData[buffer.length - 1 - i];
+            }
+        }
+
+        return reversedBuffer;
     }
 
     play(params = {}) {
         if (!this.audioBuffer) return;
         
-        this.stop(); // Stop any existing playback
+        this.stop();
 
         const {
             startSample = 0,
@@ -211,30 +252,58 @@ class AudioEngine {
             reverse = false
         } = params;
 
+        // Validate parameters
+        if (startSample >= endSample) {
+            console.error('Invalid playback range: start >= end');
+            return;
+        }
+
         const sampleRate = this.audioBuffer.sampleRate;
 
-        // Store start sample for getCurrentSample()
+        // Store playback state
         this.playbackStartSample = startSample;
+        this.playbackEndSample = endSample;
+        this.loopStartSample = loopStartSample;
+        this.loopEndSample = loopEndSample;
+        this.loopEnabled = loopEnabled;
+        this.isReversed = reverse;
+
+        // Handle reverse playback
+        let bufferToPlay = this.audioBuffer;
+        let adjustedStart = startSample;
+        let adjustedEnd = endSample;
+        let adjustedLoopStart = loopStartSample;
+        let adjustedLoopEnd = loopEndSample;
+
+        if (reverse) {
+            // Create reversed buffer if not cached
+            if (!this.reversedBuffer) {
+                this.reversedBuffer = this.createReversedBuffer(this.audioBuffer);
+            }
+            bufferToPlay = this.reversedBuffer;
+            
+            // Flip the sample positions for reversed buffer
+            const bufferLength = this.audioBuffer.length;
+            adjustedStart = bufferLength - endSample;
+            adjustedEnd = bufferLength - startSample;
+            adjustedLoopStart = bufferLength - loopEndSample;
+            adjustedLoopEnd = bufferLength - loopStartSample;
+        }
 
         this.source = this.audioContext.createBufferSource();
-        this.source.buffer = this.audioBuffer;
+        this.source.buffer = bufferToPlay;
         this.source.connect(this.audioContext.destination);
 
-        const startTime = startSample / sampleRate;
-        const duration = (endSample - startSample) / sampleRate;
+        const startTime = adjustedStart / sampleRate;
+        const duration = (adjustedEnd - adjustedStart) / sampleRate;
 
         if (loopEnabled) {
             this.source.loop = true;
-            this.source.loopStart = loopStartSample / sampleRate;
-            this.source.loopEnd = loopEndSample / sampleRate;
+            this.source.loopStart = adjustedLoopStart / sampleRate;
+            this.source.loopEnd = adjustedLoopEnd / sampleRate;
         }
 
-        if (reverse) {
-            this.source.playbackRate.value = -1;
-            this.source.start(0, startTime + duration, duration);
-        } else {
-            this.source.start(0, startTime, loopEnabled ? undefined : duration);
-        }
+        this.source.start(0, startTime, loopEnabled ? undefined : duration);
 
         this.isPlaying = true;
         this.startTime = this.audioContext.currentTime;
@@ -256,14 +325,34 @@ class AudioEngine {
         this.isPlaying = false;
     }
 
+    /**
+     * FIXED: Returns current playback position with loop handling
+     */
     getCurrentSample() {
         if (!this.isPlaying || !this.audioBuffer) return 0;
         
         const elapsed = this.audioContext.currentTime - this.startTime;
-        const elapsedSamples = Math.floor(elapsed * this.audioBuffer.sampleRate);
+        const elapsedSamples = elapsed * this.audioBuffer.sampleRate;
         
-        // Return absolute position in file
-        return this.playbackStartSample + elapsedSamples;
+        if (this.loopEnabled) {
+            // Calculate position within loop
+            const loopLength = this.loopEndSample - this.loopStartSample;
+            const preLoopLength = this.loopStartSample - this.playbackStartSample;
+            
+            if (elapsedSamples < preLoopLength) {
+                // Before loop starts
+                return this.playbackStartSample + elapsedSamples;
+            } else {
+                // Inside loop - wrap around
+                const loopElapsed = elapsedSamples - preLoopLength;
+                const loopPosition = loopElapsed % loopLength;
+                return this.loopStartSample + loopPosition;
+            }
+        } else {
+            // Non-looping - simple linear playback
+            const currentSample = this.playbackStartSample + elapsedSamples;
+            return Math.min(currentSample, this.playbackEndSample);
+        }
     }
 }
 
@@ -283,6 +372,7 @@ class MarkerController {
         this.dragging = null;
         this.sliceMarkers = []; // For slicer mode
         this.isUpdatingFromDrag = false;
+        this.snapToZeroCrossingEnabled = true;  // Default ON
     }
 
     setMarker(name, sample) {
@@ -311,11 +401,11 @@ class MarkerController {
             console.log('Slice too close to existing marker');
             return false;
         }
-        
+
         this.sliceMarkers.push(snappedSample);
         this.sliceMarkers.sort((a, b) => a - b);
         this.updateSlicesToPad();
-        
+
         console.log(`Added slice at sample ${snappedSample}`);
         return true;
     }
@@ -524,24 +614,7 @@ class MarkerController {
         const grainPercent = (grainSourceWindow * 100).toFixed(0);
         ctx.fillText(`GRAIN WINDOW (${grainPercent}%)`, Math.max(5, x1 + 5), height - 10);
 
-        // Draw grain size indicator (animated grain)
-        const grainSizePerc = parseFloat(padParams.grainsizeperc) / 1000; // 0-1
-        const grainSizeSamples = Math.floor(sampleRate * 0.1 * grainSizePerc); // Up to 100ms
-        const grainWidth = this.renderer.sampleToX(samstart + grainSizeSamples) - this.renderer.sampleToX(samstart);
-
-        // Animate grain position (simple ping-pong)
-        const time = Date.now() / 1000;
-        const animSpeed = 0.5; // seconds per cycle
-        const animPos = (Math.sin(time * Math.PI * 2 / animSpeed) + 1) / 2; // 0-1
-
-        const grainX = x1 + animPos * Math.max(0, (x2 - x1 - grainWidth));
-
-        ctx.fillStyle = 'rgba(255, 234, 94, 0.3)';
-        ctx.fillRect(grainX, 0, grainWidth, height);
-
-        ctx.strokeStyle = '#ffea5e';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(grainX, 0, grainWidth, height);
+        // NO ANIMATION - Static display only
     }
 
     drawClipBeatGrid(padParams, tempo) {
@@ -737,25 +810,31 @@ class MarkerController {
 
     handleMouseMove(x) {
         if (!this.dragging) return false;
-        
+
         let sample = this.renderer.xToSample(x);
-        
+
         if (this.dragging.type === 'marker') {
             const marker = this.markers[this.dragging.name];
-            sample = this.snapToZeroCrossing(sample, marker);
-            
-            // Just set the marker - don't worry about other markers
+
+            // Apply snap only if enabled
+            if (this.snapToZeroCrossingEnabled && marker.snapZeroCross) {
+                sample = this.snapToZeroCrossing(sample, marker);
+            }
+
             this.setMarker(this.dragging.name, sample);
             this.updatePadParams();
         } else if (this.dragging.type === 'slice') {
             const channelData = this.renderer.waveformData.channelData[0];
-            sample = this.findZeroCrossing(sample, channelData);
-            
-            // Just update this slice - don't sort or check others
+
+            // Apply snap only if enabled
+            if (this.snapToZeroCrossingEnabled) {
+                sample = this.findZeroCrossing(sample, channelData);
+            }
+
             this.sliceMarkers[this.dragging.index] = sample;
             this.updateSlicesToPad();
         }
-        
+
         return true;
     }
 
@@ -946,7 +1025,7 @@ class ZoomController {
         if (!this.renderer.waveformData) return;
         
         const oldZoom = this.renderer.zoom;
-        const oldScroll = this.renderer.scrollPos;
+        const oldScrollSample = this.renderer.scrollSample;
         const width = this.renderer.width;
         const totalSamples = this.renderer.waveformData.length;
         
@@ -954,23 +1033,19 @@ class ZoomController {
         const zoomFactor = deltaY > 0 ? 0.9 : 1.1;
         const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, oldZoom * zoomFactor));
         
-        // Find which sample is currently at mouseX position
-        const oldVisibleSamples = totalSamples / oldZoom;
-        const oldStartSample = oldScroll * (totalSamples - oldVisibleSamples);
-        const sampleAtMouse = oldStartSample + (mouseX / width) * oldVisibleSamples;
+        // Find which sample is currently at mouseX position (INTEGER)
+        const oldVisibleSamples = Math.floor(totalSamples / oldZoom);
+        const sampleAtMouse = oldScrollSample + Math.floor((mouseX / width) * oldVisibleSamples);
         
-        // Calculate new scroll position to keep that sample at mouseX
-        const newVisibleSamples = totalSamples / newZoom;
-        const newStartSample = sampleAtMouse - (mouseX / width) * newVisibleSamples;
+        // Calculate new scroll position to keep that sample at mouseX (INTEGER)
+        const newVisibleSamples = Math.floor(totalSamples / newZoom);
+        const newScrollSample = sampleAtMouse - Math.floor((mouseX / width) * newVisibleSamples);
         
-        // Convert to scroll position (0 to 1 - 1/zoom)
-        const maxStartSample = totalSamples - newVisibleSamples;
-        const newScroll = maxStartSample > 0 ? newStartSample / maxStartSample : 0;
+        // Clamp to valid range (INTEGER)
+        const maxScrollSample = Math.max(0, totalSamples - newVisibleSamples);
         
-        // Clamp scroll position
-        const maxScroll = Math.max(0, 1 - 1 / newZoom);
         this.renderer.zoom = newZoom;
-        this.renderer.scrollPos = Math.max(0, Math.min(maxScroll, newScroll));
+        this.renderer.scrollSample = Math.max(0, Math.min(maxScrollSample, newScrollSample));
         
         this.renderer.render();
     }
@@ -987,7 +1062,7 @@ class SampleEditor {
         this.zoomController = null;
         this.animationFrame = null;
         this.currentMode = '0';
-        this.granularAnimating = false;
+        // this.granularAnimating = false;
 
         // Selection state
         this.selectionStart = null;  
@@ -998,6 +1073,46 @@ class SampleEditor {
 
         // Render throttling
         this._renderScheduled = false;
+    }
+
+    /**
+     * Clears only audio/waveform data when switching pads
+     * Does NOT reset markers, zoom, or other UI state
+     */
+    clearAudioData() {
+        console.log('SampleEditor: Clearing audio data for pad switch');
+        
+        // Stop any playing audio
+        this.stop();
+        
+        // Clear audio buffers
+        if (this.audioEngine) {
+            this.audioEngine.audioBuffer = null;
+            this.audioEngine.reversedBuffer = null;
+            this.audioEngine.isPlaying = false;
+        }
+        
+        // Clear waveform data but keep canvas sized
+        if (this.renderer && this.renderer.waveformData) {
+            this.renderer.waveformData = null;
+            
+            // Clear canvas visually
+            const ctx = this.renderer.ctx;
+            if (ctx && this.renderer.width > 0 && this.renderer.height > 0) {
+                ctx.fillStyle = '#1a1614';
+                ctx.fillRect(0, 0, this.renderer.width, this.renderer.height);
+            }
+        }
+        
+        // Stop animations
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+            this.animationFrame = null;
+        }
+        if (this.playbackAnimationFrame) {
+            cancelAnimationFrame(this.playbackAnimationFrame);
+            this.playbackAnimationFrame = null;
+        }
     }
 
     async init(canvasId) {
@@ -1023,12 +1138,15 @@ class SampleEditor {
     }
 
     setupEventListeners(canvas) {
-        // CRITICAL: Remove any existing listeners to prevent duplicates
-        if (this._eventListenersAttached) {
-            console.warn('Event listeners already attached, skipping duplicate setup');
+        // Only skip if listeners are attached to THIS SAME canvas
+        if (this._eventListenersAttached && this._attachedCanvas === canvas) {
+            console.log('Event listeners already attached to this canvas');
             return;
         }
+
+        // Mark this canvas as having listeners attached
         this._eventListenersAttached = true;
+        this._attachedCanvas = canvas;
 
         // Mouse state variables
         let isDragging = false;
@@ -1059,13 +1177,36 @@ class SampleEditor {
 
             // LEFT CLICK (button 0)
             if (e.button === 0) {
-                // Try to grab a marker first
+                // Check if clicking on selection markers first (if selection exists)
+                if (this.selectionStart !== null && this.selectionEnd !== null) {
+                    const threshold = 10;
+                    const startX = this.renderer.sampleToX(this.selectionStart);
+                    const endX = this.renderer.sampleToX(this.selectionEnd);
+
+                    if (Math.abs(x - startX) < threshold) {
+                        // Clicked on selection start marker
+                        isDragging = true;
+                        this.draggingSelectionMarker = 'start';
+                        console.log('Dragging selection start');
+                        return;
+                    } else if (Math.abs(x - endX) < threshold) {
+                        // Clicked on selection end marker
+                        isDragging = true;
+                        this.draggingSelectionMarker = 'end';
+                        console.log('Dragging selection end');
+                        return;
+                    }
+                }
+
+                // Try to grab a pad marker
                 if (this.markerController.handleMouseDown(x, y, currentMode, e.shiftKey)) {
                     isDragging = true;
+                    this.draggingSelectionMarker = null;
                     console.log('Started dragging marker');
                 } else {
                     // No marker grabbed - start selection
                     isSelecting = true;
+                    this.draggingSelectionMarker = null;
                     const startSample = this.renderer.xToSample(x);
                     this.selectionStart = startSample;
                     this.selectionEnd = startSample;
@@ -1088,23 +1229,45 @@ class SampleEditor {
             if (!moved) return;
 
             if (isDragging) {
-                if (this.markerController.handleMouseMove(x)) {
-                    this.scheduleRender();  // ← Changed from this.render()
+                if (this.draggingSelectionMarker) {
+                    // Dragging selection marker
+                    const sample = this.renderer.xToSample(x);
+                    if (this.draggingSelectionMarker === 'start') {
+                        this.selectionStart = sample;
+                    } else {
+                        this.selectionEnd = sample;
+                    }
+                    this.render();
+                } else {
+                    // Dragging pad marker
+                    if (this.markerController.handleMouseMove(x)) {
+                        this.render();
+                    }
                 }
             } else if (isSelecting) {
+                // Creating new selection
                 const endSample = this.renderer.xToSample(x);
                 this.selectionEnd = endSample;
-                this.scheduleRender();  // ← Changed from this.render()
+                this.render();
             }
         });
 
         // ==================== MOUSEUP ====================
         canvas.addEventListener('mouseup', (e) => {
             if (isDragging) {
-                this.markerController.handleMouseUp();
+                if (this.draggingSelectionMarker) {
+                    // Ensure selection is in correct order
+                    if (this.selectionStart > this.selectionEnd) {
+                        [this.selectionStart, this.selectionEnd] = [this.selectionEnd, this.selectionStart];
+                    }
+                    console.log(`Selection marker dragged: ${this.selectionStart} to ${this.selectionEnd}`);
+                    this.draggingSelectionMarker = null;
+                } else {
+                    this.markerController.handleMouseUp();
+                }
                 isDragging = false;
                 this.render();
-                console.log('Stopped dragging marker');
+                console.log('Stopped dragging');
             } else if (isSelecting) {
                 isSelecting = false;
                 // Ensure selection is in correct order
@@ -1163,6 +1326,10 @@ class SampleEditor {
         // ==================== MOUSE WHEEL (ZOOM) ====================
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
+
+            // CRITICAL: Clear selection flag to prevent mousemove from updating selection
+            isSelecting = false;
+
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
 
@@ -1175,7 +1342,7 @@ class SampleEditor {
             }
 
             this.zoomController.handleWheel(e.deltaY, zoomPoint);
-        
+
             // Update slider
             const zoomSlider = document.getElementById('zoomSlider');
             const zoomValue = document.getElementById('zoomValue');
@@ -1281,6 +1448,18 @@ class SampleEditor {
         }
     }
 
+    setScroll(scrollRatio) {
+        if (!this.renderer || !this.renderer.waveformData) return;
+        
+        const totalSamples = this.renderer.waveformData.length;
+        const visibleSamples = Math.floor(totalSamples / this.renderer.zoom);
+        const maxScrollSample = Math.max(0, totalSamples - visibleSamples);
+        
+        // Convert ratio (0-1) to integer sample position
+        this.renderer.scrollSample = Math.floor(scrollRatio * maxScrollSample);
+        this.render();
+    }
+
     render() {
         // CRITICAL: Don't render if canvas width is invalid
         if (!this.renderer || !this.renderer.width || this.renderer.width <= 0) {
@@ -1332,79 +1511,92 @@ class SampleEditor {
         // Draw playback position if playing
         if (this.audioEngine.isPlaying) {
             const currentSample = this.audioEngine.getCurrentSample();
-            if (!isNaN(currentSample)) {
+            if (!isNaN(currentSample) && currentSample >= 0) {
                 const x = this.renderer.sampleToX(currentSample);
                 const ctx = this.renderer.ctx;
                 const height = this.renderer.height;
-                
-                ctx.strokeStyle = '#5eff5e';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, height);
-                ctx.stroke();
+                const width = this.renderer.width;
+
+                // Only draw if within visible area (simple check)
+                if (x >= -10 && x <= width + 10) {
+                    ctx.strokeStyle = '#5eff5e';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, height);
+                    ctx.stroke();
+                }
             }
-        }    
+        }  
     }
 
-    startGranularAnimation() {
-        if (this.granularAnimating) return;
-        this.granularAnimating = true;
-
-        let lastFrameTime = 0;
-        const targetFPS = 24;
-        const frameInterval = 1000 / targetFPS;  // ~41.67ms
-
-        const animate = (currentTime) => {
-            // Stop if animation disabled or mode is not granular
-            if (!this.granularAnimating || this.currentMode !== '3') {
-                this.granularAnimating = false;
-                if (this.animationFrame) {
-                    cancelAnimationFrame(this.animationFrame);
-                    this.animationFrame = null;
-                }
-                return;
+    /**
+     * Shows context menu for adding slice markers at selection boundaries
+     * @param {number} pageX - Mouse X position in page coordinates
+     * @param {number} pageY - Mouse Y position in page coordinates
+     */
+    showSliceContextMenu(pageX, pageY) {
+        // Remove any existing context menu
+        const existing = document.getElementById('sliceContextMenu');
+        if (existing) existing.remove();
+        
+        // Create context menu
+        const menu = document.createElement('div');
+        menu.id = 'sliceContextMenu';
+        menu.className = 'context-menu show';
+        menu.style.position = 'fixed';
+        menu.style.left = pageX + 'px';
+        menu.style.top = pageY + 'px';
+        menu.style.zIndex = '2001';
+        
+        menu.innerHTML = `
+            <div class="context-item" data-action="start">Add slice at selection start</div>
+            <div class="context-item" data-action="end">Add slice at selection end</div>
+            <div class="context-item" data-action="both">Add slices at both</div>
+            <div class="context-item separator"></div>
+            <div class="context-item" data-action="cancel">Cancel</div>
+        `;
+        
+        document.body.appendChild(menu);
+        
+        // Handle menu clicks
+        menu.addEventListener('click', (e) => {
+            const action = e.target.dataset.action;
+            
+            if (action === 'start' || action === 'both') {
+                this.markerController.addSliceAtSample(this.selectionStart);
             }
-
-            // Throttle to 24fps
-            if (currentTime - lastFrameTime >= frameInterval) {
-                lastFrameTime = currentTime;
-
-                // Only render if canvas is ready and visible
-                if (this.renderer && this.renderer.width > 0) {
-                    this.render();
-                }
+            
+            if (action === 'end' || action === 'both') {
+                this.markerController.addSliceAtSample(this.selectionEnd);
             }
-
-            this.animationFrame = requestAnimationFrame(animate);
+            
+            // Remove menu
+            menu.remove();
+            
+            // Re-render if slices were added
+            if (action !== 'cancel') {
+                this.render();
+            }
+        });
+        
+        // Close menu on any other click
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
         };
-
-        this.animationFrame = requestAnimationFrame(animate);
-    }
-
-    updateGranularParams() {
-        this.render();
-    }
-
-    stopGranularAnimation() {
-        this.granularAnimating = false;
-        if (this.animationFrame) {
-            cancelAnimationFrame(this.animationFrame);
-            this.animationFrame = null;
-        }
+        
+        // Delay to prevent immediate closure from the same click event
+        setTimeout(() => document.addEventListener('click', closeMenu), 0);
     }
 
     setMode(mode) {
         this.currentMode = mode;
         
-        // Only granular mode needs continuous animation
-        if (mode === '3') {
-            this.startGranularAnimation();
-        } else {
-            this.stopGranularAnimation();
-            // Single render to update display
-            this.render();
-        }
+        // Single render to update display
+        this.render();
     }
 
     play() {
@@ -1415,18 +1607,32 @@ class SampleEditor {
         const col = parseInt(currentEditingPad.dataset.col);
         const pad = presetData.pads[row][col];
 
+        // Parse loop mode correctly
+        const loopmodes = parseInt(pad.params.loopmodes) || 0;
+        const loopEnabled = (loopmodes === 1 || loopmodes === 2);  // 1=Forward, 2=Bidirectional
+        
+        // Log for debugging
+        console.log('Play params:', {
+            loopmodes: pad.params.loopmodes,
+            loopEnabled,
+            loopstart: pad.params.loopstart,
+            loopend: pad.params.loopend
+        });
+
+        const samstart = parseInt(pad.params.samstart) || 0;
+        const samlen = parseInt(pad.params.samlen) || this.audioEngine.audioBuffer.length;
+
         const params = {
-            startSample: parseInt(pad.params.samstart) || 0,
-            endSample: (parseInt(pad.params.samstart) || 0) + (parseInt(pad.params.samlen) || this.audioEngine.audioBuffer.length),
+            startSample: samstart,
+            endSample: samstart + samlen,
             loopStartSample: parseInt(pad.params.loopstart) || 0,
-            loopEndSample: parseInt(pad.params.loopend) || this.audioEngine.audioBuffer.length,
-            loopEnabled: pad.params.loopmode === '1',
-            reverse: pad.params.reverse === '1'
+            loopEndSample: parseInt(pad.params.loopend) || samlen,
+            loopEnabled: loopEnabled,
+            reverse: false  // Disabled
         };
 
         this.audioEngine.play(params);
-        this.startPlaybackAnimation();  // ← This animates playhead during playback
-
+        this.startPlaybackAnimation();
     }
 
     stop() {
@@ -1434,20 +1640,51 @@ class SampleEditor {
     }
 
     playSelection() {
-        // Validate selection
-        if (this.selectionStart === null || this.selectionEnd === null ||
-            isNaN(this.selectionStart) || isNaN(this.selectionEnd) ||
-            this.selectionStart === this.selectionEnd) {
+        // Validate selection exists and is valid
+        if (this.selectionStart === null || isNaN(this.selectionStart) || this.selectionStart < 0) {
             console.warn('No valid selection to play');
-            window.BitboxerUtils.setStatus('No selection made - drag in waveform to select', 'error');
+            window.BitboxerUtils.setStatus('No selection - drag in waveform to select', 'error');
             return;
         }
 
-        console.log(`Playing selection: ${this.selectionStart} to ${this.selectionEnd}`);
+        const { currentEditingPad, presetData } = window.BitboxerData;
+        if (!currentEditingPad) return;
+
+        const row = parseInt(currentEditingPad.dataset.row);
+        const col = parseInt(currentEditingPad.dataset.col);
+        const pad = presetData.pads[row][col];
+
+        // Calculate valid end point
+        let endSample;
+        const bufferLength = this.audioEngine.audioBuffer.length;
+
+        if (this.selectionEnd === null || isNaN(this.selectionEnd) || 
+            Math.abs(this.selectionStart - this.selectionEnd) < 100) {
+            // Single-point selection - play to buffer end
+            endSample = bufferLength;
+            console.log(`Playing from point ${this.selectionStart} to end ${endSample}`);
+        } else {
+            // Ensure selection is in correct order
+            const start = Math.min(this.selectionStart, this.selectionEnd);
+            const end = Math.max(this.selectionStart, this.selectionEnd);
+
+            this.selectionStart = start;
+            endSample = end;
+            console.log(`Playing selection: ${this.selectionStart} to ${endSample}`);
+        }
+
+        // Validate range before playing
+        if (this.selectionStart >= endSample || this.selectionStart >= bufferLength) {
+            window.BitboxerUtils.setStatus('Invalid selection range', 'error');
+            return;
+        }
+
+        // Clamp end to buffer length
+        endSample = Math.min(endSample, bufferLength);
 
         this.audioEngine.play({
             startSample: Math.floor(this.selectionStart),
-            endSample: Math.floor(this.selectionEnd),
+            endSample: Math.floor(endSample),
             loopEnabled: false,
             reverse: false
         });
