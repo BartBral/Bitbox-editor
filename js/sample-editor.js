@@ -70,48 +70,68 @@ class WaveformRenderer {
 
     render() {
         if (!this.waveformData || this.width <= 0 || this.height <= 0) return;
-
+        
         const { ctx, width, height, waveformData, zoom, scrollSample } = this;
         const { channels, length, channelData } = waveformData;
-
+        
         // Clear canvas
         ctx.fillStyle = '#1a1614';
         ctx.fillRect(0, 0, width, height);
-
-        // Calculate visible sample range - ALL INTEGERS
+        
+        // Calculate visible sample range - INTEGER MATH
         const visibleSamples = Math.max(1, Math.floor(length / zoom));
         const maxScroll = Math.max(0, length - visibleSamples);
         const clampedScrollSample = Math.max(0, Math.min(maxScroll, scrollSample));
         
         const startSample = clampedScrollSample;
         const endSample = Math.min(length, startSample + visibleSamples);
-        const samplesPerPixel = Math.max(1, Math.ceil((endSample - startSample) / width));
-
+        
+        // CRITICAL FIX: Use the SAME math as sampleToX() and xToSample()
+        // This ensures perfect alignment between waveform and markers
+        // We render exactly what the coordinate functions expect
+        
         const channelHeight = height / channels;
-
+        
         // Draw each channel
         for (let ch = 0; ch < channels; ch++) {
             const data = channelData[ch];
             const yOffset = ch * channelHeight + channelHeight / 2;
-
+        
             ctx.strokeStyle = '#ffa600';
             ctx.lineWidth = 1;
             ctx.beginPath();
-
+        
             for (let x = 0; x < width; x++) {
-                const sampleIdx = Math.floor(startSample + x * samplesPerPixel);
-                const sampleEnd = Math.min(length, sampleIdx + samplesPerPixel);
-
+                // Use EXACT inverse of sampleToX() calculation
+                // sampleToX formula: pixelPos = (offsetFromScroll / visibleSamples) * width
+                // Inverse: offsetFromScroll = (x / width) * visibleSamples
+                const ratio = x / width;
+                const sampleOffset = ratio * visibleSamples;
+                const sampleIdxFloat = startSample + sampleOffset;
+                
+                // Get the sample index (floor for starting point)
+                const sampleIdx = Math.floor(sampleIdxFloat);
+                
+                // Calculate how many samples this pixel represents
+                const nextRatio = (x + 1) / width;
+                const nextSampleOffset = nextRatio * visibleSamples;
+                const nextSampleIdxFloat = startSample + nextSampleOffset;
+                const sampleEnd = Math.min(length, Math.ceil(nextSampleIdxFloat));
+                
+                // Ensure we always sample at least one sample
+                const actualEnd = Math.max(sampleIdx + 1, sampleEnd);
+            
+                // Find min/max in this pixel's sample range
                 let min = 1, max = -1;
-                for (let i = sampleIdx; i < sampleEnd; i++) {
+                for (let i = sampleIdx; i < actualEnd && i < length; i++) {
                     const val = data[i];
                     if (val < min) min = val;
                     if (val > max) max = val;
                 }
-
+            
                 const y1 = yOffset + min * (channelHeight / 2) * 0.9;
                 const y2 = yOffset + max * (channelHeight / 2) * 0.9;
-
+            
                 if (x === 0) {
                     ctx.moveTo(x, y1);
                 } else {
@@ -119,9 +139,9 @@ class WaveformRenderer {
                 }
                 ctx.lineTo(x, y2);
             }
-
+        
             ctx.stroke();
-
+        
             // Draw center line
             ctx.strokeStyle = '#4a4038';
             ctx.lineWidth = 1;
@@ -129,7 +149,7 @@ class WaveformRenderer {
             ctx.moveTo(0, yOffset);
             ctx.lineTo(width, yOffset);
             ctx.stroke();
-
+        
             // Draw channel label
             ctx.fillStyle = '#d0c2b9';
             ctx.font = '10px monospace';
@@ -1081,21 +1101,21 @@ class SampleEditor {
      */
     clearAudioData() {
         console.log('SampleEditor: Clearing audio data for pad switch');
-        
+
         // Stop any playing audio
         this.stop();
-        
+
         // Clear audio buffers
         if (this.audioEngine) {
             this.audioEngine.audioBuffer = null;
             this.audioEngine.reversedBuffer = null;
             this.audioEngine.isPlaying = false;
         }
-        
+
         // Clear waveform data but keep canvas sized
         if (this.renderer && this.renderer.waveformData) {
             this.renderer.waveformData = null;
-            
+
             // Clear canvas visually
             const ctx = this.renderer.ctx;
             if (ctx && this.renderer.width > 0 && this.renderer.height > 0) {
@@ -1103,7 +1123,7 @@ class SampleEditor {
                 ctx.fillRect(0, 0, this.renderer.width, this.renderer.height);
             }
         }
-        
+
         // Stop animations
         if (this.animationFrame) {
             cancelAnimationFrame(this.animationFrame);
