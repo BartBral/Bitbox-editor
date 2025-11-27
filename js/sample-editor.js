@@ -991,42 +991,40 @@ class MarkerController {
         this.updateSlicesToPad();
     }
 
-    autoDetectSlices(threshold = 0.1) {
+    /**
+     * Auto-detect slice points using advanced onset detection
+     * @param {string} algorithm - 'hfc', 'flux', or 'complex'
+     * @param {number} sensitivity - 0.0 to 1.0
+     */
+    autoDetectSlices(algorithm = 'flux', sensitivity = 0.5) {
         if (!this.renderer.waveformData) return;
-        
-        const channelData = this.renderer.waveformData.channelData[0];
-        const length = channelData.length;
-        const slices = [];
-        
-        let inSilence = false;
-        let silenceStart = 0;
-        
-        for (let i = 0; i < length; i++) {
-            const amplitude = Math.abs(channelData[i]);
-        
-            if (!inSilence && amplitude < threshold) {
-                inSilence = true;
-                silenceStart = i;
-            } else if (inSilence && amplitude >= threshold) {
-                inSilence = false;
-                
-                // Conditionally snap based on toggle state
-                const slicePoint = this.snapToZeroCrossingEnabled
-                    ? this.findZeroCrossing(i, channelData)
-                    : i;
-            
-                const lastSlice = slices.length > 0 ? slices[slices.length - 1] : 0;
-                if (slicePoint - lastSlice > 1000) {
-                    slices.push(slicePoint);
-                }
-            }
-        }
     
-        this.sliceMarkers = slices;
+        console.log(`Auto-detecting slices: ${algorithm}, sensitivity: ${sensitivity}`);
+        
+        // Create onset detector
+        const detector = new OnsetDetector(this.renderer.waveformData, {
+            algorithm: algorithm,
+            sensitivity: sensitivity,
+            windowSize: 1024,
+            hopSize: 512,
+            minSliceDistance: 1000 // Minimum 1000 samples between slices
+        });
+        
+        // Analyze
+        const onsetSamples = detector.analyze();
+        
+        // Optionally snap to zero crossings
+        const channelData = this.renderer.waveformData.channelData[0];
+        this.sliceMarkers = onsetSamples.map(sample => 
+            this.snapToZeroCrossingEnabled 
+                ? this.findZeroCrossing(sample, channelData)
+                : sample
+        );
+        
         this.updateSlicesToPad();
     
-        const snapStatus = this.snapToZeroCrossingEnabled ? 'with snapping' : 'exact positions';
-        console.log(`Auto-detected ${slices.length} slice markers (${snapStatus})`);
+        const snapStatus = this.snapToZeroCrossingEnabled ? 'with zero-crossing snap' : 'exact positions';
+        console.log(`Detected ${this.sliceMarkers.length} slices using ${algorithm} (${snapStatus})`);
     }
 }
 

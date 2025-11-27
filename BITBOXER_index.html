@@ -216,16 +216,18 @@
                  MODAL HEADER
                  Shows pad number/name and close button
                  ============================================ -->
-                <div class="modal-header">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <svg id="modalIcon" width="32" height="32" viewBox="0 0 32 32" fill="white" style="display: block;"></svg>
-                        <h4 id="modalTitle">Edit Pad</h4>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn" id="savePadPresetBtn">💾 Save</button>
-                        <button class="btn" id="loadPadPresetBtn">📂 Load</button>
-                    </div>
-                    <!-- Cell Mode: Determines pad behavior (Sample/Clip/Slicer/Granular) -->                <div class="param">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg id="modalIcon" width="32" height="32" viewBox="0 0 32 32" fill="white"
+                        style="display: block;"></svg>
+                    <h4 id="modalTitle">Edit Pad</h4>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn" id="savePadPresetBtn">💾 Save</button>
+                    <button class="btn" id="loadPadPresetBtn">📂 Load</button>
+                </div>
+                <!-- Cell Mode: Determines pad behavior (Sample/Clip/Slicer/Granular) -->
+                <div class="param">
                     <div class="label-value-container">
                         <label class="param-label">Cell Mode</label>
                     </div>
@@ -567,57 +569,110 @@
                  Sample playback position and loop controls
                  ============================================ -->
             <div class="tab-content" id="tab-pos">
-                
+
                 <!-- Sample Editor -->
                 <div id="sampleEditorContainer" style="margin-bottom: 20px; display: none;">
-                    <canvas id="waveformCanvas" style="width: 100%; height: 200px; background: #1a1614; border-radius: 6px; cursor: crosshair;"></canvas>
+                    <canvas id="waveformCanvas"
+                        style="width: 100%; height: 200px; background: #1a1614; border-radius: 6px; cursor: crosshair;"></canvas>
 
                     <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap;">
                         <button class="btn" id="playBtn">▶ Play</button>
                         <button class="btn" id="stopBtn">⏹ Stop</button>
                         <button class="btn" id="playSelectionBtn">▶ Selection</button>
 
-                        <label style="display: flex; align-items: center; gap: 5px; color: var(--color-text-secondary); font-size: 0.85em; margin-left: 10px;">
-                                <input type="checkbox" id="snapToZeroCheckbox" checked style="width: auto;">
-                                Snap to Zero
+                        <label
+                            style="display: flex; align-items: center; gap: 5px; color: var(--color-text-secondary); font-size: 0.85em; margin-left: 10px;">
+                            <input type="checkbox" id="snapToZeroCheckbox" checked style="width: auto;">
+                            Snap to Zero
                         </label>
 
                         <!-- Slicer mode controls (hidden by default) -->
-                        <div id="slicerControls" style="display: none; gap: 10px; align-items: center;">
-                            <button class="btn" id="autoSliceBtn">🔪 Auto Detect</button>
-                            <button class="btn" id="clearSlicesBtn">✕ Clear All</button>
-                            <span style="color: var(--color-text-secondary); font-size: 0.85em;" id="sliceCount">0 slices</span>
+                        <div id="slicerControls"
+                            style="display: none; flex-direction: column; gap: 8px; margin-top: 10px;">
+                            <!-- Algorithm Selection -->
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <label style="color: var(--color-text-secondary); font-size: 0.85em; min-width: 80px;">
+                                    Algorithm:
+                                </label>
+                                <select id="onsetAlgorithmSelect" class="select-dark" style="flex: 1;">
+                                    <option value="hfc">High Frequency Content</option>
+                                    <option value="flux" selected>Spectral Flux (Recommended)</option>
+                                    <option value="complex">Complex Domain</option>
+                                </select>
+                            </div>
+
+                            <!-- Sensitivity Slider -->
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <label style="color: var(--color-text-secondary); font-size: 0.85em; min-width: 80px;">
+                                    Sensitivity:
+                                </label>
+                                <input type="range" id="onsetSensitivitySlider" class="slider" min="10" max="90"
+                                    value="50" style="flex: 1;">
+                                <span id="onsetSensitivityValue"
+                                    style="color: var(--color-accent-blue); min-width: 40px; text-align: right;">
+                                    50%
+                                </span>
+                            </div>
+
+                            <!-- Min Distance Slider -->
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <label style="color: var(--color-text-secondary); font-size: 0.85em; min-width: 80px;">
+                                    Min Distance:
+                                </label>
+                                <input type="range" id="minSliceDistanceSlider" class="slider" min="100" max="5000"
+                                    value="1000" step="100" style="flex: 1;">
+                                <span id="minSliceDistanceValue"
+                                    style="color: var(--color-accent-blue); min-width: 60px; text-align: right;">
+                                    23 ms
+                                </span>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div style="display: flex; gap: 8px; margin-top: 5px;">
+                                <button class="btn" id="autoSliceBtn">🔪 Auto Detect</button>
+                                <button class="btn" id="clearSlicesBtn">✕ Clear All
+                                </button>
+                            </div>
+                            <span id="sliceCount"
+                                style="color: var(--color-text-secondary); font-size: 0.85em; margin-top: 5px;">
+                                0 slices
+                            </span>
                         </div>
 
                         <!-- Granular mode controls (hidden by default) -->
                         <div id="granularControls" style="display: none; gap: 10px; align-items: center;">
-                            <span style="color: var(--color-accent-yellow); font-size: 0.85em;">🌾 Granular Mode Active</span>
+                            <span style="color: var(--color-accent-yellow); font-size: 0.85em;">🌾 Granular Mode
+                                Active</span>
                         </div>
 
                         <!-- Clip mode controls (hidden by default) -->
                         <div id="clipControls" style="display: none; gap: 10px; align-items: center; flex-wrap: wrap;">
                             <button class="btn" id="tapTempoBtn" style="min-width: 120px;">🎵 Tap Tempo</button>
                             <button class="btn" id="detectBeatsBtn">🔍 Detect Beats</button>
-                            <span style="color: var(--color-accent-blue); font-size: 0.85em;" id="beatInfo">-- beats @ -- BPM</span>
+                            <span style="color: var(--color-accent-blue); font-size: 0.85em;" id="beatInfo">-- beats @
+                                -- BPM</span>
                         </div>
 
                         <div style="flex: 1; display: flex; gap: 10px; align-items: center;">
                             <label style="color: var(--color-text-secondary); font-size: 0.85em;">Zoom:</label>
-                            <input type="range" class="slider" id="zoomSlider" min="1" max="10000" value="1" style="flex: 1;">
+                            <input type="range" class="slider" id="zoomSlider" min="1" max="10000" value="1"
+                                style="flex: 1;">
                             <span id="zoomValue" style="color: var(--color-accent-blue); min-width: 40px;">1x</span>
                         </div>
                     </div>
 
-                    <div style="margin-top: 5px; color: var(--color-text-secondary); font-size: 0.8em;" id="editorHints">
+                    <div style="margin-top: 5px; color: var(--color-text-secondary); font-size: 0.8em;"
+                        id="editorHints">
                         Drag markers to adjust positions. Mouse wheel to zoom.
                     </div>
 
                     <div style="margin-top: 5px;">
-                        <input type="range" class="slider" id="scrollBar" min="0" max="100" value="0" style="width: 100%;">
+                        <input type="range" class="slider" id="scrollBar" min="0" max="100" value="0"
+                            style="width: 100%;">
                     </div>
                 </div>
-                
-                
+
+
                 <div class="param-section">
                     <h3>Position & Loop</h3>
                     <div class="param-grid">
@@ -1825,6 +1880,12 @@
 
     <!-- NEW: SFZ Exporter -->
     <script src="js/sfz-exporter.js"></script>
+
+    <!-- FFT Library for onset detection -->
+    <script src="js/lib/fft.js"></script>
+
+    <!-- Onset Detection Module -->
+    <script src="js/onset-detector.js"></script>
 
     <!-- Sample Editor -->
     <script src="js/sample-editor.js"></script>

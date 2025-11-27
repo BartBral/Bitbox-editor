@@ -1091,12 +1091,12 @@ async function initSampleEditor(padData) {
     
     // Show appropriate controls
     if (cellmode === '2') {
-        // SLICER MODE
+        // SLICER MODE - ADVANCED
         if (slicerControls) slicerControls.style.display = 'flex';
         if (editorHints) {
-            editorHints.textContent = 'Shift+Click: add slice | Right-click: delete | Drag: move | Wheel: zoom';
+            editorHints.textContent = 'Shift+Click: add slice | Right-click: delete | Algorithm detects transients automatically';
         }
-        
+
         const updateSliceCount = () => {
             const count = window.BitboxerSampleEditor.markerController.sliceMarkers.length;
             const sliceCount = document.getElementById('sliceCount');
@@ -1105,18 +1105,75 @@ async function initSampleEditor(padData) {
             }
         };
         updateSliceCount();
-        
+
+        // Algorithm selection
+        const algorithmSelect = document.getElementById('onsetAlgorithmSelect');
+        const sensitivitySlider = document.getElementById('onsetSensitivitySlider');
+        const sensitivityValue = document.getElementById('onsetSensitivityValue');
+        const minDistanceSlider = document.getElementById('minSliceDistanceSlider');
+        const minDistanceValue = document.getElementById('minSliceDistanceValue');
+
+        // Store current settings
+        let currentAlgorithm = 'flux';
+        let currentSensitivity = 0.5;
+        let currentMinDistance = 1000;
+
+        if (algorithmSelect) {
+            algorithmSelect.value = currentAlgorithm;
+            algorithmSelect.onchange = () => {
+                currentAlgorithm = algorithmSelect.value;
+            };
+        }
+
+        if (sensitivitySlider && sensitivityValue) {
+            sensitivitySlider.value = 50;
+            sensitivityValue.textContent = '50%';
+            sensitivitySlider.oninput = () => {
+                currentSensitivity = parseInt(sensitivitySlider.value) / 100;
+                sensitivityValue.textContent = sensitivitySlider.value + '%';
+            };
+        }
+
+        if (minDistanceSlider && minDistanceValue) {
+            minDistanceSlider.value = 1000;
+            const sampleRate = window.BitboxerSampleEditor.audioEngine.audioBuffer?.sampleRate || 44100;
+            minDistanceValue.textContent = (1000 / sampleRate * 1000).toFixed(0) + ' ms';
+
+            minDistanceSlider.oninput = () => {
+                currentMinDistance = parseInt(minDistanceSlider.value);
+                const ms = (currentMinDistance / sampleRate * 1000).toFixed(0);
+                minDistanceValue.textContent = ms + ' ms';
+            };
+        }
+
+        // Auto-detect button
         const autoSliceBtn = document.getElementById('autoSliceBtn');
         if (autoSliceBtn) {
             autoSliceBtn.onclick = () => {
-                const threshold = prompt('Auto-detect threshold (0.01 - 0.5):', '0.1');
-                if (threshold) {
-                    window.BitboxerSampleEditor.autoDetectSlices(parseFloat(threshold));
-                    updateSliceCount();
-                }
+                window.BitboxerUtils.setStatus('Analyzing audio...', 'info');
+
+                // Run in next tick to allow UI update
+                setTimeout(() => {
+                    try {
+                        window.BitboxerSampleEditor.markerController.autoDetectSlices(
+                            currentAlgorithm,
+                            currentSensitivity
+                        );
+                        updateSliceCount();
+                        window.BitboxerSampleEditor.render();
+                        window.BitboxerUtils.setStatus(
+                            `Detected ${window.BitboxerSampleEditor.markerController.sliceMarkers.length} slices using ${currentAlgorithm}`,
+                            'success'
+                        );
+                    } catch (error) {
+                        console.error('Onset detection error:', error);
+                        window.BitboxerUtils.setStatus(`Detection failed: ${error.message}`, 'error');
+                    }
+                }, 10);
             };
         }
-        
+
+        // Clear button
         const clearSlicesBtn = document.getElementById('clearSlicesBtn');
         if (clearSlicesBtn) {
             clearSlicesBtn.onclick = () => {
@@ -1128,8 +1185,8 @@ async function initSampleEditor(padData) {
                 }
             };
         }
-        
-    } else if (cellmode === '3') {
+    } 
+    else if (cellmode === '3') {
         // GRANULAR MODE
         if (granularControls) granularControls.style.display = 'flex';
         if (editorHints) {
