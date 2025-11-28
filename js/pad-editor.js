@@ -1094,9 +1094,9 @@ async function initSampleEditor(padData) {
         // SLICER MODE - ADVANCED
         if (slicerControls) slicerControls.style.display = 'flex';
         if (editorHints) {
-            editorHints.textContent = 'Shift+Click: add slice | Right-click: delete | Algorithm detects transients automatically';
+            editorHints.textContent = 'Shift+Click: add slice | Right-click: delete | Auto-detects on sensitivity change';
         }
-
+    
         const updateSliceCount = () => {
             const count = window.BitboxerSampleEditor.markerController.sliceMarkers.length;
             const sliceCount = document.getElementById('sliceCount');
@@ -1105,53 +1105,27 @@ async function initSampleEditor(padData) {
             }
         };
         updateSliceCount();
-
+    
         // Algorithm selection
         const algorithmSelect = document.getElementById('onsetAlgorithmSelect');
         const sensitivitySlider = document.getElementById('onsetSensitivitySlider');
         const sensitivityValue = document.getElementById('onsetSensitivityValue');
         const minDistanceSlider = document.getElementById('minSliceDistanceSlider');
         const minDistanceValue = document.getElementById('minSliceDistanceValue');
-
+    
         // Store current settings
         let currentAlgorithm = 'flux';
         let currentSensitivity = 0.5;
         let currentMinDistance = 1000;
-
-        if (algorithmSelect) {
-            algorithmSelect.value = currentAlgorithm;
-            algorithmSelect.onchange = () => {
-                currentAlgorithm = algorithmSelect.value;
-            };
-        }
-
-        if (sensitivitySlider && sensitivityValue) {
-            sensitivitySlider.value = 50;
-            sensitivityValue.textContent = '50%';
-            sensitivitySlider.oninput = () => {
-                currentSensitivity = parseInt(sensitivitySlider.value) / 100;
-                sensitivityValue.textContent = sensitivitySlider.value + '%';
-            };
-        }
-
-        if (minDistanceSlider && minDistanceValue) {
-            minDistanceSlider.value = 1000;
-            const sampleRate = window.BitboxerSampleEditor.audioEngine.audioBuffer?.sampleRate || 44100;
-            minDistanceValue.textContent = (1000 / sampleRate * 1000).toFixed(0) + ' ms';
-
-            minDistanceSlider.oninput = () => {
-                currentMinDistance = parseInt(minDistanceSlider.value);
-                const ms = (currentMinDistance / sampleRate * 1000).toFixed(0);
-                minDistanceValue.textContent = ms + ' ms';
-            };
-        }
-
-        // Auto-detect button
-        const autoSliceBtn = document.getElementById('autoSliceBtn');
-        if (autoSliceBtn) {
-            autoSliceBtn.onclick = () => {
-                window.BitboxerUtils.setStatus('Analyzing audio...', 'info');
-
+        let autoDetectTimer = null;
+    
+        // Debounced auto-detect function
+        const triggerAutoDetect = () => {
+            if (autoDetectTimer) clearTimeout(autoDetectTimer);
+            
+            autoDetectTimer = setTimeout(() => {
+                window.BitboxerUtils.setStatus('Auto-analyzing...', 'info');
+                
                 // Run in next tick to allow UI update
                 setTimeout(() => {
                     try {
@@ -1162,7 +1136,7 @@ async function initSampleEditor(padData) {
                         updateSliceCount();
                         window.BitboxerSampleEditor.render();
                         window.BitboxerUtils.setStatus(
-                            `Detected ${window.BitboxerSampleEditor.markerController.sliceMarkers.length} slices using ${currentAlgorithm}`,
+                            `Detected ${window.BitboxerSampleEditor.markerController.sliceMarkers.length} slices`,
                             'success'
                         );
                     } catch (error) {
@@ -1170,9 +1144,45 @@ async function initSampleEditor(padData) {
                         window.BitboxerUtils.setStatus(`Detection failed: ${error.message}`, 'error');
                     }
                 }, 10);
+            }, AUTODETECT_DEBOUNCE_MS);
+        };
+    
+        if (algorithmSelect) {
+            algorithmSelect.value = currentAlgorithm;
+            algorithmSelect.onchange = () => {
+                currentAlgorithm = algorithmSelect.value;
+                triggerAutoDetect();
             };
         }
-
+    
+        if (sensitivitySlider && sensitivityValue) {
+            sensitivitySlider.value = 50;
+            sensitivityValue.textContent = '50%';
+            
+            // Update display on input
+            sensitivitySlider.oninput = () => {
+                currentSensitivity = parseInt(sensitivitySlider.value) / 100;
+                sensitivityValue.textContent = sensitivitySlider.value + '%';
+            };
+            
+            // Trigger auto-detect on release
+            sensitivitySlider.onchange = () => {
+                triggerAutoDetect();
+            };
+        }
+    
+        if (minDistanceSlider && minDistanceValue) {
+            minDistanceSlider.value = 1000;
+            const sampleRate = window.BitboxerSampleEditor.audioEngine.audioBuffer?.sampleRate || 44100;
+            minDistanceValue.textContent = (1000 / sampleRate * 1000).toFixed(0) + ' ms';
+        
+            minDistanceSlider.oninput = () => {
+                currentMinDistance = parseInt(minDistanceSlider.value);
+                const ms = (currentMinDistance / sampleRate * 1000).toFixed(0);
+                minDistanceValue.textContent = ms + ' ms';
+            };
+        }
+    
         // Clear button
         const clearSlicesBtn = document.getElementById('clearSlicesBtn');
         if (clearSlicesBtn) {

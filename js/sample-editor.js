@@ -6,6 +6,11 @@
  */
 
 // ============================================
+// CONSTANTS
+// ============================================
+const AUTODETECT_DEBOUNCE_MS = 500;
+
+// ============================================
 // WAVEFORM RENDERER
 // ============================================
 class WaveformRenderer {
@@ -545,9 +550,12 @@ class MarkerController {
         if (showStandardMarkers) {
             Object.entries(this.markers).forEach(([name, marker]) => {
                 const x = this.renderer.sampleToX(marker.sample);
-
-                if (x < 0 || x > width) return;
             
+                if (x < 0 || x > width) return;
+
+                // Determine if this is a loop marker
+                const isLoopMarker = (name === 'loopStart' || name === 'loopEnd');
+
                 // Draw vertical line
                 ctx.strokeStyle = marker.color;
                 ctx.lineWidth = 2;
@@ -555,19 +563,23 @@ class MarkerController {
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, height);
                 ctx.stroke();
+            
+                // Position label and handle based on marker type
+                const labelY = isLoopMarker ? height - 17 : 5;
+                const handleY = isLoopMarker ? height - 20 : 0;
 
                 // Draw label background for readability
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(x + 3, 5, 80, 12);
-            
+                ctx.fillRect(x + 3, labelY, 80, 12);
+
                 // Draw label
                 ctx.fillStyle = marker.color;
                 ctx.font = '10px monospace';
-                ctx.fillText(marker.label, x + 5, 15);
-            
+                ctx.fillText(marker.label, x + 5, labelY + 10);
+
                 // Draw draggable handle
                 ctx.fillStyle = marker.color;
-                ctx.fillRect(x - 5, 0, 10, 20);
+                ctx.fillRect(x - 5, handleY, 10, 20);
             });
         }
 
@@ -764,16 +776,24 @@ class MarkerController {
             return true;
         }
 
-        // Check if clicking near a standard marker handle (top 20px)
-        if (y <= 20 && (cellmode === '0' || cellmode === '3')) {
-            const threshold = 10;
-            console.log('Checking standard markers (top 20px zone)');
+        // Check standard markers (STRICT: must be within handle rectangle)
+        if (cellmode === '0' || cellmode === '3') {
+            const threshold = 5; // Must be within handle width (10px total, ±5px)
+            console.log('Checking standard markers');
 
             for (const [name, marker] of Object.entries(this.markers)) {
                 const markerX = this.renderer.sampleToX(marker.sample);
-                console.log(`  Marker ${name}: x=${markerX}, distance=${Math.abs(x - markerX)}`);
+                const isLoopMarker = (name === 'loopStart' || name === 'loopEnd');
 
-                if (Math.abs(x - markerX) < threshold) {
+                // Strict Y-coordinate check: must be INSIDE handle rectangle
+                const handleTop = isLoopMarker ? (this.renderer.height - 20) : 0;
+                const handleBottom = isLoopMarker ? this.renderer.height : 20;
+                const inHandleY = (y >= handleTop && y <= handleBottom);
+
+                console.log(`  Marker ${name}: x=${markerX}, distance=${Math.abs(x - markerX)}, y=${y}, handleTop=${handleTop}, handleBottom=${handleBottom}, inHandleY=${inHandleY}`);
+
+                // Must be within BOTH X threshold AND Y handle zone
+                if (Math.abs(x - markerX) < threshold && inHandleY) {
                     this.dragging = { type: 'marker', name };
                     console.log(`✓ Started dragging ${name} marker`);
                     return true;
@@ -781,19 +801,22 @@ class MarkerController {
             }
         }
 
-        // In slicer mode, check for dragging slice markers
+        // In slicer mode, check for dragging slice markers (STRICT: top 15px only)
         if (cellmode === '2') {
-            const threshold = 10;
+            const threshold = 3; // Slice handles are smaller (6px wide)
             console.log(`Checking slice markers (${this.sliceMarkers.length} slices)`);
 
-            for (let i = 0; i < this.sliceMarkers.length; i++) {
-                const markerX = this.renderer.sampleToX(this.sliceMarkers[i]);
-                console.log(`  Slice ${i}: x=${markerX}, distance=${Math.abs(x - markerX)}`);
+            // STRICT: Must be in top 15px (handle zone)
+            if (y <= 15) {
+                for (let i = 0; i < this.sliceMarkers.length; i++) {
+                    const markerX = this.renderer.sampleToX(this.sliceMarkers[i]);
+                    console.log(`  Slice ${i}: x=${markerX}, distance=${Math.abs(x - markerX)}`);
 
-                if (Math.abs(x - markerX) < threshold) {
-                    this.dragging = { type: 'slice', index: i };
-                    console.log(`✓ Started dragging slice marker ${i}`);
-                    return true;
+                    if (Math.abs(x - markerX) < threshold) {
+                        this.dragging = { type: 'slice', index: i };
+                        console.log(`✓ Started dragging slice marker ${i}`);
+                        return true;
+                    }
                 }
             }
         }
@@ -950,11 +973,24 @@ class MarkerController {
         this.setMarker('loopEnd', validLoopEnd);
         
         // Load slices if in slicer mode
-        if (pad.params.cellmode === '2' && pad.slices) {
-            this.sliceMarkers = pad.slices.map(slice => {
-                const pos = parseInt(slice.pos);
-                return isNaN(pos) ? 0 : pos;
-            }).filter(pos => pos > 0); // Remove invalid slices
+        if (pad.params.cellmode === '2') {
+            if (pad.slices && pad.slices.length > 0) {
+                this.sliceMarkers = pad.slices.map(slice => {
+                    const pos = parseInt(slice.pos);
+                    return isNaN(pos) ? 0 : pos;
+                }).filter(pos => pos >= 0); // Keep sample 0
+            } else {
+                // Always start with marker at sample 0 in slicer mode
+                this.sliceMarkers = [0];
+            }
+
+            // Ensure marker at sample 0 exists
+            if (!this.sliceMarkers.includes(0)) {
+                this.sliceMarkers.unshift(0);
+            }
+
+            // Sort and remove duplicates
+            this.sliceMarkers = [...new Set(this.sliceMarkers)].sort((a, b) => a - b);
         } else {
             this.sliceMarkers = [];
         }
@@ -1020,7 +1056,15 @@ class MarkerController {
                 ? this.findZeroCrossing(sample, channelData)
                 : sample
         );
-        
+
+        // ALWAYS ensure marker at sample 0 exists in slicer mode
+        if (!this.sliceMarkers.includes(0)) {
+            this.sliceMarkers.unshift(0);
+        }
+
+        // Remove duplicates and sort
+        this.sliceMarkers = [...new Set(this.sliceMarkers)].sort((a, b) => a - b);
+
         this.updateSlicesToPad();
     
         const snapStatus = this.snapToZeroCrossingEnabled ? 'with zero-crossing snap' : 'exact positions';
@@ -1252,15 +1296,19 @@ class SampleEditor {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-
-            // Check if mouse actually moved
-            const moved = (lastMouseX === null || Math.abs(x - lastMouseX) > 1 || Math.abs(y - lastMouseY) > 1);
-            lastMouseX = x;
-            lastMouseY = y;
-
-            if (!moved) return;
+        
+            // ALWAYS update cursor (don't skip based on movement threshold)
+            // This ensures cursor updates even with tiny mouse movements
 
             if (isDragging) {
+                // DRAGGING MODE: Handle marker/selection movement
+                // Check if mouse actually moved (for performance)
+                const moved = (lastMouseX === null || Math.abs(x - lastMouseX) > 1 || Math.abs(y - lastMouseY) > 1);
+                lastMouseX = x;
+                lastMouseY = y;
+
+                if (!moved) return;
+
                 if (this.draggingSelectionMarker) {
                     // Dragging selection marker
                     const sample = this.renderer.xToSample(x);
@@ -1277,11 +1325,95 @@ class SampleEditor {
                     }
                 }
             } else if (isSelecting) {
-                // Creating new selection
+                // SELECTING MODE: Creating new selection
+                const moved = (lastMouseX === null || Math.abs(x - lastMouseX) > 1 || Math.abs(y - lastMouseY) > 1);
+                lastMouseX = x;
+                lastMouseY = y;
+
+                if (!moved) return;
+
                 const endSample = this.renderer.xToSample(x);
                 this.selectionEnd = endSample;
                 this.render();
             }
+
+            // ALWAYS check for hover cursor (even during drag/select for smooth transitions)
+            // This runs independently of drag state
+            let isOverHandle = false;
+            const selectionThreshold = 10; // Selection markers: wider detection
+            const standardThreshold = 5;   // Standard markers: must be in handle (±5px from center)
+            const sliceThreshold = 3;      // Slice markers: smallest handles (±3px from center)
+
+            // Get current mode
+            const { currentEditingPad, presetData } = window.BitboxerData;
+            let currentMode = '0';
+            if (currentEditingPad) {
+                const row = parseInt(currentEditingPad.dataset.row);
+                const col = parseInt(currentEditingPad.dataset.col);
+                currentMode = presetData.pads[row][col].params.cellmode || '0';
+            }
+
+            // 1. Check selection markers ANYWHERE on vertical line (if selection exists)
+            if (this.selectionStart !== null && this.selectionEnd !== null) {
+                const startX = this.renderer.sampleToX(this.selectionStart);
+                const endX = this.renderer.sampleToX(this.selectionEnd);
+
+                if (Math.abs(x - startX) < selectionThreshold || Math.abs(x - endX) < selectionThreshold) {
+                    isOverHandle = true;
+                }
+            }
+
+            // 2. Check standard markers in sample/granular modes (STRICT: in handle zone only)
+            if (!isOverHandle && (currentMode === '0' || currentMode === '3')) {
+                for (const [name, marker] of Object.entries(this.markerController.markers)) {
+                    const markerX = this.renderer.sampleToX(marker.sample);
+
+                    if (Math.abs(x - markerX) < standardThreshold) {
+                        // STRICT: Check if in correct vertical zone for this marker
+                        const isLoopMarker = (name === 'loopStart' || name === 'loopEnd');
+
+                        if (isLoopMarker) {
+                            // Loop markers: bottom 20px only
+                            if (y >= this.renderer.height - 20) {
+                                isOverHandle = true;
+                                break;
+                            }
+                        } else {
+                            // Start/End markers: top 20px only
+                            if (y <= 20) {
+                                isOverHandle = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. Check slice markers in slicer mode (STRICT: top 15px only)
+            if (!isOverHandle && currentMode === '2') {
+                for (let i = 0; i < this.markerController.sliceMarkers.length; i++) {
+                    const markerX = this.renderer.sampleToX(this.markerController.sliceMarkers[i]);
+                    if (Math.abs(x - markerX) < sliceThreshold && y <= 15) {
+                        isOverHandle = true;
+                        break;
+                    }
+                }
+            }
+
+            // Update cursor - ALWAYS, regardless of drag state
+            canvas.style.cursor = isOverHandle ? 'ew-resize' : 'crosshair';
+        });
+
+        // ==================== MOUSE ENTER/LEAVE ====================
+        canvas.addEventListener('mouseenter', () => {
+            canvas.style.cursor = 'crosshair';
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            canvas.style.cursor = 'default';
+            // Reset tracking
+            lastMouseX = null;
+            lastMouseY = null;
         });
 
         // ==================== MOUSEUP ====================
@@ -1328,10 +1460,10 @@ class SampleEditor {
                 currentMode = presetData.pads[row][col].params.cellmode || '0';
             }
         
-            // Only handle in slicer mode
+            // SLICER MODE: Handle slice marker deletion/addition
             if (currentMode === '2') {
                 const clickSample = this.renderer.xToSample(x);
-
+            
                 // Check if clicking on existing marker (delete it)
                 const threshold = 10;
                 for (let i = 0; i < this.markerController.sliceMarkers.length; i++) {
@@ -1343,14 +1475,32 @@ class SampleEditor {
                         return;
                     }
                 }
-
-                // Check if clicking within selection
+            
+                // Check if clicking within selection (add slices at boundaries)
                 if (this.selectionStart !== null && this.selectionEnd !== null &&
                     clickSample >= this.selectionStart && clickSample <= this.selectionEnd) {
                     
-                    // Show context menu for adding slices
                     this.showSliceContextMenu(e.pageX, e.pageY);
                     return;
+                }
+            } 
+            // NORMAL MODES (Sample/Granular): Show selection context menu
+            else if (currentMode === '0' || currentMode === '3') {
+                const clickSample = this.renderer.xToSample(x);
+
+                // Check if we have a valid selection
+                if (this.selectionStart !== null && this.selectionEnd !== null &&
+                    !isNaN(this.selectionStart) && !isNaN(this.selectionEnd)) {
+                    
+                    // Ensure selection is ordered
+                    const selStart = Math.min(this.selectionStart, this.selectionEnd);
+                    const selEnd = Math.max(this.selectionStart, this.selectionEnd);
+                    
+                    // Check if click is within selection
+                    if (clickSample >= selStart && clickSample <= selEnd) {
+                        this.showSelectionContextMenu(e.pageX, e.pageY, selStart, selEnd);
+                        return;
+                    }
                 }
             }
         });
@@ -1444,6 +1594,89 @@ class SampleEditor {
                 document.removeEventListener('click', closeMenu);
             }
         };
+        setTimeout(() => document.addEventListener('click', closeMenu), 0);
+    }
+
+    /**
+     * Shows context menu for setting markers from selection
+     * @param {number} pageX - Mouse X position in page coordinates
+     * @param {number} pageY - Mouse Y position in page coordinates
+     * @param {number} selStart - Selection start sample
+     * @param {number} selEnd - Selection end sample
+     */
+    showSelectionContextMenu(pageX, pageY, selStart, selEnd) {
+        // Remove any existing context menu
+        const existing = document.getElementById('selectionContextMenu');
+        if (existing) existing.remove();
+        
+        // Create context menu
+        const menu = document.createElement('div');
+        menu.id = 'selectionContextMenu';
+        menu.className = 'context-menu show';
+        menu.style.position = 'fixed';
+        menu.style.left = pageX + 'px';
+        menu.style.top = pageY + 'px';
+        menu.style.zIndex = '2001';
+        
+        menu.innerHTML = `
+            <div class="context-item" data-action="sample-start">Set sample start</div>
+            <div class="context-item" data-action="sample-end">Set sample end</div>
+            <div class="context-item" data-action="sample-both">Set sample start & end</div>
+            <div class="context-item separator"></div>
+            <div class="context-item" data-action="loop-start">Set loop start</div>
+            <div class="context-item" data-action="loop-end">Set loop end</div>
+            <div class="context-item" data-action="loop-both">Set loop start & end</div>
+            <div class="context-item separator"></div>
+            <div class="context-item" data-action="cancel">Cancel</div>
+        `;
+        
+        document.body.appendChild(menu);
+        
+        // Handle menu clicks
+        menu.addEventListener('click', (e) => {
+            const action = e.target.dataset.action;
+            
+            if (action === 'sample-start') {
+                this.markerController.setMarker('start', selStart);
+                this.markerController.updatePadParams();
+            } else if (action === 'sample-end') {
+                this.markerController.setMarker('end', selEnd);
+                this.markerController.updatePadParams();
+            } else if (action === 'sample-both') {
+                this.markerController.setMarker('start', selStart);
+                this.markerController.setMarker('end', selEnd);
+                this.markerController.updatePadParams();
+            } else if (action === 'loop-start') {
+                this.markerController.setMarker('loopStart', selStart);
+                this.markerController.updatePadParams();
+            } else if (action === 'loop-end') {
+                this.markerController.setMarker('loopEnd', selEnd);
+                this.markerController.updatePadParams();
+            } else if (action === 'loop-both') {
+                this.markerController.setMarker('loopStart', selStart);
+                this.markerController.setMarker('loopEnd', selEnd);
+                this.markerController.updatePadParams();
+            }
+            
+            // Remove menu
+            menu.remove();
+            
+            // Re-render if markers were changed
+            if (action !== 'cancel') {
+                this.render();
+                window.BitboxerUtils.setStatus('Markers updated from selection', 'success');
+            }
+        });
+        
+        // Close menu on any other click
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        };
+        
+        // Delay to prevent immediate closure from the same click event
         setTimeout(() => document.addEventListener('click', closeMenu), 0);
     }
 
