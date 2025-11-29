@@ -653,11 +653,19 @@
                                 -- BPM</span>
                         </div>
 
-                        <div style="flex: 1; display: flex; gap: 10px; align-items: center;">
-                            <label style="color: var(--color-text-secondary); font-size: 0.85em;">Zoom:</label>
-                            <input type="range" class="slider" id="zoomSlider" min="1" max="10000" value="1"
-                                style="flex: 1;">
-                            <span id="zoomValue" style="color: var(--color-accent-blue); min-width: 40px;">1x</span>
+                        <!-- Unified Scroll-Zoom Bar -->
+                        <div style="margin-top: 10px; width: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <label style="color: var(--color-text-secondary); font-size: 0.85em;">View:</label>
+                                <span id="zoomValue" style="color: var(--color-accent-blue); font-size: 0.85em;">1.0x zoom</span>
+                            </div>
+                            <canvas id="scrollZoomCanvas" 
+                                    style="width: 100%; 
+                                           height: 30px; 
+                                           display: block; 
+                                           border-radius: 6px; 
+                                           cursor: default; 
+                                           background: #2a2420;"></canvas>
                         </div>
                     </div>
 
@@ -666,10 +674,10 @@
                         Drag markers to adjust positions. Mouse wheel to zoom.
                     </div>
 
-                    <div style="margin-top: 5px;">
+                    <!-- <div style="margin-top: 5px;">
                         <input type="range" class="slider" id="scrollBar" min="0" max="100" value="0"
                             style="width: 100%;">
-                    </div>
+                    </div> -->
                 </div>
 
 

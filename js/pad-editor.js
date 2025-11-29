@@ -82,6 +82,11 @@ async function openEditModal(pad) {
             window.BitboxerSampleEditor.renderer.resize();
             window.BitboxerSampleEditor.render();
         }
+        
+        // ALSO resize scrollZoomBar after modal is visible
+        if (window.BitboxerSampleEditor.scrollZoomBar) {
+            window.BitboxerSampleEditor.scrollZoomBar.resize();
+        }
     }, 50);
 
     // Show modal
@@ -981,65 +986,31 @@ async function initSampleEditor(padData) {
             }
         };
         
-        // Setup zoom controls (ONE-TIME)
-        const zoomSlider = document.getElementById('zoomSlider');
-        const zoomValue = document.getElementById('zoomValue');
-        if (zoomSlider && zoomValue) {
-            zoomSlider.oninput = () => {
-                const newZoom = parseFloat(zoomSlider.value);
-                const renderer = window.BitboxerSampleEditor.renderer;
-                
-                if (renderer && renderer.waveformData) {
-                    const totalSamples = renderer.waveformData.length;
-                    const oldZoom = renderer.zoom;
-                    const oldScrollSample = renderer.scrollSample;
-                    
-                    const oldVisibleSamples = Math.floor(totalSamples / oldZoom);
-                    const viewCenter = oldScrollSample + Math.floor(oldVisibleSamples / 2);
-                    
-                    renderer.zoom = newZoom;
-                    
-                    const newVisibleSamples = Math.floor(totalSamples / newZoom);
-                    const newScrollSample = viewCenter - Math.floor(newVisibleSamples / 2);
-                    const maxScrollSample = Math.max(0, totalSamples - newVisibleSamples);
-                    
-                    renderer.scrollSample = Math.max(0, Math.min(maxScrollSample, newScrollSample));
-                    
-                    zoomValue.textContent = newZoom.toFixed(1) + 'x';
-                    
-                    const scrollBar = document.getElementById('scrollBar');
-                    if (scrollBar && maxScrollSample > 0) {
-                        scrollBar.value = (renderer.scrollSample / maxScrollSample) * 100;
+        // Setup unified scroll-zoom bar (ONE-TIME)
+        if (!window.BitboxerSampleEditor.scrollZoomBar) {
+            window.BitboxerSampleEditor.scrollZoomBar = new ScrollZoomBar(
+                window.BitboxerSampleEditor.renderer,
+                () => {
+                    // Callback when zoom/scroll changes
+                    const zoomValue = document.getElementById('zoomValue');
+                    if (zoomValue) {
+                        const zoom = window.BitboxerSampleEditor.renderer.zoom;
+                        zoomValue.textContent = zoom.toFixed(1) + 'x zoom';
                     }
-                    
                     window.BitboxerSampleEditor.render();
                 }
-            };
-            
-            zoomSlider.value = 1;
-            zoomValue.textContent = '1x';
+            );
+
+            window.BitboxerSampleEditor.scrollZoomBar.init('scrollZoomCanvas');
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (window.BitboxerSampleEditor.scrollZoomBar) {
+                    window.BitboxerSampleEditor.scrollZoomBar.resize();
+                }
+            });
         }
-
-        // Setup scroll bar (ONE-TIME)
-        const scrollBar = document.getElementById('scrollBar');
-        if (scrollBar) {
-            scrollBar.oninput = () => {
-                const renderer = window.BitboxerSampleEditor.renderer;
-                if (!renderer || !renderer.waveformData) return;
-
-                const totalSamples = renderer.waveformData.length;
-                const visibleSamples = Math.floor(totalSamples / renderer.zoom);
-                const maxScrollSample = Math.max(0, totalSamples - visibleSamples);
-
-                renderer.scrollSample = Math.floor((scrollBar.value / 100) * maxScrollSample);
-                window.BitboxerSampleEditor.render();
-            };
-
-            scrollBar.min = 0;
-            scrollBar.max = 100;
-            scrollBar.value = 0;
-        }
-        
+                
         // Setup snap toggle (ONE-TIME)
         const snapCheckbox = document.getElementById('snapToZeroCheckbox');
         if (snapCheckbox) {
@@ -1096,7 +1067,7 @@ async function initSampleEditor(padData) {
         if (editorHints) {
             editorHints.textContent = 'Shift+Click: add slice | Right-click: delete | Auto-detects on sensitivity change';
         }
-    
+
         const updateSliceCount = () => {
             const count = window.BitboxerSampleEditor.markerController.sliceMarkers.length;
             const sliceCount = document.getElementById('sliceCount');
@@ -1105,27 +1076,27 @@ async function initSampleEditor(padData) {
             }
         };
         updateSliceCount();
-    
+
         // Algorithm selection
         const algorithmSelect = document.getElementById('onsetAlgorithmSelect');
         const sensitivitySlider = document.getElementById('onsetSensitivitySlider');
         const sensitivityValue = document.getElementById('onsetSensitivityValue');
         const minDistanceSlider = document.getElementById('minSliceDistanceSlider');
         const minDistanceValue = document.getElementById('minSliceDistanceValue');
-    
+
         // Store current settings
         let currentAlgorithm = 'flux';
         let currentSensitivity = 0.5;
         let currentMinDistance = 1000;
         let autoDetectTimer = null;
-    
+
         // Debounced auto-detect function
         const triggerAutoDetect = () => {
             if (autoDetectTimer) clearTimeout(autoDetectTimer);
-            
+
             autoDetectTimer = setTimeout(() => {
                 window.BitboxerUtils.setStatus('Auto-analyzing...', 'info');
-                
+
                 // Run in next tick to allow UI update
                 setTimeout(() => {
                     try {
@@ -1146,7 +1117,7 @@ async function initSampleEditor(padData) {
                 }, 10);
             }, AUTODETECT_DEBOUNCE_MS);
         };
-    
+
         if (algorithmSelect) {
             algorithmSelect.value = currentAlgorithm;
             algorithmSelect.onchange = () => {
@@ -1154,35 +1125,35 @@ async function initSampleEditor(padData) {
                 triggerAutoDetect();
             };
         }
-    
+
         if (sensitivitySlider && sensitivityValue) {
             sensitivitySlider.value = 50;
             sensitivityValue.textContent = '50%';
-            
+
             // Update display on input
             sensitivitySlider.oninput = () => {
                 currentSensitivity = parseInt(sensitivitySlider.value) / 100;
                 sensitivityValue.textContent = sensitivitySlider.value + '%';
             };
-            
+
             // Trigger auto-detect on release
             sensitivitySlider.onchange = () => {
                 triggerAutoDetect();
             };
         }
-    
+
         if (minDistanceSlider && minDistanceValue) {
             minDistanceSlider.value = 1000;
             const sampleRate = window.BitboxerSampleEditor.audioEngine.audioBuffer?.sampleRate || 44100;
             minDistanceValue.textContent = (1000 / sampleRate * 1000).toFixed(0) + ' ms';
-        
+
             minDistanceSlider.oninput = () => {
                 currentMinDistance = parseInt(minDistanceSlider.value);
                 const ms = (currentMinDistance / sampleRate * 1000).toFixed(0);
                 minDistanceValue.textContent = ms + ' ms';
             };
         }
-    
+
         // Clear button
         const clearSlicesBtn = document.getElementById('clearSlicesBtn');
         if (clearSlicesBtn) {

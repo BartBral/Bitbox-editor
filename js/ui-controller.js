@@ -97,6 +97,7 @@ function setupModalTabs(modalElement) {
                     if (window.BitboxerSampleEditor && window.BitboxerSampleEditor.renderer) {
                         window.BitboxerSampleEditor.renderer.resize();
                         window.BitboxerSampleEditor.render();
+                        window.BitboxerSampleEditor.scrollZoomBar.render();
                     }
                 });
             }

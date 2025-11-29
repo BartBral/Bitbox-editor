@@ -536,7 +536,9 @@ function generatePresetXML(data) {
 
         xml += `        <cell row="${index}" filename="${filename}" type="asset">\n`;
         xml += `            <params rootnote="${asset.params.rootnote}" keyrangebottom="${asset.params.keyrangebottom}" keyrangetop="${asset.params.keyrangetop}" velroot="${asset.params.velroot}" velrangebottom="${asset.params.velrangebottom}" velrangetop="${asset.params.velrangetop}" asssrcrow="${asset.params.asssrcrow}" asssrccol="${asset.params.asssrccol}"/>\n`;
-        });
+        xml += '        </cell>\n'; 
+
+    });
 
     // Layer 8 - Inputs
     for (let i = 0; i < 8; i++) {

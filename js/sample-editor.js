@@ -1128,6 +1128,271 @@ class ZoomController {
 }
 
 // ============================================
+// UNIFIED SCROLL-ZOOM BAR
+// ============================================
+class ScrollZoomBar {
+    constructor(renderer, onUpdate) {
+        this.renderer = renderer;
+        this.onUpdate = onUpdate; // Callback when zoom/scroll changes
+        this.canvas = null;
+        this.ctx = null;
+        this.width = 0;
+        this.height = 30;
+        
+        // Zoom/scroll state
+        this.minZoom = 1;
+        this.maxZoom = 10000;
+        
+        // Interaction state
+        this.dragging = null; // null | 'body' | 'left-edge' | 'right-edge'
+        this.dragStartX = 0;
+        this.dragStartZoom = 1;
+        this.dragStartScroll = 0;
+        
+        // Visual styling
+        this.colors = {
+            track: '#2a2420',
+            thumb: '#a35a2d',
+            thumbHover: '#ffa600',
+            border: '#4a4038'
+        };
+    }
+    
+    init(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        if (!this.canvas) {
+            console.error('ScrollZoomBar: Canvas not found:', canvasId);
+            return;
+        }
+        
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        this.setupEventListeners();
+        this.render();
+    }
+    
+    resize() {
+        const container = this.canvas.parentElement;
+        const dpr = window.devicePixelRatio || 1;
+        
+        this.width = container.offsetWidth;
+        
+        this.canvas.width = this.width * dpr;
+        this.canvas.height = this.height * dpr;
+        
+        this.canvas.style.width = this.width + 'px';
+        this.canvas.style.height = this.height + 'px';
+        
+        this.ctx.scale(dpr, dpr);
+        
+        this.render();
+    }
+    
+    /**
+     * Calculates thumb position and width based on current zoom/scroll
+     */
+    getThumbGeometry() {
+        if (!this.renderer.waveformData) {
+            return { x: 0, width: this.width };
+        }
+        
+        const totalSamples = this.renderer.waveformData.length;
+        const visibleSamples = Math.floor(totalSamples / this.renderer.zoom);
+        const maxScroll = Math.max(0, totalSamples - visibleSamples);
+        
+        // Thumb width represents visible portion
+        const thumbWidth = Math.max(20, (visibleSamples / totalSamples) * this.width);
+        
+        // Thumb position represents scroll position
+        const scrollRatio = maxScroll > 0 ? (this.renderer.scrollSample / maxScroll) : 0;
+        const thumbX = scrollRatio * (this.width - thumbWidth);
+        
+        return {
+            x: thumbX,
+            width: thumbWidth,
+            scrollRatio: scrollRatio,
+            visibleRatio: visibleSamples / totalSamples
+        };
+    }
+    
+    render() {
+        if (!this.ctx || this.width <= 0) return;
+        
+        const { ctx, width, height } = this;
+        
+        // Clear
+        ctx.fillStyle = this.colors.track;
+        ctx.fillRect(0, 0, width, height);
+        
+        // Draw outer border
+        ctx.strokeStyle = this.colors.border;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
+        
+        // Get thumb geometry
+        const thumb = this.getThumbGeometry();
+        
+        // Draw thumb
+        const isHovering = this.dragging !== null;
+        ctx.fillStyle = isHovering ? this.colors.thumbHover : this.colors.thumb;
+        ctx.fillRect(thumb.x, 4, thumb.width, height - 8);
+        
+        // Draw thumb border
+        ctx.strokeStyle = this.colors.border;
+        ctx.strokeRect(thumb.x + 0.5, 4.5, thumb.width - 1, height - 9);
+        
+        // Draw edge handles (visual indicators)
+        ctx.fillStyle = '#fff';
+        const handleWidth = 2;
+        const handleHeight = 12;
+        const handleY = (height - handleHeight) / 2;
+        
+        // Left handle
+        ctx.fillRect(thumb.x + 4, handleY, handleWidth, handleHeight);
+        
+        // Right handle
+        ctx.fillRect(thumb.x + thumb.width - 4 - handleWidth, handleY, handleWidth, handleHeight);
+        
+        // Draw center grip (3 vertical lines)
+        const centerX = thumb.x + thumb.width / 2;
+        for (let i = -1; i <= 1; i++) {
+            ctx.fillRect(centerX + i * 4 - 1, handleY, handleWidth, handleHeight);
+        }
+    }
+    
+    setupEventListeners() {
+        const canvas = this.canvas;
+        
+        canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+        canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+        canvas.addEventListener('mouseup', () => this.handleMouseUp());
+        canvas.addEventListener('mouseleave', () => this.handleMouseUp());
+        
+        // Cursor feedback
+        canvas.addEventListener('mousemove', (e) => {
+            if (this.dragging) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const thumb = this.getThumbGeometry();
+            
+            const edgeThreshold = 8;
+            const onLeftEdge = (x >= thumb.x && x <= thumb.x + edgeThreshold);
+            const onRightEdge = (x >= thumb.x + thumb.width - edgeThreshold && x <= thumb.x + thumb.width);
+            const onBody = (x > thumb.x + edgeThreshold && x < thumb.x + thumb.width - edgeThreshold);
+            
+            if (onLeftEdge || onRightEdge) {
+                canvas.style.cursor = 'ew-resize';
+            } else if (onBody) {
+                canvas.style.cursor = 'grab';
+            } else {
+                canvas.style.cursor = 'default';
+            }
+        });
+    }
+    
+    handleMouseDown(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const thumb = this.getThumbGeometry();
+        
+        const edgeThreshold = 8;
+        const onLeftEdge = (x >= thumb.x && x <= thumb.x + edgeThreshold);
+        const onRightEdge = (x >= thumb.x + thumb.width - edgeThreshold && x <= thumb.x + thumb.width);
+        const onBody = (x > thumb.x + edgeThreshold && x < thumb.x + thumb.width - edgeThreshold);
+        
+        if (onLeftEdge) {
+            this.dragging = 'left-edge';
+            this.dragStartX = x;
+            this.dragStartZoom = this.renderer.zoom;
+            this.dragStartScroll = this.renderer.scrollSample;
+            this.canvas.style.cursor = 'ew-resize';
+        } else if (onRightEdge) {
+            this.dragging = 'right-edge';
+            this.dragStartX = x;
+            this.dragStartZoom = this.renderer.zoom;
+            this.dragStartScroll = this.renderer.scrollSample;
+            this.canvas.style.cursor = 'ew-resize';
+        } else if (onBody) {
+            this.dragging = 'body';
+            this.dragStartX = x;
+            this.dragStartScroll = this.renderer.scrollSample;
+            this.canvas.style.cursor = 'grabbing';
+        }
+        
+        this.render();
+    }
+    
+    handleMouseMove(e) {
+        if (!this.dragging || !this.renderer.waveformData) return;
+        
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const deltaX = x - this.dragStartX;
+        
+        const totalSamples = this.renderer.waveformData.length;
+        
+        if (this.dragging === 'body') {
+            // Pan viewport
+            const visibleSamples = Math.floor(totalSamples / this.renderer.zoom);
+            const maxScroll = Math.max(0, totalSamples - visibleSamples);
+            const thumbRange = this.width - (visibleSamples / totalSamples) * this.width;
+            
+            if (thumbRange > 0) {
+                const scrollDelta = (deltaX / thumbRange) * maxScroll;
+                const newScroll = Math.max(0, Math.min(maxScroll, this.dragStartScroll + scrollDelta));
+                this.renderer.scrollSample = Math.floor(newScroll);
+            }
+        } else if (this.dragging === 'left-edge') {
+            // Zoom by dragging left edge (zoom in = drag right, zoom out = drag left)
+            const zoomSensitivity = 0.02;
+            const zoomFactor = Math.exp(deltaX * zoomSensitivity);
+            const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.dragStartZoom * zoomFactor));
+            
+            // Adjust scroll to keep right edge fixed
+            const oldVisibleSamples = Math.floor(totalSamples / this.dragStartZoom);
+            const newVisibleSamples = Math.floor(totalSamples / newZoom);
+            const rightEdge = this.dragStartScroll + oldVisibleSamples;
+            const newScroll = Math.max(0, rightEdge - newVisibleSamples);
+            
+            this.renderer.zoom = newZoom;
+            this.renderer.scrollSample = Math.floor(newScroll);
+        } else if (this.dragging === 'right-edge') {
+            // Zoom by dragging right edge (zoom in = drag left, zoom out = drag right)
+            const zoomSensitivity = 0.02;
+            const zoomFactor = Math.exp(-deltaX * zoomSensitivity);
+            const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.dragStartZoom * zoomFactor));
+            
+            // Keep left edge (scroll position) fixed
+            this.renderer.zoom = newZoom;
+            
+            // Clamp scroll
+            const visibleSamples = Math.floor(totalSamples / newZoom);
+            const maxScroll = Math.max(0, totalSamples - visibleSamples);
+            this.renderer.scrollSample = Math.max(0, Math.min(maxScroll, this.dragStartScroll));
+        }
+        
+        this.render();
+        if (this.onUpdate) this.onUpdate();
+    }
+    
+    handleMouseUp() {
+        if (this.dragging) {
+            this.dragging = null;
+            this.canvas.style.cursor = 'default';
+            this.render();
+        }
+    }
+    
+    /**
+     * External update (called when zoom/scroll changes from other sources)
+     */
+    update() {
+        this.render();
+    }
+}
+
+// ============================================
 // MAIN SAMPLE EDITOR
 // ============================================
 class SampleEditor {
@@ -1136,6 +1401,7 @@ class SampleEditor {
         this.audioEngine = new AudioEngine();
         this.markerController = null;
         this.zoomController = null;
+        this.scrollZoomBar = null;
         this.animationFrame = null;
         this.currentMode = '0';
         // this.granularAnimating = false;
@@ -1424,14 +1690,14 @@ class SampleEditor {
                     if (this.selectionStart > this.selectionEnd) {
                         [this.selectionStart, this.selectionEnd] = [this.selectionEnd, this.selectionStart];
                     }
-                    
+
                     // Apply snap to zero-crossing if enabled
                     if (this.markerController.snapToZeroCrossingEnabled && this.renderer.waveformData) {
                         const channelData = this.renderer.waveformData.channelData[0];
                         this.selectionStart = this.markerController.findZeroCrossing(this.selectionStart, channelData);
                         this.selectionEnd = this.markerController.findZeroCrossing(this.selectionEnd, channelData);
                     }
-                    
+
                     console.log(`Selection marker dragged: ${this.selectionStart} to ${this.selectionEnd}`);
                     this.draggingSelectionMarker = null;
                 } else {
@@ -1541,15 +1807,18 @@ class SampleEditor {
             }
 
             this.zoomController.handleWheel(e.deltaY, zoomPoint);
-
-            // Update slider
-            const zoomSlider = document.getElementById('zoomSlider');
-            const zoomValue = document.getElementById('zoomValue');
-            if (zoomSlider && zoomValue) {
-                zoomSlider.value = this.renderer.zoom;
-                zoomValue.textContent = this.renderer.zoom.toFixed(1) + 'x';
+        
+            // Update scroll-zoom bar
+            if (this.scrollZoomBar) {
+                this.scrollZoomBar.update();
             }
         
+            // Update zoom display
+            const zoomValue = document.getElementById('zoomValue');
+            if (zoomValue) {
+                zoomValue.textContent = this.renderer.zoom.toFixed(1) + 'x zoom';
+            }
+
             this.render();
         });
 
@@ -1765,6 +2034,11 @@ class SampleEditor {
 
         this.renderer.render();
         this.markerController.draw();
+
+        // Update scroll-zoom bar
+        if (this.scrollZoomBar) {
+            this.scrollZoomBar.render();
+        }
 
         // Draw mode-specific overlays
         const { currentEditingPad, presetData } = window.BitboxerData;
