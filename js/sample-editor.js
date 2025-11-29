@@ -1424,6 +1424,14 @@ class SampleEditor {
                     if (this.selectionStart > this.selectionEnd) {
                         [this.selectionStart, this.selectionEnd] = [this.selectionEnd, this.selectionStart];
                     }
+                    
+                    // Apply snap to zero-crossing if enabled
+                    if (this.markerController.snapToZeroCrossingEnabled && this.renderer.waveformData) {
+                        const channelData = this.renderer.waveformData.channelData[0];
+                        this.selectionStart = this.markerController.findZeroCrossing(this.selectionStart, channelData);
+                        this.selectionEnd = this.markerController.findZeroCrossing(this.selectionEnd, channelData);
+                    }
+                    
                     console.log(`Selection marker dragged: ${this.selectionStart} to ${this.selectionEnd}`);
                     this.draggingSelectionMarker = null;
                 } else {
@@ -1434,10 +1442,19 @@ class SampleEditor {
                 console.log('Stopped dragging');
             } else if (isSelecting) {
                 isSelecting = false;
+
                 // Ensure selection is in correct order
                 if (this.selectionStart > this.selectionEnd) {
                     [this.selectionStart, this.selectionEnd] = [this.selectionEnd, this.selectionStart];
                 }
+
+                // Apply snap to zero-crossing if enabled
+                if (this.markerController.snapToZeroCrossingEnabled && this.renderer.waveformData) {
+                    const channelData = this.renderer.waveformData.channelData[0];
+                    this.selectionStart = this.markerController.findZeroCrossing(this.selectionStart, channelData);
+                    this.selectionEnd = this.markerController.findZeroCrossing(this.selectionEnd, channelData);
+                }
+
                 console.log(`Selection finalized: ${this.selectionStart} to ${this.selectionEnd}`);
                 this.render();
             }
@@ -1608,7 +1625,21 @@ class SampleEditor {
         // Remove any existing context menu
         const existing = document.getElementById('selectionContextMenu');
         if (existing) existing.remove();
-        
+
+        // Apply snap-to-zero-crossing if enabled
+        const applySnap = (sample) => {
+            if (!this.markerController.snapToZeroCrossingEnabled) {
+                return sample;
+            }
+
+            const channelData = this.renderer.waveformData.channelData[0];
+            return this.markerController.findZeroCrossing(sample, channelData);
+        };
+
+        // Snap selection boundaries if toggle is enabled
+        const snappedStart = applySnap(selStart);
+        const snappedEnd = applySnap(selEnd);
+
         // Create context menu
         const menu = document.createElement('div');
         menu.id = 'selectionContextMenu';
@@ -1617,7 +1648,7 @@ class SampleEditor {
         menu.style.left = pageX + 'px';
         menu.style.top = pageY + 'px';
         menu.style.zIndex = '2001';
-        
+
         menu.innerHTML = `
             <div class="context-item" data-action="sample-start">Set sample start</div>
             <div class="context-item" data-action="sample-end">Set sample end</div>
@@ -1629,45 +1660,46 @@ class SampleEditor {
             <div class="context-item separator"></div>
             <div class="context-item" data-action="cancel">Cancel</div>
         `;
-        
+
         document.body.appendChild(menu);
-        
+
         // Handle menu clicks
         menu.addEventListener('click', (e) => {
             const action = e.target.dataset.action;
-            
+
             if (action === 'sample-start') {
-                this.markerController.setMarker('start', selStart);
+                this.markerController.setMarker('start', snappedStart);
                 this.markerController.updatePadParams();
             } else if (action === 'sample-end') {
-                this.markerController.setMarker('end', selEnd);
+                this.markerController.setMarker('end', snappedEnd);
                 this.markerController.updatePadParams();
             } else if (action === 'sample-both') {
-                this.markerController.setMarker('start', selStart);
-                this.markerController.setMarker('end', selEnd);
+                this.markerController.setMarker('start', snappedStart);
+                this.markerController.setMarker('end', snappedEnd);
                 this.markerController.updatePadParams();
             } else if (action === 'loop-start') {
-                this.markerController.setMarker('loopStart', selStart);
+                this.markerController.setMarker('loopStart', snappedStart);
                 this.markerController.updatePadParams();
             } else if (action === 'loop-end') {
-                this.markerController.setMarker('loopEnd', selEnd);
+                this.markerController.setMarker('loopEnd', snappedEnd);
                 this.markerController.updatePadParams();
             } else if (action === 'loop-both') {
-                this.markerController.setMarker('loopStart', selStart);
-                this.markerController.setMarker('loopEnd', selEnd);
+                this.markerController.setMarker('loopStart', snappedStart);
+                this.markerController.setMarker('loopEnd', snappedEnd);
                 this.markerController.updatePadParams();
             }
-            
+
             // Remove menu
             menu.remove();
-            
+
             // Re-render if markers were changed
             if (action !== 'cancel') {
                 this.render();
-                window.BitboxerUtils.setStatus('Markers updated from selection', 'success');
+                const snapStatus = this.markerController.snapToZeroCrossingEnabled ? ' (snapped)' : '';
+                window.BitboxerUtils.setStatus(`Markers updated from selection${snapStatus}`, 'success');
             }
         });
-        
+
         // Close menu on any other click
         const closeMenu = (e) => {
             if (!menu.contains(e.target)) {
@@ -1675,7 +1707,7 @@ class SampleEditor {
                 document.removeEventListener('click', closeMenu);
             }
         };
-        
+
         // Delay to prevent immediate closure from the same click event
         setTimeout(() => document.addEventListener('click', closeMenu), 0);
     }
