@@ -355,8 +355,13 @@ async function savePreset() {
             for (let col = 0; col < 4; col++) {
                 const pad = presetData.pads[row][col];
                 if (pad.params.multisammode === '1' && pad.filename) {
-                    // Extract folder name from filename like ".\Trumpet"
-                    const folderName = pad.filename.replace('.\\', '').replace('./', '');
+                    // Extract ONLY the immediate folder name, not full path
+                    // Input: ".\Presets\001-Ac Piano 1" or "\Presets\001-Ac Piano 1"
+                    // Output: "001-Ac Piano 1"
+                    let path = pad.filename.replace(/^\.?[\\\/]/, ''); // Remove leading .\ or \
+                    const parts = path.split(/[\\\/]/);
+                    const folderName = parts[parts.length - 1]; // Take last part only
+
                     if (folderName) {
                         multisamFolders.add(folderName);
                     }
@@ -392,8 +397,17 @@ async function savePreset() {
             console.log(`  Adding WAV files to: ${projectName}/${folder}/`);
 
             // Find all asset cells for this folder
+            // Asset filename: ".\Presets\001-Ac Piano 1\Jv880_000.wav"
+            // We need to match against the IMMEDIATE parent folder
             const folderAssets = assetCells.filter(asset => {
-                const assetFolder = asset.filename.split('\\')[1];
+                // Remove leading prefix and split by slashes
+                let path = asset.filename.replace(/^\.?[\\\/]/, '');
+                const parts = path.split(/[\\\/]/);
+
+                // Get parent folder (second-to-last part)
+                // ["Presets", "001-Ac Piano 1", "Jv880_000.wav"] → "001-Ac Piano 1"
+                const assetFolder = parts.length > 1 ? parts[parts.length - 2] : null;
+
                 return assetFolder === folder;
             });
 
@@ -528,16 +542,34 @@ function generatePresetXML(data) {
     // Asset cells - preserve multi-sample references
     const { assetCells } = window.BitboxerData;
     assetCells.forEach((asset, index) => {
-        // CRITICAL FIX: Ensure .\ prefix
+        // Clean asset filename - remove parent paths, keep only immediate folder + filename
+        // Input: ".\\Presets\001-Ac Piano 1\Jv880_000.wav"
+        // Output: ".\\001-Ac Piano 1\Jv880_000.wav"
         let filename = asset.filename;
-        if (filename && !filename.startsWith('.\\') && !filename.startsWith('./')) {
-            filename = `.\\${filename}`;
+        
+        if (filename) {
+            // Remove leading prefix
+            let path = filename.replace(/^\.?[\\\/]/, '');
+            const parts = path.split(/[\\\/]/);
+            
+            // Keep only last TWO parts: folder + filename
+            // ["Presets", "001-Ac Piano 1", "Jv880_000.wav"] → ["001-Ac Piano 1", "Jv880_000.wav"]
+            if (parts.length > 2) {
+                const folder = parts[parts.length - 2];
+                const file = parts[parts.length - 1];
+                filename = `.\\${folder}\\${file}`;
+            } else if (parts.length === 2) {
+                // Already correct format: folder\file.wav
+                filename = `.\\${parts[0]}\\${parts[1]}`;
+            } else {
+                // Single file, no folder
+                filename = `.\\${parts[0]}`;
+            }
         }
-
+    
         xml += `        <cell row="${index}" filename="${filename}" type="asset">\n`;
         xml += `            <params rootnote="${asset.params.rootnote}" keyrangebottom="${asset.params.keyrangebottom}" keyrangetop="${asset.params.keyrangetop}" velroot="${asset.params.velroot}" velrangebottom="${asset.params.velrangebottom}" velrangetop="${asset.params.velrangetop}" asssrcrow="${asset.params.asssrcrow}" asssrccol="${asset.params.asssrccol}"/>\n`;
-        xml += '        </cell>\n'; 
-
+        xml += '        </cell>\n';
     });
 
     // Layer 8 - Inputs
@@ -580,14 +612,23 @@ function generatePadCellXML(row, col, pad) {
     const isLoaded = pad.filename && pad.filename !== '';
     const cellType = isLoaded ? 'sample' : 'samtempl';
     
-    // CRITICAL FIX: Ensure .\ prefix for local files
+    // Clean up filename for multisamples
     let filename = pad.filename;
-    if (filename && !filename.startsWith('.\\') && !filename.startsWith('./')) {
+    if (filename && pad.params.multisammode === '1') {
+        // For multisamples, extract only the immediate folder name
+        // Input: ".\Presets\001-Ac Piano 1" or "\Presets\001-Ac Piano 1"
+        // Output: ".\001-Ac Piano 1"
+        let path = filename.replace(/^\.?[\\\/]/, ''); // Remove leading .\ or \
+        const parts = path.split(/[\\\/]/);
+        const folderName = parts[parts.length - 1]; // Take last part only
+        filename = `.\\${folderName}`;
+    } else if (filename && !filename.startsWith('.\\') && !filename.startsWith('./')) {
+        // For regular samples, just ensure .\ prefix
         filename = `.\\${filename}`;
     }
     
     let xml = `        <cell row="${row}" column="${col}" layer="0" filename="${filename}" type="${cellType}">\n`;
-
+    
     // CRITICAL FIX: Add <params> tag with ALL parameters!
     xml += '            <params';
     for (let [key, value] of Object.entries(pad.params)) {
