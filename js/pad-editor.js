@@ -82,12 +82,23 @@ async function openEditModal(pad) {
             window.BitboxerSampleEditor.renderer.resize();
             window.BitboxerSampleEditor.render();
         }
-        
+
         // ALSO resize scrollZoomBar after modal is visible
         if (window.BitboxerSampleEditor.scrollZoomBar) {
             window.BitboxerSampleEditor.scrollZoomBar.resize();
         }
     }, 50);
+
+    // SECOND resize for scrollZoomBar - wait for tab content to be fully rendered
+    setTimeout(() => {
+        if (window.BitboxerSampleEditor.scrollZoomBar) {
+            const canvas = document.getElementById('scrollZoomCanvas');
+            if (canvas && canvas.parentElement) {
+                console.log('Second resize - container width:', canvas.parentElement.offsetWidth);
+                window.BitboxerSampleEditor.scrollZoomBar.resize();
+            }
+        }
+    }, 150);
 
     // Show modal
     window.BitboxerUI.openModal('editModal');

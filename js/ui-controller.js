@@ -76,7 +76,7 @@ function setupModalTabs(modalElement) {
             // Remove active from all
             tabBtns.forEach(b => b.classList.remove('active'));
             tabContents.forEach(c => c.classList.remove('active'));
-
+        
             // Add active to clicked
             btn.classList.add('active');
             const tabId = 'tab-' + btn.dataset.tab;
@@ -84,12 +84,12 @@ function setupModalTabs(modalElement) {
             if (targetTab) {
                 targetTab.classList.add('active');
             }
-
+        
             // Special handling for envelope tab
             if (btn.dataset.tab === 'env') {
                 drawEnvelope();
             }
-
+        
             // FIX: Refresh sample editor canvas when switching to POS tab
             if (btn.dataset.tab === 'pos') {
                 // Use requestAnimationFrame to ensure DOM has updated with new visibility
@@ -97,7 +97,12 @@ function setupModalTabs(modalElement) {
                     if (window.BitboxerSampleEditor && window.BitboxerSampleEditor.renderer) {
                         window.BitboxerSampleEditor.renderer.resize();
                         window.BitboxerSampleEditor.render();
-                        window.BitboxerSampleEditor.scrollZoomBar.render();
+                    }
+                    
+                    // ALSO resize scrollZoomBar
+                    if (window.BitboxerSampleEditor.scrollZoomBar) {
+                        window.BitboxerSampleEditor.scrollZoomBar.resize();
+                        console.log('ScrollZoomBar resized on tab switch');
                     }
                 });
             }
