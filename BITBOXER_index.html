@@ -575,6 +575,21 @@
                     <canvas id="waveformCanvas"
                         style="width: 100%; height: 200px; background: #1a1614; border-radius: 6px; cursor: crosshair;"></canvas>
 
+                        <!-- Unified Scroll-Zoom Bar -->
+                        <div style="margin-top: 0px; width: 100%;">
+                            <!-- <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <label style="color: var(--color-text-secondary); font-size: 0.85em;">View:</label>
+                                <span id="zoomValue" style="color: var(--color-accent-blue); font-size: 0.85em;">1.0x zoom</span>
+                            </div> -->
+                            <canvas id="scrollZoomCanvas" 
+                                    style="width: 100%; 
+                                           height: 30px; 
+                                           display: block; 
+                                           border-radius: 6px; 
+                                           cursor: default; 
+                                           background: #2a2420;"></canvas>
+                        </div>
+
                     <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap;">
                         <button class="btn" id="playBtn">▶ Play</button>
                         <button class="btn" id="stopBtn">⏹ Stop</button>
@@ -651,27 +666,7 @@
                             <button class="btn" id="detectBeatsBtn">🔍 Detect Beats</button>
                             <span style="color: var(--color-accent-blue); font-size: 0.85em;" id="beatInfo">-- beats @
                                 -- BPM</span>
-                        </div>
-
-                        <!-- Unified Scroll-Zoom Bar -->
-                        <div style="margin-top: 10px; width: 100%;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                                <label style="color: var(--color-text-secondary); font-size: 0.85em;">View:</label>
-                                <span id="zoomValue" style="color: var(--color-accent-blue); font-size: 0.85em;">1.0x zoom</span>
-                            </div>
-                            <canvas id="scrollZoomCanvas" 
-                                    style="width: 100%; 
-                                           height: 30px; 
-                                           display: block; 
-                                           border-radius: 6px; 
-                                           cursor: default; 
-                                           background: #2a2420;"></canvas>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 5px; color: var(--color-text-secondary); font-size: 0.8em;"
-                        id="editorHints">
-                        Drag markers to adjust positions. Mouse wheel to zoom.
+                        </div>                        
                     </div>
 
                     <!-- <div style="margin-top: 5px;">
@@ -679,7 +674,6 @@
                             style="width: 100%;">
                     </div> -->
                 </div>
-
 
                 <div class="param-section">
                     <h3>Position & Loop</h3>

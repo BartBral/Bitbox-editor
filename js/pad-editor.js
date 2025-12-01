@@ -37,10 +37,6 @@ async function openEditModal(pad) {
     
     // Update modal icon
     updateModalIcon(padData);
-    
-    // if (modalIcon) {
-    //     modalIcon.innerHTML = icons[mode] || icons['0'];
-    // }
 
     // Update modal title
     document.getElementById('modalTitle').textContent =
@@ -48,9 +44,6 @@ async function openEditModal(pad) {
 
     // Load parameters to UI
     loadParamsToModal(padData);
-    
-    // Update slider max values based on sample length
-    updateSliderMaxValues(padData);
 
     // Force cellmode dropdown update for multisamples
     const cellmodeSelect = document.getElementById('cellmode');
@@ -953,9 +946,12 @@ async function initSampleEditor(padData) {
     }
 
     // Check if we need full initialization
-    const currentPadId = `${padData.row}-${padData.col}`;
+    const { currentEditingPad } = window.BitboxerData;
+    const row = parseInt(currentEditingPad.dataset.row);
+    const col = parseInt(currentEditingPad.dataset.col);
+    const currentPadId = `${row}-${col}`;
     const needsInitialization = (window._lastInitializedPad !== currentPadId);
-    
+
     if (needsInitialization) {
         console.log('Initializing sample editor for pad:', currentPadId);
         window._lastInitializedPad = currentPadId;

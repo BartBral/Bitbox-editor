@@ -389,10 +389,10 @@ class MarkerController {
         this.renderer = renderer;
         this.audioEngine = audioEngine;
         this.markers = {
-            start: { sample: 0, color: '#ff0000', label: 'START', snapZeroCross: true },
-            end: { sample: 0, color: '#ff0000', label: 'END', snapZeroCross: true },
-            loopStart: { sample: 0, color: '#4a9eff', label: 'LOOP START', snapZeroCross: true },
-            loopEnd: { sample: 0, color: '#4a9eff', label: 'LOOP END', snapZeroCross: true }
+            start: { sample: 0, color: '#ff0000', label: ' START', snapZeroCross: true },
+            end: { sample: 0, color: '#ff0000', label: ' END', snapZeroCross: true },
+            loopStart: { sample: 0, color: '#4a9eff', label: ' LOOP START', snapZeroCross: true },
+            loopEnd: { sample: 0, color: '#4a9eff', label: ' LOOP END', snapZeroCross: true }
         };
         this.dragging = null;
         this.sliceMarkers = []; // For slicer mode
@@ -424,12 +424,12 @@ class MarkerController {
             : sample;
         
         // Don't add if too close to existing
-        const minDistance = 100;
-        const tooClose = this.sliceMarkers.some(s => Math.abs(s - finalSample) < minDistance);
-        if (tooClose) {
-            console.log('Slice too close to existing marker');
-            return false;
-        }
+             // const minDistance = 100;
+             // const tooClose = this.sliceMarkers.some(s => Math.abs(s - finalSample) < minDistance);
+             // if (tooClose) {
+             //     console.log('Slice too close to existing marker');
+             //     return false;
+             // }
 
         this.sliceMarkers.push(finalSample);
         this.sliceMarkers.sort((a, b) => a - b);
@@ -471,58 +471,6 @@ class MarkerController {
         const channelData = this.renderer.waveformData.channelData[0];
         return this.findZeroCrossing(sample, channelData);
     }
-
-    //     const { ctx, width, height } = this.renderer;
-
-    //     // FIX: Don't draw if canvas width is invalid
-    //     if (!width || width <= 0) {
-    //         console.warn('Skipping marker draw - invalid canvas width:', width);
-    //         return;
-    //     }
-
-    //     // Markers draw in SCREEN coordinates (already DPR-scaled by resize())
-    //     Object.entries(this.markers).forEach(([name, marker]) => {
-    //         const x = this.renderer.sampleToX(marker.sample);
-
-    //         if (x < 0 || x > width) return;
-
-    //         // Draw vertical line
-    //         ctx.strokeStyle = marker.color;
-    //         ctx.lineWidth = 2;
-    //         ctx.beginPath();
-    //         ctx.moveTo(x, 0);
-    //         ctx.lineTo(x, height);
-    //         ctx.stroke();
-
-    //         // Draw label background for readability
-    //         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    //         ctx.fillRect(x + 3, 5, 80, 12);
-
-    //         // Draw label
-    //         ctx.fillStyle = marker.color;
-    //         ctx.font = '10px monospace';
-    //         ctx.fillText(marker.label, x + 5, 15);
-
-    //         // Draw draggable handle
-    //         ctx.fillStyle = marker.color;
-    //         ctx.fillRect(x - 5, 0, 10, 20);
-    //     });
-
-    //     // Draw slice markers
-    //     this.sliceMarkers.forEach(sample => {
-    //         const x = this.renderer.sampleToX(sample);
-    //         if (x < 0 || x > width) return;
-
-    //         ctx.strokeStyle = '#5eff5e';
-    //         ctx.lineWidth = 1;
-    //         ctx.setLineDash([5, 5]);
-    //         ctx.beginPath();
-    //         ctx.moveTo(x, 0);
-    //         ctx.lineTo(x, height);
-    //         ctx.stroke();
-    //         ctx.setLineDash([]);
-    //     });
-    // }
 
     // Temporary Debug Code
     draw() {
