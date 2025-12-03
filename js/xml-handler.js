@@ -319,6 +319,137 @@ async function findWAVFileForAsset(wavFileName) {
     return null;
 }
 
+/**
+ * Writes loop points to WAV smpl chunk
+ * Creates new WAV buffer with modified metadata
+ */
+function writeWAVMetadata(originalBuffer, metadata) {
+    const view = new DataView(originalBuffer);
+    
+    // Helper functions
+    const readUint32LE = (offset) => view.getUint32(offset, true);
+    const readChunkID = (offset) => String.fromCharCode(
+        view.getUint8(offset),
+        view.getUint8(offset + 1),
+        view.getUint8(offset + 2),
+        view.getUint8(offset + 3)
+    );
+    
+    // Verify RIFF/WAVE
+    if (readChunkID(0) !== 'RIFF' || readChunkID(8) !== 'WAVE') {
+        throw new Error('Not a valid WAV file');
+    }
+    
+    // Collect all chunks
+    const chunks = [];
+    let offset = 12;
+    let hasSmpl = false;
+    
+    while (offset < originalBuffer.byteLength - 8) {
+        const chunkID = readChunkID(offset);
+        const chunkSize = readUint32LE(offset + 4);
+        
+        if (chunkID === 'smpl') {
+            hasSmpl = true;
+            // Skip old smpl chunk (will be replaced)
+        } else {
+            // Keep other chunks
+            chunks.push({
+                id: chunkID,
+                offset: offset,
+                size: chunkSize
+            });
+        }
+        
+        offset += 8 + chunkSize;
+        if (chunkSize % 2 !== 0) offset++; // Padding
+    }
+    
+    // Calculate new smpl chunk size
+    const smplChunkSize = 60; // Standard size with 1 loop
+    
+    // Calculate new file size
+    let newSize = 12; // RIFF header
+    chunks.forEach(chunk => {
+        newSize += 8 + chunk.size;
+        if (chunk.size % 2 !== 0) newSize++; // Padding
+    });
+    newSize += 8 + smplChunkSize; // New smpl chunk
+    
+    // Create new buffer
+    const newBuffer = new ArrayBuffer(newSize);
+    const newView = new DataView(newBuffer);
+    
+    // Write helpers
+    const writeUint32LE = (offset, value) => newView.setUint32(offset, value, true);
+    const writeChunkID = (offset, id) => {
+        for (let i = 0; i < 4; i++) {
+            newView.setUint8(offset + i, id.charCodeAt(i));
+        }
+    };
+    
+    // Write RIFF header
+    writeChunkID(0, 'RIFF');
+    writeUint32LE(4, newSize - 8);
+    writeChunkID(8, 'WAVE');
+    
+    let writeOffset = 12;
+    
+    // Copy existing chunks
+    chunks.forEach(chunk => {
+        const chunkData = new Uint8Array(originalBuffer, chunk.offset, 8 + chunk.size);
+        new Uint8Array(newBuffer, writeOffset, chunkData.length).set(chunkData);
+        writeOffset += chunkData.length;
+        if (chunk.size % 2 !== 0) writeOffset++; // Padding
+    });
+    
+    // Write new smpl chunk
+    writeChunkID(writeOffset, 'smpl');
+    writeUint32LE(writeOffset + 4, smplChunkSize);
+    
+    const dataOffset = writeOffset + 8;
+    
+    // Manufacturer (0)
+    writeUint32LE(dataOffset, 0);
+    // Product (0)
+    writeUint32LE(dataOffset + 4, 0);
+    // Sample Period (calculate from sample rate)
+    const samplePeriod = Math.floor(1000000000 / (metadata.sampleRate || 44100));
+    writeUint32LE(dataOffset + 8, samplePeriod);
+    // MIDI Unity Note (root key)
+    writeUint32LE(dataOffset + 12, metadata.rootKey || 60);
+    // MIDI Pitch Fraction (0)
+    writeUint32LE(dataOffset + 16, 0);
+    // SMPTE Format (0)
+    writeUint32LE(dataOffset + 20, 0);
+    // SMPTE Offset (0)
+    writeUint32LE(dataOffset + 24, 0);
+    // Number of Sample Loops
+    const numLoops = metadata.hasLoop ? 1 : 0;
+    writeUint32LE(dataOffset + 28, numLoops);
+    // Sampler Data (0)
+    writeUint32LE(dataOffset + 32, 0);
+    
+    if (numLoops > 0) {
+        const loopOffset = dataOffset + 36;
+        
+        // Loop: Cue Point ID (0)
+        writeUint32LE(loopOffset, 0);
+        // Loop: Type (0 = forward)
+        writeUint32LE(loopOffset + 4, 0);
+        // Loop: Start
+        writeUint32LE(loopOffset + 8, metadata.loopStart || 0);
+        // Loop: End
+        writeUint32LE(loopOffset + 12, metadata.loopEnd || 0);
+        // Loop: Fraction (0)
+        writeUint32LE(loopOffset + 16, 0);
+        // Loop: Play Count (0 = infinite)
+        writeUint32LE(loopOffset + 20, 0);
+    }
+    
+    return newBuffer;
+}
+
 
 // ============================================
 // XML SAVING
@@ -423,13 +554,28 @@ async function savePreset() {
                 const wavFile = await findWAVFileForAsset(wavFileName);
 
                 if (wavFile) {
-                    // Read the WAV file as ArrayBuffer
-                    const wavData = await wavFile.arrayBuffer();
+                    let wavData = await wavFile.arrayBuffer();
+                                
+                    // Check if this asset has modified metadata
+                    if (asset.wavMetadata && (
+                        asset.wavMetadata.loopStart !== 0 || 
+                        asset.wavMetadata.loopEnd !== 0 ||
+                        asset.wavMetadata.hasLoop
+                    )) {
+                        try {
+                            // Write updated metadata
+                            wavData = writeWAVMetadata(wavData, asset.wavMetadata);
+                            console.log(`    ✓ Added with modified metadata: ${wavFileName}`);
+                        } catch (error) {
+                            console.error(`    ✗ Failed to write metadata for ${wavFileName}:`, error);
+                            // Fall back to original
+                        }
+                    } else {
+                        console.log(`    ✓ Added: ${wavFileName}`);
+                    }
+                    
                     const wavBytes = new Uint8Array(wavData);
-
-                    // Add to ZIP with correct path
                     files[`${projectName}/${folder}/${wavFileName}`] = wavBytes;
-                    console.log(`    ✓ Added: ${wavFileName}`);
                 } else {
                     console.warn(`    ✗ Missing: ${wavFileName}`);
                     missingFiles.push(wavFileName);
@@ -551,7 +697,7 @@ function generatePresetXML(data) {
             // Remove leading prefix
             let path = filename.replace(/^\.?[\\\/]/, '');
             const parts = path.split(/[\\\/]/);
-            
+
             // Keep only last TWO parts: folder + filename
             // ["Presets", "001-Ac Piano 1", "Jv880_000.wav"] → ["001-Ac Piano 1", "Jv880_000.wav"]
             if (parts.length > 2) {
@@ -566,7 +712,7 @@ function generatePresetXML(data) {
                 filename = `.\\${parts[0]}`;
             }
         }
-    
+
         xml += `        <cell row="${index}" filename="${filename}" type="asset">\n`;
         xml += `            <params rootnote="${asset.params.rootnote}" keyrangebottom="${asset.params.keyrangebottom}" keyrangetop="${asset.params.keyrangetop}" velroot="${asset.params.velroot}" velrangebottom="${asset.params.velrangebottom}" velrangetop="${asset.params.velrangetop}" asssrcrow="${asset.params.asssrcrow}" asssrccol="${asset.params.asssrccol}"/>\n`;
         xml += '        </cell>\n';
@@ -826,11 +972,21 @@ async function exportSinglePadAsZip(padNum) {
         for (const wavName of wavFilesNeeded) {
             const wavFile = await findWAVFileForAsset(wavName);
             if (wavFile) {
-                const wavData = await wavFile.arrayBuffer();
-                filesForZip[wavName] = new Uint8Array(wavData);
-                foundWavs++;
-                console.log(`✓ Added WAV: ${wavName}`);
+            let wavData = await wavFile.arrayBuffer();
+
+            // Check if this WAV has modified metadata
+            const asset = assetCells.find(a => a.filename.endsWith(wavName));
+            if (asset && asset.wavMetadata) {
+                // Write updated metadata to WAV
+                wavData = WAVMetadataHandler.writeWAV(wavData, asset.wavMetadata);
+                console.log(`✓ Added WAV with metadata: ${wavName}`);
             } else {
+                console.log(`✓ Added WAV: ${wavName}`);
+            }
+
+            filesForZip[wavName] = new Uint8Array(wavData);
+            foundWavs++;
+        } else {
                 missingWavs++;
                 console.warn(`✗ Missing WAV: ${wavName}`);
                 filesForZip[`${wavName}.missing.txt`] = new TextEncoder().encode(

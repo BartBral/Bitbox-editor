@@ -575,20 +575,19 @@
                     <canvas id="waveformCanvas"
                         style="width: 100%; height: 200px; background: #1a1614; border-radius: 6px; cursor: crosshair;"></canvas>
 
-                        <!-- Unified Scroll-Zoom Bar -->
-                        <div style="margin-top: 0px; width: 100%;">
-                            <!-- <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <!-- Unified Scroll-Zoom Bar -->
+                    <div style="margin-top: 0px; width: 100%;">
+                        <!-- <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                                 <label style="color: var(--color-text-secondary); font-size: 0.85em;">View:</label>
                                 <span id="zoomValue" style="color: var(--color-accent-blue); font-size: 0.85em;">1.0x zoom</span>
                             </div> -->
-                            <canvas id="scrollZoomCanvas" 
-                                    style="width: 100%; 
+                        <canvas id="scrollZoomCanvas" style="width: 100%; 
                                            height: 30px; 
                                            display: block; 
                                            border-radius: 6px; 
                                            cursor: default; 
                                            background: #2a2420;"></canvas>
-                        </div>
+                    </div>
 
                     <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap;">
                         <button class="btn" id="playBtn">▶ Play</button>
@@ -666,7 +665,7 @@
                             <button class="btn" id="detectBeatsBtn">🔍 Detect Beats</button>
                             <span style="color: var(--color-accent-blue); font-size: 0.85em;" id="beatInfo">-- beats @
                                 -- BPM</span>
-                        </div>                        
+                        </div>
                     </div>
 
                     <!-- <div style="margin-top: 5px;">
@@ -1293,16 +1292,114 @@
                 </div>
             </div>
 
-            <!-- MULTISAMPLE TAB -->
+            <!-- ============================================
+                 MULTISAMPLE TAB 
+                 ============================================ -->
             <div class="tab-content" id="tab-multi">
                 <div class="param-section">
-                    <h3>Multisample Layers</h3>
-                    <div id="multisampleList" class="multisample-list">
-                        <!-- Populated by JS -->
+                    <h3>Sample Editor - <span id="multiSampleName">Select a key</span></h3>
+                    <canvas id="multiWaveformCanvas"
+                        style="width: 100%; height: 200px; background: #1a1614; border-radius: 6px; cursor: crosshair; display: block;"></canvas>
+
+                    <!-- Scroll-Zoom Bar -->
+                    <canvas id="multiScrollZoomCanvas" style="width: 100%; 
+               height: 30px; 
+               display: block; 
+               border-radius: 6px; 
+               cursor: default; 
+               background: #2a2420;
+               margin-top: 5px;"></canvas>
+
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn" id="multiPlayBtn">▶ Play</button>
+                        <button class="btn" id="multiStopBtn">■ Stop</button>
                     </div>
                 </div>
-            </div>
 
+                <div class="param-section" id="multiEditPanel">
+                    <h3>Key Mapping Parameters</h3>
+                    <div class="param-grid">
+                        <!-- Root Key -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Root Key</label>
+                            </div>
+                            <select class="select" id="multiRootNote">
+                                <!-- Options 0-127 populated by JS -->
+                            </select>
+                        </div>
+
+                        <!-- Key Range -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Key Range</label>
+                            </div>
+                            <div style="display: flex; gap: 5px;">
+                                <select class="select" id="multiKeyLo" style="flex: 1;">
+                                    <!-- Options 0-127 -->
+                                </select>
+                                <span style="color: var(--color-text-secondary); line-height: 1.8;">to</span>
+                                <select class="select" id="multiKeyHi" style="flex: 1;">
+                                    <!-- Options 0-127 -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Velocity Range -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Velocity Range</label>
+                            </div>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="number" class="select" id="multiVelLo" min="0" max="127"
+                                    style="flex: 1; padding: 4px;">
+                                <span style="color: var(--color-text-secondary); line-height: 1.8;">to</span>
+                                <input type="number" class="select" id="multiVelHi" min="0" max="127"
+                                    style="flex: 1; padding: 4px;">
+                            </div>
+                        </div>
+
+                        <!-- Loop Points -->
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Loop Start</label>
+                                <span class="param-value" id="multiLoopStart-val">0</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="multiLoopStart" min="0" max="4294967295"
+                                    value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Loop End</label>
+                                <span class="param-value" id="multiLoopEnd-val">0</span>
+                            </div>
+                            <div class="param-control">
+                                <input type="range" class="slider" id="multiLoopEnd" min="0" max="4294967295" value="0">
+                            </div>
+                        </div>
+
+                        <div class="param">
+                            <div class="label-value-container">
+                                <label class="param-label">Loop Enabled</label>
+                            </div>
+                            <select class="select" id="multiLoopEnabled">
+                                <option value="0">Off</option>
+                                <option value="1">On</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="param-section">
+                    <h3>Keyboard Mapping</h3>
+                    <canvas id="keyboardCanvas"
+                        style="width: 100%; height: 240px; background: #1a1614; border-radius: 6px; display: block;"></canvas>
+                    <canvas id="keyboardScrollCanvas" style="width: 100%; height: 30px; background: #2a2420; border-radius: 6px; margin-top: 5px; display: block; cursor: grab;"></canvas>
+                </div>
+            </div>
             <!-- Status Bar + Close Button -->
             <div style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
                 <div class="status-bar" id="editModalStatusBar" style="flex: 1; margin: 0;"></div>
@@ -1888,6 +1985,9 @@
 
     <!-- Onset Detection Module -->
     <script src="js/onset-detector.js"></script>
+
+    <!-- Keyboard Visualizer -->
+    <script src="js/keyboard-visualizer.js"></script>
 
     <!-- Sample Editor -->
     <script src="js/sample-editor.js"></script>

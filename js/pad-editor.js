@@ -27,76 +27,36 @@ async function openEditModal(pad) {
 
     if (!padData) return;
 
-    // Set current editing pad
     window.BitboxerData.currentEditingPad = pad;
 
-    // Update modal icon
-    const modalIcon = document.getElementById('modalIcon');
-    const isMulti = padData.params.multisammode === '1';
-    const mode = isMulti ? '0-multi' : (padData.params.cellmode || '0');
+    // Clear editors
+    if (window.BitboxerSampleEditor) {
+        window.BitboxerSampleEditor.clearAudioData();
+    }
     
-    // Update modal icon
-    updateModalIcon(padData);
+    if (window._multiSampleEditor) {
+        window._multiSampleEditor.clearAudioData();
+    }
+    
+    // Clear multisample visualizer
+    window._multiKeyboardViz = null;
+    
+    // Hide multisample UI
+    const editPanel = document.getElementById('multiEditPanel');
+    if (editPanel) editPanel.style.display = 'none';
 
-    // Update modal title
+    updateModalIcon(padData);
     document.getElementById('modalTitle').textContent =
         `Pad ${pad.dataset.padnum} - ${padData.filename || 'Empty'}`;
 
-    // Load parameters to UI
     loadParamsToModal(padData);
-
-    // Force cellmode dropdown update for multisamples
-    const cellmodeSelect = document.getElementById('cellmode');
-    if (cellmodeSelect && padData.params.multisammode === '1') {
-        cellmodeSelect.value = '0-multi';
-    }
-
-    // Render modulation slots
     renderModSlots(padData);
-    
-    // Initialize sample editor
-    await initSampleEditor(padData);
-
-    // Render multisample list
-    renderMultisampleList();
-
-    // NEW: Ensure slider max values are updated after modal opens
     updateSliderMaxValues(padData);
-
-    // Initialize sample editor
     await initSampleEditor(padData);
 
-    // Show modal
     window.BitboxerUI.openModal('editModal');
 
-    // FIX: Force render after modal is visible
-    setTimeout(() => {
-        if (window.BitboxerSampleEditor.renderer) {
-            window.BitboxerSampleEditor.renderer.resize();
-            window.BitboxerSampleEditor.render();
-        }
-
-        // ALSO resize scrollZoomBar after modal is visible
-        if (window.BitboxerSampleEditor.scrollZoomBar) {
-            window.BitboxerSampleEditor.scrollZoomBar.resize();
-        }
-    }, 50);
-
-    // SECOND resize for scrollZoomBar - wait for tab content to be fully rendered
-    setTimeout(() => {
-        if (window.BitboxerSampleEditor.scrollZoomBar) {
-            const canvas = document.getElementById('scrollZoomCanvas');
-            if (canvas && canvas.parentElement) {
-                console.log('Second resize - container width:', canvas.parentElement.offsetWidth);
-                window.BitboxerSampleEditor.scrollZoomBar.resize();
-            }
-        }
-    }, 150);
-
-    // Show modal
-    window.BitboxerUI.openModal('editModal');
-
-    // Reset tabs to default (Main active)
+    // Reset to Main tab
     const editModal = document.getElementById('editModal');
     const tabBtns = editModal.querySelectorAll('.tab-btn');
     const tabContents = editModal.querySelectorAll('.tab-content');
@@ -107,11 +67,21 @@ async function openEditModal(pad) {
     tabBtns[0].classList.add('active');
     tabContents[0].classList.add('active');
 
-    // Update visibility based on mode
     drawEnvelope();
     window.BitboxerUI.updateTabVisibility();
     window.BitboxerUI.updateLFOParameterVisibility();
     window.BitboxerUI.updatePosConditionalVisibility();
+
+    // Sample editor resize
+    setTimeout(() => {
+        if (window.BitboxerSampleEditor.renderer) {
+            window.BitboxerSampleEditor.renderer.resize();
+            window.BitboxerSampleEditor.render();
+        }
+        if (window.BitboxerSampleEditor.scrollZoomBar) {
+            window.BitboxerSampleEditor.scrollZoomBar.resize();
+        }
+    }, 50);
 }
 
 /**
@@ -143,7 +113,7 @@ function loadParamsToModal(padData) {
 
     // Load dropdown parameters
     const dropdownParams = [
-        'cellmode', 'loopmodes', 'loopmode', 'samtrigtype', 'polymode',
+        'loopmodes', 'loopmode', 'samtrigtype', 'polymode',
         'lfowave', 'lfokeytrig', 'lfobeatsync', 'lforatebeatsync',
         'midimode', 'reverse', 'outputbus', 'chokegrp', 'slicestepmode',
         'legatomode', 'interpqual', 'quantsize', 'synctype', 'playthru',
@@ -489,13 +459,14 @@ function drawEnvelope() {
     ctx.stroke();
 }
 
+// ============================================
+// MULTISAMPLE 
+// ============================================
 /**
- * Renders multisample layer list
+ * Renders multisample keyboard + editor
+ * FIXED: Uses existing WAVParser, proper canvas timing, clearAudioData
  */
 function renderMultisampleList() {
-    const container = document.getElementById('multisampleList');
-    if (!container) return;
-
     const { currentEditingPad, presetData, assetCells } = window.BitboxerData;
     if (!currentEditingPad) return;
 
@@ -503,49 +474,115 @@ function renderMultisampleList() {
     const col = parseInt(currentEditingPad.dataset.col);
     const padData = presetData.pads[row][col];
 
-    // Check if this is a multisample pad
+    const multiTab = document.getElementById('tab-multi');
+    if (!multiTab) return;
+    
+    const paramSections = multiTab.querySelectorAll('.param-section');
+
+    // Clear and hide if not multisample
     if (padData.params.multisammode !== '1') {
-        container.innerHTML = '<p style="color: var(--color-text-secondary);">This pad is not in multisample mode.</p>';
+        paramSections.forEach(section => section.style.display = 'none');
+        
+        ['keyboardCanvas', 'multiWaveformCanvas', 'multiScrollZoomCanvas', 'keyboardScrollCanvas'].forEach(id => {
+            const canvas = document.getElementById(id);
+            if (canvas && canvas.width > 0) {
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#1a1614';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        });
         return;
     }
 
-    // Find assets for this pad
+    // Show sections
+    paramSections.forEach(section => section.style.display = 'block');
+
+    const editPanel = document.getElementById('multiEditPanel');
+    if (editPanel) editPanel.style.display = 'none';
+
     const assets = assetCells.filter(asset =>
         parseInt(asset.params.asssrcrow) === row &&
         parseInt(asset.params.asssrccol) === col
     );
 
-    if (assets.length === 0) {
-        container.innerHTML = '<p style="color: var(--color-text-secondary);">No multisample layers found.</p>';
-        return;
-    }
-
-    // Build list
-    let html = '';
-    assets.forEach((asset, idx) => {
-        const sampleName = asset.filename.split(/[/\\]/).pop();
-        const rootNote = midiNoteToName(parseInt(asset.params.rootnote));
-        const keyBottom = midiNoteToName(parseInt(asset.params.keyrangebottom));
-        const keyTop = midiNoteToName(parseInt(asset.params.keyrangetop));
-        const velBottom = asset.params.velrangebottom;
-        const velTop = asset.params.velrangetop;
-
-        html += `
-            <div class="multisample-layer" data-asset-index="${asset.row}">
-                <div class="multisample-layer-name">${idx + 1}. ${sampleName}</div>
-                <div class="multisample-layer-info">
-                    Root: <span>${rootNote}</span> | 
-                    Keys: <span>${keyBottom} - ${keyTop}</span> | 
-                    Vel: <span>${velBottom} - ${velTop}</span>
-                </div>
-            </div>
-        `;
+    parseAssetsWAVMetadata(assets).then(() => {
+        // Only create if doesn't exist
+        if (!window._multiKeyboardViz) {
+            window._multiKeyboardViz = new KeyboardVisualizer('keyboardCanvas', 'keyboardScrollCanvas');
+            window._multiKeyboardViz.onAssetSelected = (asset) => {
+                loadMultisampleAssetToEditor(asset);
+            };
+        }
+        
+        window._multiKeyboardViz.setAssets(assets);
     });
-
-    container.innerHTML = html;
 }
 
-
+/**
+ * Parses WAV metadata for all assets using EXISTING WAVParser
+ * FIXED: Uses window.BitboxerFileHandler.WAVParser (already works!)
+ */
+async function parseAssetsWAVMetadata(assets) {
+    for (const asset of assets) {
+        const wavName = asset.filename.split(/[/\\]/).pop();
+        
+        // Find WAV file in cache
+        if (window._lastImportedFiles && window._lastImportedFiles.has(wavName)) {
+            const wavFile = window._lastImportedFiles.get(wavName);
+            
+            try {
+                const arrayBuffer = await wavFile.arrayBuffer();
+                
+                // FIXED: Use EXISTING WAVParser (not broken new one)
+                const metadata = window.BitboxerFileHandler.WAVParser.parseMetadata(arrayBuffer);
+                
+                // Store metadata in asset
+                asset.wavMetadata = {
+                    sampleRate: metadata.sampleRate || 44100,
+                    numChannels: metadata.numChannels || 1,
+                    bitsPerSample: metadata.bitsPerSample || 16,
+                    duration: metadata.duration || 0,
+                    samlen: metadata.duration && metadata.sampleRate 
+                        ? Math.floor(metadata.sampleRate * metadata.duration) 
+                        : 0,
+                    loopStart: metadata.loopPoints?.start || 0,
+                    loopEnd: metadata.loopPoints?.end || 0,
+                    hasLoop: !!metadata.loopPoints,
+                    rootKey: parseInt(asset.params.rootnote) || 60
+                };
+                
+                // Update rootnote from WAV if available
+                if (metadata.rootNote >= 0 && metadata.rootNote <= 127) {
+                    asset.params.rootnote = metadata.rootNote.toString();
+                    asset.wavMetadata.rootKey = metadata.rootNote;
+                }
+                
+                console.log(`✓ Parsed WAV: ${wavName} (${asset.wavMetadata.samlen} samples, Loop: ${asset.wavMetadata.hasLoop})`);
+            } catch (error) {
+                console.error(`✗ Failed to parse WAV: ${wavName}`, error);
+                // Initialize with defaults
+                asset.wavMetadata = {
+                    sampleRate: 44100,
+                    samlen: 0,
+                    loopStart: 0,
+                    loopEnd: 0,
+                    hasLoop: false,
+                    rootKey: parseInt(asset.params.rootnote) || 60
+                };
+            }
+        } else {
+            console.warn(`✗ WAV file not found in cache: ${wavName}`);
+            asset.wavMetadata = {
+                sampleRate: 44100,
+                samlen: 0,
+                loopStart: 0,
+                loopEnd: 0,
+                hasLoop: false,
+                rootKey: parseInt(asset.params.rootnote) || 60
+            };
+        }
+    }
+}
 
 // ============================================
 // MODULATION SLOT RENDERING
@@ -1282,6 +1319,516 @@ async function initSampleEditor(padData) {
 }
 
 // ============================================
+// FIXED: renderMultisampleList()
+// ============================================
+
+/**
+ * Renders multisample keyboard + editor
+ * FIXED: Uses existing WAVParser, proper canvas timing, clearAudioData
+ */
+function renderMultisampleList() {
+    const { currentEditingPad, presetData, assetCells } = window.BitboxerData;
+    if (!currentEditingPad) return;
+
+    if (window._multiKeyboardViz) {
+        window._multiKeyboardViz.selectedAsset = null;
+    }
+    
+    const editPanel = document.getElementById('multiEditPanel');
+    if (editPanel) editPanel.style.display = 'none';
+
+    const row = parseInt(currentEditingPad.dataset.row);
+    const col = parseInt(currentEditingPad.dataset.col);
+    const padData = presetData.pads[row][col];
+
+    // Not multisample - clear canvases
+    if (padData.params.multisammode !== '1') {
+        ['keyboardCanvas', 'multiWaveformCanvas', 'multiScrollZoomCanvas', 'keyboardScrollCanvas'].forEach(id => {
+            const canvas = document.getElementById(id);
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = (id === 'keyboardCanvas') ? '#1a1614' : '#2a2420';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        });
+        
+        const canvas = document.getElementById('keyboardCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#d0c2b9';
+            ctx.font = '14px monospace';
+            ctx.fillText('Not in multisample mode', 10, 120);
+        }
+        
+        return;
+    }
+
+    // Is multisample - prepare data
+    const assets = assetCells.filter(asset =>
+        parseInt(asset.params.asssrcrow) === row &&
+        parseInt(asset.params.asssrccol) === col
+    );
+
+    parseAssetsWAVMetadata(assets).then(() => {
+        // Initialize visualizer if needed
+        if (!window._multiKeyboardViz) {
+            window._multiKeyboardViz = new KeyboardVisualizer('keyboardCanvas', 'keyboardScrollCanvas');
+            window._multiKeyboardViz.onAssetSelected = (asset) => {
+                loadMultisampleAssetToEditor(asset);
+            };
+        }
+        
+        // Set assets (will render if tab is visible, otherwise waits)
+        window._multiKeyboardViz.setAssets(assets);
+    });
+}
+
+// ============================================
+// NEW: Parse WAV Metadata Using Existing Parser
+// ============================================
+
+/**
+ * Parses WAV metadata for all assets using EXISTING WAVParser
+ * FIXED: Only parses if metadata doesn't exist - preserves user edits
+ */
+async function parseAssetsWAVMetadata(assets) {
+    for (const asset of assets) {
+        // CRITICAL FIX: Skip if metadata already exists (preserves user edits)
+        if (asset.wavMetadata) {
+            console.log(`âœ" Skipping parse: ${asset.filename.split(/[/\\]/).pop()} (metadata exists)`);
+            continue;
+        }
+        
+        const wavName = asset.filename.split(/[/\\]/).pop();
+        
+        // Find WAV file in cache
+        if (window._lastImportedFiles && window._lastImportedFiles.has(wavName)) {
+            const wavFile = window._lastImportedFiles.get(wavName);
+            
+            try {
+                const arrayBuffer = await wavFile.arrayBuffer();
+                const metadata = window.BitboxerFileHandler.WAVParser.parseMetadata(arrayBuffer);
+                
+                console.log(`Parsing ${wavName}:`, metadata);
+                
+                // Calculate sample length
+                let samlen = 0;
+                if (metadata.duration && metadata.sampleRate) {
+                    samlen = Math.floor(metadata.sampleRate * metadata.duration);
+                }
+                
+                // Extract loop points
+                let loopStart = 0;
+                let loopEnd = samlen;
+                let hasLoop = false;
+                
+                if (metadata.loopPoints) {
+                    loopStart = metadata.loopPoints.start || 0;
+                    loopEnd = metadata.loopPoints.end || samlen;
+                    hasLoop = true;
+                    console.log(`  Loop found: ${loopStart} - ${loopEnd}`);
+                }
+                
+                // Store metadata in asset (only on first parse)
+                asset.wavMetadata = {
+                    sampleRate: metadata.sampleRate || 44100,
+                    numChannels: metadata.numChannels || 1,
+                    bitsPerSample: metadata.bitsPerSample || 16,
+                    duration: metadata.duration || 0,
+                    samlen: samlen,
+                    loopStart: loopStart,
+                    loopEnd: loopEnd,
+                    hasLoop: hasLoop,
+                    rootKey: parseInt(asset.params.rootnote) || 60
+                };
+                
+                // Update rootnote from WAV if available
+                if (metadata.rootNote !== undefined && metadata.rootNote >= 0 && metadata.rootNote <= 127) {
+                    asset.params.rootnote = metadata.rootNote.toString();
+                    asset.wavMetadata.rootKey = metadata.rootNote;
+                    console.log(`  Root note from WAV: ${metadata.rootNote}`);
+                }
+                
+                console.log(`âœ" Parsed: ${wavName} (${samlen} samples, Loop: ${hasLoop})`);
+            } catch (error) {
+                console.error(`âœ— Failed to parse WAV: ${wavName}`, error);
+                // Initialize with defaults only if parsing failed
+                asset.wavMetadata = {
+                    sampleRate: 44100,
+                    numChannels: 1,
+                    bitsPerSample: 16,
+                    duration: 0,
+                    samlen: 0,
+                    loopStart: 0,
+                    loopEnd: 0,
+                    hasLoop: false,
+                    rootKey: parseInt(asset.params.rootnote) || 60
+                };
+            }
+        } else {
+            console.warn(`âœ— WAV not in cache: ${wavName}`);
+            // Initialize with defaults only if not found
+            asset.wavMetadata = {
+                sampleRate: 44100,
+                numChannels: 1,
+                bitsPerSample: 16,
+                duration: 0,
+                samlen: 0,
+                loopStart: 0,
+                loopEnd: 0,
+                hasLoop: false,
+                rootKey: parseInt(asset.params.rootnote) || 60
+            };
+        }
+    }
+}
+
+// ============================================
+// FIXED: loadMultisampleAssetToEditor
+// ============================================
+
+/**
+ * Loads asset into multisample editor
+ * FIXED: Clears previous data, sets correct samlen, green markers
+ */
+async function loadMultisampleAssetToEditor(asset) {
+    const editPanel = document.getElementById('multiEditPanel');
+    const sampleNameSpan = document.getElementById('multiSampleName');
+    
+    if (!asset || !editPanel) return;
+    
+    // Show edit panel
+    editPanel.style.display = 'block';
+    
+    // Update sample name
+    const wavName = asset.filename.split(/[/\\]/).pop();
+    sampleNameSpan.textContent = wavName;
+    
+    // Initialize multi-sample editor if needed
+    if (!window._multiSampleEditor) {
+        window._multiSampleEditor = new SampleEditor();
+        await window._multiSampleEditor.init('multiWaveformCanvas');
+
+        // Initialize scroll-zoom bar for multisample editor
+        window._multiSampleEditor.scrollZoomBar = new ScrollZoomBar(
+            window._multiSampleEditor.renderer,
+            () => {
+                window._multiSampleEditor.render();
+            }
+        );
+        window._multiSampleEditor.scrollZoomBar.init('multiScrollZoomCanvas');
+
+        // Setup playback controls
+        document.getElementById('multiPlayBtn').onclick = () => {
+            const loopEnabled = (document.getElementById('multiLoopEnabled').value === '1');
+            window._multiSampleEditor.audioEngine.play({
+                startSample: 0,
+                endSample: window._multiSampleEditor.audioEngine.audioBuffer.length,
+                loopStartSample: parseInt(document.getElementById('multiLoopStart').value) || 0,
+                loopEndSample: parseInt(document.getElementById('multiLoopEnd').value) || 0,
+                loopEnabled: loopEnabled,
+                reverse: false
+            });
+        };
+        
+        document.getElementById('multiStopBtn').onclick = () => 
+            window._multiSampleEditor.stop();
+    } else {
+        // CRITICAL FIX: Clear previous audio data when switching assets
+        window._multiSampleEditor.clearAudioData();
+    }
+    
+    // Load WAV file
+    if (window._lastImportedFiles && window._lastImportedFiles.has(wavName)) {
+        const wavFile = window._lastImportedFiles.get(wavName);
+        await window._multiSampleEditor.loadSample(wavFile);
+        
+        // Set mode to sample mode
+        window._multiSampleEditor.setMode('0');
+        
+        // Set loop markers to GREEN and configure from WAV metadata
+        if (asset.wavMetadata) {
+            const { loopStart, loopEnd, hasLoop, samlen } = asset.wavMetadata;
+
+            console.log(`Configuring loop markers: start=${loopStart}, end=${loopEnd}, samlen=${samlen}`);
+
+            // Change marker colors and labels to green
+            const markers = window._multiSampleEditor.markerController.markers;
+            markers.loopStart.color = '#5eff5e';
+            markers.loopStart.label = ' LOOP START';
+            markers.loopEnd.color = '#5eff5e';
+            markers.loopEnd.label = ' LOOP END';
+
+            // Hide sample start/end markers (not relevant for multisamples)
+            markers.start.color = 'transparent';
+            markers.start.label = '';
+            markers.end.color = 'transparent';
+            markers.end.label = '';
+
+            // Set loop points from WAV
+            const finalLoopEnd = loopEnd || samlen || window._multiSampleEditor.audioEngine.audioBuffer.length;
+            window._multiSampleEditor.markerController.setMarker('loopStart', loopStart);
+            window._multiSampleEditor.markerController.setMarker('loopEnd', finalLoopEnd);
+        }
+        
+        window._multiSampleEditor.render();
+    }
+    
+    // Populate edit panel
+    populateMultisampleEditPanel(asset);
+}
+
+// ============================================
+// FIXED: populateMultisampleEditPanel
+// ============================================
+
+/**
+ * Populates edit panel with asset data
+ * FIXED: Correct samlen from audioBuffer, two-way binding
+ */
+function populateMultisampleEditPanel(asset) {
+    // Populate note dropdowns (0-127)
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    
+    ['multiRootNote', 'multiKeyLo', 'multiKeyHi'].forEach(id => {
+        const select = document.getElementById(id);
+        if (select && select.options.length === 0) {
+            for (let i = 0; i <= 127; i++) {
+                const octave = Math.floor((i - 12) / 12);
+                const note = noteNames[i % 12];
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${note}${octave} (${i})`;
+                select.appendChild(option);
+            }
+        }
+    });
+    
+    // Set values
+    document.getElementById('multiRootNote').value = asset.params.rootnote;
+    document.getElementById('multiKeyLo').value = asset.params.keyrangebottom;
+    document.getElementById('multiKeyHi').value = asset.params.keyrangetop;
+    document.getElementById('multiVelLo').value = asset.params.velrangebottom;
+    document.getElementById('multiVelHi').value = asset.params.velrangetop;
+    
+    // Set loop points and slider max from audioBuffer
+    if (window._multiSampleEditor && window._multiSampleEditor.audioEngine && window._multiSampleEditor.audioEngine.audioBuffer) {
+        const audioBuffer = window._multiSampleEditor.audioEngine.audioBuffer;
+        const maxSamples = audioBuffer.length;
+
+        console.log(`Setting slider max to audioBuffer.length: ${maxSamples}`);
+
+        // Set slider max
+        const startSlider = document.getElementById('multiLoopStart');
+        const endSlider = document.getElementById('multiLoopEnd');
+
+        if (startSlider) startSlider.max = maxSamples;
+        if (endSlider) endSlider.max = maxSamples;
+
+        // Set current values from WAV metadata
+        if (asset.wavMetadata) {
+            const loopStart = asset.wavMetadata.loopStart || 0;
+            const loopEnd = asset.wavMetadata.loopEnd || maxSamples;
+            const hasLoop = asset.wavMetadata.hasLoop || false;
+
+            console.log(`Setting loop values: start=${loopStart}, end=${loopEnd}, enabled=${hasLoop}`);
+
+            if (startSlider) {
+                startSlider.value = loopStart;
+                const startVal = document.getElementById('multiLoopStart-val');
+                if (startVal) startVal.textContent = loopStart;
+            }
+
+            if (endSlider) {
+                endSlider.value = loopEnd;
+                const endVal = document.getElementById('multiLoopEnd-val');
+                if (endVal) endVal.textContent = loopEnd;
+            }
+
+            const enabledSelect = document.getElementById('multiLoopEnabled');
+            if (enabledSelect) enabledSelect.value = hasLoop ? '1' : '0';
+        }
+    } else {
+        console.warn('Audio buffer not available, using defaults');
+    }
+    
+    // Setup event listeners for changes
+    setupMultisampleEditListeners(asset);
+}
+
+// ============================================
+// FIXED: setupMultisampleEditListeners
+// ============================================
+
+/**
+ * Setup event listeners with TWO-WAY binding
+ * FIXED: Markers update sliders, sliders update markers
+ */
+function setupMultisampleEditListeners(asset) {
+    // Remove old listeners to prevent duplicates
+    const loopStartSlider = document.getElementById('multiLoopStart');
+    const loopEndSlider = document.getElementById('multiLoopEnd');
+    const loopEnabledSelect = document.getElementById('multiLoopEnabled');
+    
+    // Clone and replace to remove old listeners
+    if (loopStartSlider) {
+        const newStart = loopStartSlider.cloneNode(true);
+        loopStartSlider.parentNode.replaceChild(newStart, loopStartSlider);
+    }
+    if (loopEndSlider) {
+        const newEnd = loopEndSlider.cloneNode(true);
+        loopEndSlider.parentNode.replaceChild(newEnd, loopEndSlider);
+    }
+    
+    // Get fresh references
+    const startSlider = document.getElementById('multiLoopStart');
+    const endSlider = document.getElementById('multiLoopEnd');
+    const enabledSelect = document.getElementById('multiLoopEnabled');
+    
+    // Key/velocity changes
+    ['multiRootNote', 'multiKeyLo', 'multiKeyHi', 'multiVelLo', 'multiVelHi'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.onchange = () => {
+                updateAssetFromEditPanel(asset);
+            };
+        }
+    });
+    
+    // FIXED: Loop point sliders with two-way binding
+    if (startSlider) {
+        startSlider.oninput = () => {
+            const value = parseInt(startSlider.value);
+            asset.wavMetadata.loopStart = value;
+            document.getElementById('multiLoopStart-val').textContent = value;
+            
+            // Update marker
+            if (window._multiSampleEditor) {
+                window._multiSampleEditor.markerController.setMarker('loopStart', value);
+                window._multiSampleEditor.render();
+            }
+        };
+    }
+    
+    if (endSlider) {
+        endSlider.oninput = () => {
+            const value = parseInt(endSlider.value);
+            asset.wavMetadata.loopEnd = value;
+            document.getElementById('multiLoopEnd-val').textContent = value;
+            
+            // Update marker
+            if (window._multiSampleEditor) {
+                window._multiSampleEditor.markerController.setMarker('loopEnd', value);
+                window._multiSampleEditor.render();
+            }
+        };
+    }
+    
+    // Loop enabled toggle - updates both metadata and playback
+    if (enabledSelect) {
+        enabledSelect.onchange = () => {
+            const enabled = (enabledSelect.value === '1');
+            asset.wavMetadata.hasLoop = enabled;
+            console.log(`Loop enabled changed to: ${enabled}`);
+
+            // If playing, restart with new loop setting
+            if (window._multiSampleEditor && window._multiSampleEditor.audioEngine.isPlaying) {
+                window._multiSampleEditor.stop();
+                setTimeout(() => {
+                    window._multiSampleEditor.audioEngine.play({
+                        startSample: 0,
+                        endSample: window._multiSampleEditor.audioEngine.audioBuffer.length,
+                        loopStartSample: parseInt(document.getElementById('multiLoopStart').value) || 0,
+                        loopEndSample: parseInt(document.getElementById('multiLoopEnd').value) || 0,
+                        loopEnabled: enabled,
+                        reverse: false
+                    });
+                }, 100);
+            }
+        };
+    }
+    
+    // NEW: Two-way binding - marker drag updates sliders
+    setupMarkerToSliderSync(asset);
+}
+
+// ============================================
+// NEW: Marker to Slider Sync
+// ============================================
+
+/**
+ * Syncs marker dragging to slider values (two-way binding)
+ */
+function setupMarkerToSliderSync(asset) {
+    if (!window._multiSampleEditor || !window._multiSampleEditor.markerController) {
+        console.warn('Cannot setup marker sync: editor not initialized');
+        return;
+    }
+    
+    const markerController = window._multiSampleEditor.markerController;
+    
+    // Clear any previous override
+    if (markerController._originalUpdatePadParams) {
+        markerController.updatePadParams = markerController._originalUpdatePadParams;
+    }
+    
+    // Store original function
+    if (!markerController._originalUpdatePadParams) {
+        markerController._originalUpdatePadParams = markerController.updatePadParams;
+    }
+    
+    // Override to sync to sliders
+    markerController.updatePadParams = function() {
+        // Get marker positions
+        const loopStart = this.markers.loopStart.sample;
+        const loopEnd = this.markers.loopEnd.sample;
+        
+        // Validate
+        if (isNaN(loopStart) || isNaN(loopEnd)) {
+            console.warn('Invalid marker positions:', loopStart, loopEnd);
+            return;
+        }
+        
+        console.log(`Marker moved: loopStart=${loopStart}, loopEnd=${loopEnd}`);
+        
+        // Update sliders
+        const startSlider = document.getElementById('multiLoopStart');
+        const endSlider = document.getElementById('multiLoopEnd');
+        
+        if (startSlider) {
+            startSlider.value = loopStart;
+            const startVal = document.getElementById('multiLoopStart-val');
+            if (startVal) startVal.textContent = loopStart;
+            if (asset.wavMetadata) asset.wavMetadata.loopStart = loopStart;
+        }
+        
+        if (endSlider) {
+            endSlider.value = loopEnd;
+            const endVal = document.getElementById('multiLoopEnd-val');
+            if (endVal) endVal.textContent = loopEnd;
+            if (asset.wavMetadata) asset.wavMetadata.loopEnd = loopEnd;
+        }
+    };
+}
+
+// ============================================
+// updateAssetFromEditPanel (unchanged)
+// ============================================
+
+function updateAssetFromEditPanel(asset) {
+    asset.params.rootnote = document.getElementById('multiRootNote').value;
+    asset.params.keyrangebottom = document.getElementById('multiKeyLo').value;
+    asset.params.keyrangetop = document.getElementById('multiKeyHi').value;
+    asset.params.velrangebottom = document.getElementById('multiVelLo').value;
+    asset.params.velrangetop = document.getElementById('multiVelHi').value;
+    
+    // Refresh keyboard visualizer
+    if (window._multiKeyboardViz) {
+        window._multiKeyboardViz.render();
+    }
+}
+
+// ============================================
 // EXPORT PAD EDITOR
 // ============================================
 window.BitboxerPadEditor = {
@@ -1296,6 +1843,10 @@ window.BitboxerPadEditor = {
     updateModSlotAppearance,
     renderMultisampleList,
     updateModalIcon,
-    initSampleEditor
+    initSampleEditor,
+    loadMultisampleAssetToEditor,
+    populateMultisampleEditPanel,
+    parseAssetsWAVMetadata,
+    setupMarkerToSliderSync
  
 };

@@ -416,6 +416,13 @@ class MarkerController {
     }
 
     addSliceAtSample(sample) {
+        // CRITICAL: Max 512 slices (Bitbox hardware limit)
+        if (this.sliceMarkers.length >= 512) {
+            console.warn('Maximum 512 slices reached');
+            window.BitboxerUtils.setStatus('Maximum 512 slices reached', 'error');
+            return false;
+        }
+
         const channelData = this.renderer.waveformData.channelData[0];
         
         // Conditionally snap based on toggle state
@@ -982,37 +989,52 @@ class MarkerController {
      */
     autoDetectSlices(algorithm = 'flux', sensitivity = 0.5) {
         if (!this.renderer.waveformData) return;
-    
+        
         console.log(`Auto-detecting slices: ${algorithm}, sensitivity: ${sensitivity}`);
         
-        // Create onset detector
         const detector = new OnsetDetector(this.renderer.waveformData, {
             algorithm: algorithm,
             sensitivity: sensitivity,
             windowSize: 1024,
             hopSize: 512,
-            minSliceDistance: 1000 // Minimum 1000 samples between slices
+            minSliceDistance: 1000
         });
         
-        // Analyze
         const onsetSamples = detector.analyze();
         
-        // Optionally snap to zero crossings
+        // CRITICAL FIX: Enforce 512 slice limit BEFORE processing
+        let limitedOnsets = onsetSamples;
+        if (onsetSamples.length > 511) { // 511 because we add sample 0 later
+            console.warn(`Detected ${onsetSamples.length} slices, truncating to 511`);
+            limitedOnsets = onsetSamples.slice(0, 511);
+            window.BitboxerUtils.setStatus(
+                `Detected ${onsetSamples.length} slices, limited to 512 (hardware maximum)`,
+                'info'
+            );
+        }
+        
+        // Snap to zero crossings if enabled
         const channelData = this.renderer.waveformData.channelData[0];
-        this.sliceMarkers = onsetSamples.map(sample => 
+        this.sliceMarkers = limitedOnsets.map(sample => 
             this.snapToZeroCrossingEnabled 
                 ? this.findZeroCrossing(sample, channelData)
                 : sample
         );
-
-        // ALWAYS ensure marker at sample 0 exists in slicer mode
+    
+        // Ensure marker at sample 0 exists
         if (!this.sliceMarkers.includes(0)) {
             this.sliceMarkers.unshift(0);
         }
-
+    
+        // FINAL SAFETY CHECK: Hard cap at 512
+        if (this.sliceMarkers.length > 512) {
+            console.error(`Slice count exceeded 512 after processing, truncating`);
+            this.sliceMarkers = this.sliceMarkers.slice(0, 512);
+        }
+    
         // Remove duplicates and sort
         this.sliceMarkers = [...new Set(this.sliceMarkers)].sort((a, b) => a - b);
-
+    
         this.updateSlicesToPad();
     
         const snapStatus = this.snapToZeroCrossingEnabled ? 'with zero-crossing snap' : 'exact positions';
@@ -1866,17 +1888,31 @@ class SampleEditor {
         menu.style.top = pageY + 'px';
         menu.style.zIndex = '2001';
 
-        menu.innerHTML = `
-            <div class="context-item" data-action="sample-start">Set sample start</div>
-            <div class="context-item" data-action="sample-end">Set sample end</div>
-            <div class="context-item" data-action="sample-both">Set sample start & end</div>
-            <div class="context-item separator"></div>
+        // Detect if in multisample mode (check if we're using _multiSampleEditor)
+        const isMultisampleMode = (this === window._multiSampleEditor);
+
+        let menuItems = '';
+
+        if (!isMultisampleMode) {
+            // Normal mode: show sample start/end options
+            menuItems += `
+                <div class="context-item" data-action="sample-start">Set sample start</div>
+                <div class="context-item" data-action="sample-end">Set sample end</div>
+                <div class="context-item" data-action="sample-both">Set sample start & end</div>
+                <div class="context-item separator"></div>
+            `;
+        }
+
+        // Always show loop options
+        menuItems += `
             <div class="context-item" data-action="loop-start">Set loop start</div>
             <div class="context-item" data-action="loop-end">Set loop end</div>
             <div class="context-item" data-action="loop-both">Set loop start & end</div>
             <div class="context-item separator"></div>
             <div class="context-item" data-action="cancel">Cancel</div>
         `;
+
+        menu.innerHTML = menuItems;
 
         document.body.appendChild(menu);
 

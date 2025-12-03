@@ -41,10 +41,25 @@ function closeModal(modalId) {
  * Closes the pad edit modal and cleans up state
  */
 function closeEditModal() {
-    // Clear audio data when closing modal to prevent contamination
+    // Clear BOTH audio editors when closing modal
     if (window.BitboxerSampleEditor) {
         window.BitboxerSampleEditor.clearAudioData();
     }
+    
+    // CRITICAL: Also clear multisample editor
+    if (window._multiSampleEditor) {
+        window._multiSampleEditor.clearAudioData();
+    }
+    
+    // Clear multisample state
+    if (window._multiKeyboardViz) {
+        window._multiKeyboardViz.selectedAsset = null;
+        window._multiKeyboardViz.assetCells = [];
+    }
+    
+    // Hide multisample panels
+    const editPanel = document.getElementById('multiEditPanel');
+    if (editPanel) editPanel.style.display = 'none';
     
     closeModal('editModal');
     window.BitboxerData.currentEditingPad = null;
@@ -73,36 +88,40 @@ function setupModalTabs(modalElement) {
 
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Remove active from all
             tabBtns.forEach(b => b.classList.remove('active'));
             tabContents.forEach(c => c.classList.remove('active'));
-        
-            // Add active to clicked
+
             btn.classList.add('active');
             const tabId = 'tab-' + btn.dataset.tab;
             const targetTab = modalElement.querySelector('#' + tabId);
             if (targetTab) {
                 targetTab.classList.add('active');
             }
-        
-            // Special handling for envelope tab
+
             if (btn.dataset.tab === 'env') {
                 drawEnvelope();
             }
-        
-            // FIX: Refresh sample editor canvas when switching to POS tab
+
             if (btn.dataset.tab === 'pos') {
-                // Use requestAnimationFrame to ensure DOM has updated with new visibility
                 requestAnimationFrame(() => {
                     if (window.BitboxerSampleEditor && window.BitboxerSampleEditor.renderer) {
                         window.BitboxerSampleEditor.renderer.resize();
                         window.BitboxerSampleEditor.render();
                     }
-                    
-                    // ALSO resize scrollZoomBar
                     if (window.BitboxerSampleEditor.scrollZoomBar) {
                         window.BitboxerSampleEditor.scrollZoomBar.resize();
-                        console.log('ScrollZoomBar resized on tab switch');
+                    }
+                });
+            }
+            
+            // Multi tab - render multisample content NOW
+            if (btn.dataset.tab === 'multi') {
+                requestAnimationFrame(() => {
+                    renderMultisampleList();
+                    
+                    if (window._multiSampleEditor && window._multiSampleEditor.renderer) {
+                        window._multiSampleEditor.renderer.resize();
+                        window._multiSampleEditor.render();
                     }
                 });
             }

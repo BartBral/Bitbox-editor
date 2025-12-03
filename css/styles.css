@@ -999,3 +999,34 @@ input[type="file"] {
 #modalIcon .cls-2 {
     fill: black;
 }
+
+
+/* ============================================
+   MULTISAMPLE KEYBOARD VISUALIZER
+   ============================================ */
+#keyboardCanvas {
+    display: block;
+    cursor: pointer;
+}
+
+#keyboardScrollCanvas {
+    display: block;
+    cursor: grab;
+}
+
+#keyboardScrollCanvas:active {
+    cursor: grabbing;
+}
+
+#multiWaveformCanvas {
+    display: block;
+}
+
+#multiEditPanel .param-grid {
+    grid-template-columns: 1fr;
+}
+
+#multiEditPanel .select,
+#multiEditPanel input[type="number"] {
+    font-size: 0.9em;
+}
