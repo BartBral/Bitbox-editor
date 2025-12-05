@@ -41,6 +41,13 @@ function closeModal(modalId) {
  * Closes the pad edit modal and cleans up state
  */
 function closeEditModal() {
+    // Reset multi tab sections to hidden state
+    const multiTab = document.getElementById('tab-multi');
+    if (multiTab) {
+        const paramSections = multiTab.querySelectorAll('.param-section');
+        paramSections.forEach(section => section.style.display = 'none');
+    }
+    
     // Clear BOTH audio editors when closing modal
     if (window.BitboxerSampleEditor) {
         window.BitboxerSampleEditor.clearAudioData();
@@ -114,15 +121,18 @@ function setupModalTabs(modalElement) {
                 });
             }
             
-            // Multi tab - render multisample content NOW
+            // Multi tab - render multisample content with proper timing
             if (btn.dataset.tab === 'multi') {
+                // Use double requestAnimationFrame to ensure CSS reflow completes
                 requestAnimationFrame(() => {
-                    renderMultisampleList();
-                    
-                    if (window._multiSampleEditor && window._multiSampleEditor.renderer) {
-                        window._multiSampleEditor.renderer.resize();
-                        window._multiSampleEditor.render();
-                    }
+                    requestAnimationFrame(() => {
+                        renderMultisampleList();
+
+                        if (window._multiSampleEditor && window._multiSampleEditor.renderer) {
+                            window._multiSampleEditor.renderer.resize();
+                            window._multiSampleEditor.render();
+                        }
+                    });
                 });
             }
         });
@@ -155,6 +165,24 @@ function updateTabVisibility() {
     
     const cellmode = cellmodeSelect.value;
     const isMultisample = cellmode === '0-multi';
+    
+    // *** DEBUG LOGGING - START ***
+    const { currentEditingPad, presetData } = window.BitboxerData;
+    console.log('=== updateTabVisibility DEBUG ===');
+    if (currentEditingPad) {
+        const row = parseInt(currentEditingPad.dataset.row);
+        const col = parseInt(currentEditingPad.dataset.col);
+        const padData = presetData.pads[row][col];
+        console.log('Pad:', row, col);
+        console.log('cellmode dropdown value:', cellmode);
+        console.log('isMultisample:', isMultisample);
+        console.log('padData.params.cellmode:', padData.params.cellmode);
+        console.log('padData.params.multisammode:', padData.params.multisammode);
+    } else {
+        console.log('No currentEditingPad');
+    }
+    // *** DEBUG LOGGING - END ***
+    
     const granTab = document.querySelector('[data-tab="gran"]');
     const posTab = document.querySelector('[data-tab="pos"]');
     const lfoTab = document.querySelector('[data-tab="lfo"]');
@@ -183,40 +211,47 @@ function updateTabVisibility() {
     if (isMultisample) {
         if (posTab) posTab.style.opacity = GREY_VALUE;
         if (posContent) posContent.style.opacity = GREY_VALUE;
-        if (granTab) granTab.style.opacity = GREY_VALUE; // ← ADD
-        if (granContent) granContent.style.opacity = GREY_VALUE; // ← ADD
-        return; // Exit early, don't process other modes
+        if (granTab) granTab.style.opacity = GREY_VALUE;
+        if (granContent) granContent.style.opacity = GREY_VALUE;
+        // Don't return - continue to process other modes
     }
 
     // Apply greying based on cellmode (existing code continues...)
-    switch (cellmode) {
-        case '0': // Sample mode - grey out Gran
-            if (granTab) granTab.style.opacity = GREY_VALUE;
-            if (granContent) granContent.style.opacity = GREY_VALUE;
-            break;
-            
-        case '1': // Clip mode - grey out Gran and Pos
-            if (granTab) granTab.style.opacity = GREY_VALUE;
-            if (granContent) granContent.style.opacity = GREY_VALUE;
-            break;
-            
-        case '2': // Slice mode - grey out Gran
-            if (granTab) granTab.style.opacity = GREY_VALUE;
-            if (granContent) granContent.style.opacity = GREY_VALUE;
-            break;
-            
-        case '3': // Granular mode - all available
-            break;
+    if (!isMultisample) {
+        switch (cellmode) {
+            case '0': // Sample mode - grey out Gran
+                if (granTab) granTab.style.opacity = GREY_VALUE;
+                if (granContent) granContent.style.opacity = GREY_VALUE;
+                break;
+                
+            case '1': // Clip mode - grey out Gran and Pos
+                if (granTab) granTab.style.opacity = GREY_VALUE;
+                if (granContent) granContent.style.opacity = GREY_VALUE;
+                break;
+                
+            case '2': // Slice mode - grey out Gran
+                if (granTab) granTab.style.opacity = GREY_VALUE;
+                if (granContent) granContent.style.opacity = GREY_VALUE;
+                break;
+                
+            case '3': // Granular mode - all available
+                break;
+        }
     }
+    
     // Grey out Multi tab when NOT multisample
     const multiTab = document.querySelector('[data-tab="multi"]');
     const multiContent = document.getElementById('tab-multi');
     
+    console.log('>>> Setting multi tab opacity, isMultisample:', isMultisample);
+    
     if (multiTab && multiContent) {
         if (isMultisample) {
+            console.log('>>> Setting multi tab to VISIBLE (opacity 1)');
             multiTab.style.opacity = '1';
             multiContent.style.opacity = '1';
         } else {
+            console.log('>>> Setting multi tab to GREYED (opacity', GREY_VALUE, ')');
             multiTab.style.opacity = GREY_VALUE;
             multiContent.style.opacity = GREY_VALUE;
         }

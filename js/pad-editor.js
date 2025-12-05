@@ -29,6 +29,8 @@ async function openEditModal(pad) {
 
     window.BitboxerData.currentEditingPad = pad;
 
+    
+
     // Clear editors
     if (window.BitboxerSampleEditor) {
         window.BitboxerSampleEditor.clearAudioData();
@@ -56,6 +58,14 @@ async function openEditModal(pad) {
 
     window.BitboxerUI.openModal('editModal');
 
+    window.BitboxerUI.updateTabVisibility();
+    window.BitboxerUI.updateLFOParameterVisibility();
+    window.BitboxerUI.updatePosConditionalVisibility();
+
+    // Force browser reflow to ensure CSS changes take effect
+    document.getElementById('tab-multi').offsetHeight;
+
+
     // Reset to Main tab
     const editModal = document.getElementById('editModal');
     const tabBtns = editModal.querySelectorAll('.tab-btn');
@@ -68,9 +78,6 @@ async function openEditModal(pad) {
     tabContents[0].classList.add('active');
 
     drawEnvelope();
-    window.BitboxerUI.updateTabVisibility();
-    window.BitboxerUI.updateLFOParameterVisibility();
-    window.BitboxerUI.updatePosConditionalVisibility();
 
     // Sample editor resize
     setTimeout(() => {
@@ -464,11 +471,19 @@ function drawEnvelope() {
 // ============================================
 /**
  * Renders multisample keyboard + editor
- * FIXED: Uses existing WAVParser, proper canvas timing, clearAudioData
+ * Uses existing WAVParser, proper canvas timing, clearAudioData
  */
 function renderMultisampleList() {
+    
     const { currentEditingPad, presetData, assetCells } = window.BitboxerData;
     if (!currentEditingPad) return;
+
+    if (window._multiKeyboardViz) {
+        window._multiKeyboardViz.selectedAsset = null;
+    }
+    
+    const editPanel = document.getElementById('multiEditPanel');
+    if (editPanel) editPanel.style.display = 'none';
 
     const row = parseInt(currentEditingPad.dataset.row);
     const col = parseInt(currentEditingPad.dataset.col);
@@ -479,110 +494,157 @@ function renderMultisampleList() {
     
     const paramSections = multiTab.querySelectorAll('.param-section');
 
-    // Clear and hide if not multisample
+    // *** DEBUG LOGGING - START ***
+    console.log('=== renderMultisampleList DEBUG ===');
+    console.log('Pad:', row, col);
+    console.log('padData.params.multisammode:', padData.params.multisammode);
+    console.log('padData.params.cellmode:', padData.params.cellmode);
+    console.log('padData.filename:', padData.filename);
+    console.log('paramSections count:', paramSections.length);
+    
+    paramSections.forEach((section, i) => {
+        const computed = window.getComputedStyle(section);
+        console.log(`Section ${i}:`, 
+                    'inline display:', section.style.display, 
+                    'computed display:', computed.display,
+                    'offsetWidth:', section.offsetWidth,
+                    'offsetHeight:', section.offsetHeight);
+    });
+    
+    const keyboardCanvas = document.getElementById('keyboardCanvas');
+    const multiWaveformCanvas = document.getElementById('multiWaveformCanvas');
+    
+    if (keyboardCanvas) {
+        console.log('keyboardCanvas:', 
+                    'offsetWidth:', keyboardCanvas.offsetWidth, 
+                    'offsetHeight:', keyboardCanvas.offsetHeight,
+                    'parent width:', keyboardCanvas.parentElement?.offsetWidth);
+    }
+    
+    if (multiWaveformCanvas) {
+        console.log('multiWaveformCanvas:', 
+                    'offsetWidth:', multiWaveformCanvas.offsetWidth, 
+                    'offsetHeight:', multiWaveformCanvas.offsetHeight,
+                    'parent width:', multiWaveformCanvas.parentElement?.offsetWidth);
+    }
+    // *** DEBUG LOGGING - END ***
+
+    // Not multisample - hide everything cleanly
     if (padData.params.multisammode !== '1') {
-        paramSections.forEach(section => section.style.display = 'none');
-        
-        ['keyboardCanvas', 'multiWaveformCanvas', 'multiScrollZoomCanvas', 'keyboardScrollCanvas'].forEach(id => {
-            const canvas = document.getElementById(id);
-            if (canvas && canvas.width > 0) {
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#1a1614';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
+        console.log('>>> NOT multisample, hiding sections');
+        paramSections.forEach(section => {
+            section.style.display = 'none';
         });
         return;
     }
 
-    // Show sections
-    paramSections.forEach(section => section.style.display = 'block');
-
-    const editPanel = document.getElementById('multiEditPanel');
-    if (editPanel) editPanel.style.display = 'none';
+    // IS multisample - show everything and render
+    console.log('>>> IS multisample, showing sections');
+    paramSections.forEach(section => {
+        section.style.display = 'block';
+    });
 
     const assets = assetCells.filter(asset =>
         parseInt(asset.params.asssrcrow) === row &&
         parseInt(asset.params.asssrccol) === col
     );
 
+    console.log('>>> Found', assets.length, 'assets for this pad');
+
     parseAssetsWAVMetadata(assets).then(() => {
+        console.log('>>> After parseAssetsWAVMetadata, creating/updating visualizer');
+        
         // Only create if doesn't exist
         if (!window._multiKeyboardViz) {
+            console.log('>>> Creating new KeyboardVisualizer');
             window._multiKeyboardViz = new KeyboardVisualizer('keyboardCanvas', 'keyboardScrollCanvas');
             window._multiKeyboardViz.onAssetSelected = (asset) => {
                 loadMultisampleAssetToEditor(asset);
             };
+        } else {
+            console.log('>>> Reusing existing KeyboardVisualizer');
         }
         
+        console.log('>>> Calling setAssets on visualizer');
         window._multiKeyboardViz.setAssets(assets);
     });
 }
 
-/**
- * Parses WAV metadata for all assets using EXISTING WAVParser
- * FIXED: Uses window.BitboxerFileHandler.WAVParser (already works!)
- */
-async function parseAssetsWAVMetadata(assets) {
-    for (const asset of assets) {
-        const wavName = asset.filename.split(/[/\\]/).pop();
+// /**
+//  * Parses WAV metadata for all assets using EXISTING WAVParser
+//  * FIXED: Uses window.BitboxerFileHandler.WAVParser (already works!)
+//  */
+// async function parseAssetsWAVMetadata(assets) {
+//     for (const asset of assets) {
+//         const wavName = asset.filename.split(/[/\\]/).pop();
         
-        // Find WAV file in cache
-        if (window._lastImportedFiles && window._lastImportedFiles.has(wavName)) {
-            const wavFile = window._lastImportedFiles.get(wavName);
+//         // Find WAV file in cache
+//         if (window._lastImportedFiles && window._lastImportedFiles.has(wavName)) {
+//             const wavFile = window._lastImportedFiles.get(wavName);
             
-            try {
-                const arrayBuffer = await wavFile.arrayBuffer();
+//             // *** ADD THIS DEBUG ***
+//             console.log('FIRST parseAssetsWAVMetadata() at line 586');
+//             console.log('=== DEBUG: Looking for WAV ===');
+//             console.log('wavName:', wavName);
+//             console.log('window._lastImportedFiles exists?', !!window._lastImportedFiles);
+//             console.log('Cache size:', window._lastImportedFiles?.size);
+//             console.log('Cache has this file?', window._lastImportedFiles?.has(wavName));
+//             console.log('Cache keys:', Array.from(window._lastImportedFiles?.keys() || []));
+//             // *** END DEBUG ***
+
+//             try {
+//                 const arrayBuffer = await wavFile.arrayBuffer();
                 
-                // FIXED: Use EXISTING WAVParser (not broken new one)
-                const metadata = window.BitboxerFileHandler.WAVParser.parseMetadata(arrayBuffer);
+//                 // FIXED: Use EXISTING WAVParser (not broken new one)
+//                 const metadata = window.BitboxerFileHandler.WAVParser.parseMetadata(arrayBuffer);
                 
-                // Store metadata in asset
-                asset.wavMetadata = {
-                    sampleRate: metadata.sampleRate || 44100,
-                    numChannels: metadata.numChannels || 1,
-                    bitsPerSample: metadata.bitsPerSample || 16,
-                    duration: metadata.duration || 0,
-                    samlen: metadata.duration && metadata.sampleRate 
-                        ? Math.floor(metadata.sampleRate * metadata.duration) 
-                        : 0,
-                    loopStart: metadata.loopPoints?.start || 0,
-                    loopEnd: metadata.loopPoints?.end || 0,
-                    hasLoop: !!metadata.loopPoints,
-                    rootKey: parseInt(asset.params.rootnote) || 60
-                };
+//                 // Store metadata in asset
+//                 asset.wavMetadata = {
+//                     sampleRate: metadata.sampleRate || 44100,
+//                     numChannels: metadata.numChannels || 1,
+//                     bitsPerSample: metadata.bitsPerSample || 16,
+//                     duration: metadata.duration || 0,
+//                     samlen: metadata.duration && metadata.sampleRate 
+//                         ? Math.floor(metadata.sampleRate * metadata.duration) 
+//                         : 0,
+//                     loopStart: metadata.loopPoints?.start || 0,
+//                     loopEnd: metadata.loopPoints?.end || 0,
+//                     hasLoop: !!metadata.loopPoints,
+//                     rootKey: parseInt(asset.params.rootnote) || 60
+//                 };
                 
-                // Update rootnote from WAV if available
-                if (metadata.rootNote >= 0 && metadata.rootNote <= 127) {
-                    asset.params.rootnote = metadata.rootNote.toString();
-                    asset.wavMetadata.rootKey = metadata.rootNote;
-                }
+//                 // Update rootnote from WAV if available
+//                 if (metadata.rootNote >= 0 && metadata.rootNote <= 127) {
+//                     asset.params.rootnote = metadata.rootNote.toString();
+//                     asset.wavMetadata.rootKey = metadata.rootNote;
+//                 }
                 
-                console.log(`✓ Parsed WAV: ${wavName} (${asset.wavMetadata.samlen} samples, Loop: ${asset.wavMetadata.hasLoop})`);
-            } catch (error) {
-                console.error(`✗ Failed to parse WAV: ${wavName}`, error);
-                // Initialize with defaults
-                asset.wavMetadata = {
-                    sampleRate: 44100,
-                    samlen: 0,
-                    loopStart: 0,
-                    loopEnd: 0,
-                    hasLoop: false,
-                    rootKey: parseInt(asset.params.rootnote) || 60
-                };
-            }
-        } else {
-            console.warn(`✗ WAV file not found in cache: ${wavName}`);
-            asset.wavMetadata = {
-                sampleRate: 44100,
-                samlen: 0,
-                loopStart: 0,
-                loopEnd: 0,
-                hasLoop: false,
-                rootKey: parseInt(asset.params.rootnote) || 60
-            };
-        }
-    }
-}
+//                 console.log(`✓ Parsed WAV: ${wavName} (${asset.wavMetadata.samlen} samples, Loop: ${asset.wavMetadata.hasLoop})`);
+//             } catch (error) {
+//                 console.error(`✗ Failed to parse WAV: ${wavName}`, error);
+//                 // Initialize with defaults
+//                 asset.wavMetadata = {
+//                     sampleRate: 44100,
+//                     samlen: 0,
+//                     loopStart: 0,
+//                     loopEnd: 0,
+//                     hasLoop: false,
+//                     rootKey: parseInt(asset.params.rootnote) || 60
+//                 };
+//             }
+//         } else {
+//             console.warn(`✗ WAV file not found in cache: ${wavName}`);
+//             asset.wavMetadata = {
+//                 sampleRate: 44100,
+//                 samlen: 0,
+//                 loopStart: 0,
+//                 loopEnd: 0,
+//                 hasLoop: false,
+//                 rootKey: parseInt(asset.params.rootnote) || 60
+//             };
+//         }
+//     }
+// }
 
 // ============================================
 // MODULATION SLOT RENDERING
@@ -1319,71 +1381,6 @@ async function initSampleEditor(padData) {
 }
 
 // ============================================
-// FIXED: renderMultisampleList()
-// ============================================
-
-/**
- * Renders multisample keyboard + editor
- * FIXED: Uses existing WAVParser, proper canvas timing, clearAudioData
- */
-function renderMultisampleList() {
-    const { currentEditingPad, presetData, assetCells } = window.BitboxerData;
-    if (!currentEditingPad) return;
-
-    if (window._multiKeyboardViz) {
-        window._multiKeyboardViz.selectedAsset = null;
-    }
-    
-    const editPanel = document.getElementById('multiEditPanel');
-    if (editPanel) editPanel.style.display = 'none';
-
-    const row = parseInt(currentEditingPad.dataset.row);
-    const col = parseInt(currentEditingPad.dataset.col);
-    const padData = presetData.pads[row][col];
-
-    // Not multisample - clear canvases
-    if (padData.params.multisammode !== '1') {
-        ['keyboardCanvas', 'multiWaveformCanvas', 'multiScrollZoomCanvas', 'keyboardScrollCanvas'].forEach(id => {
-            const canvas = document.getElementById(id);
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = (id === 'keyboardCanvas') ? '#1a1614' : '#2a2420';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-        });
-        
-        const canvas = document.getElementById('keyboardCanvas');
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#d0c2b9';
-            ctx.font = '14px monospace';
-            ctx.fillText('Not in multisample mode', 10, 120);
-        }
-        
-        return;
-    }
-
-    // Is multisample - prepare data
-    const assets = assetCells.filter(asset =>
-        parseInt(asset.params.asssrcrow) === row &&
-        parseInt(asset.params.asssrccol) === col
-    );
-
-    parseAssetsWAVMetadata(assets).then(() => {
-        // Initialize visualizer if needed
-        if (!window._multiKeyboardViz) {
-            window._multiKeyboardViz = new KeyboardVisualizer('keyboardCanvas', 'keyboardScrollCanvas');
-            window._multiKeyboardViz.onAssetSelected = (asset) => {
-                loadMultisampleAssetToEditor(asset);
-            };
-        }
-        
-        // Set assets (will render if tab is visible, otherwise waits)
-        window._multiKeyboardViz.setAssets(assets);
-    });
-}
-
-// ============================================
 // NEW: Parse WAV Metadata Using Existing Parser
 // ============================================
 
@@ -1401,6 +1398,17 @@ async function parseAssetsWAVMetadata(assets) {
         
         const wavName = asset.filename.split(/[/\\]/).pop();
         
+        // *** ADD THIS DEBUG ***
+        console.log('SECOND parseAssetsWAVMetadata() at line 1402');
+        console.log('=== DEBUG: Looking for WAV ===');
+        console.log('wavName:', wavName);
+        console.log('window._lastImportedFiles exists?', !!window._lastImportedFiles);
+        console.log('Cache size:', window._lastImportedFiles?.size);
+        console.log('Cache has this file?', window._lastImportedFiles?.has(wavName));
+        console.log('Cache keys:', Array.from(window._lastImportedFiles?.keys() || []));
+        // *** END DEBUG ***
+
+
         // Find WAV file in cache
         if (window._lastImportedFiles && window._lastImportedFiles.has(wavName)) {
             const wavFile = window._lastImportedFiles.get(wavName);

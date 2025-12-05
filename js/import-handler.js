@@ -69,8 +69,9 @@ async function unifiedImportHandler(files, source, targetPad = null) {
         if (hasZIP) {
             try {
                 window.BitboxerUtils.setStatus('Processing ZIP...', 'info');
+                
                 const result = await window.BitboxerFileHandler.FileImporter.import(file);
-                window._lastImportedFiles = result.collection.files;
+                // window._lastImportedFiles = result.collection.files;
                 
                 const hasPresetXML = result.xmlFiles.length > 0;
                 const hasPadJSON = Array.from(result.collection.files.keys())
@@ -241,7 +242,7 @@ async function unifiedImportHandler(files, source, targetPad = null) {
  * @param {Object} result - Processed file collection from FileHandler
  */
 async function processImportedFiles(result) {
-    window._lastImportedFiles = result.collection.files;
+    // window._lastImportedFiles = result.collection.files;
     
     try {
         // SFZ files with samples

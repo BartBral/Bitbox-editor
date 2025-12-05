@@ -87,13 +87,20 @@ class KeyboardVisualizer {
 
     setAssets(assetCells) {
         this.assetCells = assetCells;
-
-        // Try to render immediately
-        const rendered = this.tryRenderWhenVisible();
-
-        if (!rendered) {
-            console.log('Canvas not visible yet, will render when tab is clicked');
-        }
+        
+        // Attempt render with retry logic
+        const attemptRender = (retries = 0) => {
+            const rendered = this.tryRenderWhenVisible();
+            
+            if (!rendered && retries < 5) {
+                // Retry after next frame if canvas not ready
+                requestAnimationFrame(() => attemptRender(retries + 1));
+            } else if (!rendered) {
+                console.warn('Canvas failed to render after 5 attempts');
+            }
+        };
+        
+        attemptRender();
     }
 
     /**
