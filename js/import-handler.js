@@ -728,17 +728,18 @@ async function promptLayerToPadMapping(regions, targetPad) {
 function createAssetFromSFZRegion(region, padRow, padCol, assetIndex) {
     let keyRangeBottom = 0, keyRangeTop = 127, rootNote = 60;
     
-    if (region.lokey !== undefined && !isNaN(parseInt(region.lokey))) {
+    // Handle null/undefined/NaN properly
+    if (region.lokey !== undefined && region.lokey !== null && !isNaN(region.lokey)) {
         keyRangeBottom = parseInt(region.lokey);
     }
-    if (region.hikey !== undefined && !isNaN(parseInt(region.hikey))) {
+    if (region.hikey !== undefined && region.hikey !== null && !isNaN(region.hikey)) {
         keyRangeTop = parseInt(region.hikey);
     }
-    if (region.pitch_keycenter !== undefined && !isNaN(parseInt(region.pitch_keycenter))) {
+    if (region.pitch_keycenter !== undefined && region.pitch_keycenter !== null && !isNaN(region.pitch_keycenter)) {
         rootNote = parseInt(region.pitch_keycenter);
-    } else if (region.key !== undefined && !isNaN(parseInt(region.key))) {
+    } else if (region.key !== undefined && region.key !== null && !isNaN(region.key)) {
         rootNote = parseInt(region.key);
-        if (region.lokey === undefined && region.hikey === undefined) {
+        if (!region.lokey && !region.hikey) {
             keyRangeBottom = rootNote;
             keyRangeTop = rootNote;
         }

@@ -401,6 +401,127 @@ function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+/**
+ * Checks if a zone would overlap with others on the same velocity layer
+ * @param {Object} asset - Asset to check
+ * @param {number} newKeyLo - Proposed keyrangebottom
+ * @param {number} newKeyHi - Proposed keyrangetop
+ * @param {Array} allAssets - All asset cells
+ * @returns {Object} { valid, conflicts: [] }
+ */
+function validateZoneOverlap(asset, newKeyLo, newKeyHi, allAssets) {
+    const loVel = parseInt(asset.params.velrangebottom);
+    const hiVel = parseInt(asset.params.velrangetop);
+    
+    const conflicts = [];
+    
+    for (const other of allAssets) {
+        if (other === asset) continue;
+        
+        const otherLoVel = parseInt(other.params.velrangebottom);
+        const otherHiVel = parseInt(other.params.velrangetop);
+        const otherLoKey = parseInt(other.params.keyrangebottom);
+        const otherHiKey = parseInt(other.params.keyrangetop);
+        
+        // Check if on same velocity layer
+        const velOverlap = !(hiVel < otherLoVel || loVel > otherHiVel);
+        if (!velOverlap) continue;
+        
+        // Check if key ranges would overlap
+        const keyOverlap = !(newKeyHi < otherLoKey || newKeyLo > otherHiKey);
+        if (keyOverlap) {
+            conflicts.push({
+                asset: other,
+                keys: `${otherLoKey}-${otherHiKey}`,
+                velocity: `${otherLoVel}-${otherHiVel}`
+            });
+        }
+    }
+    
+    return {
+        valid: conflicts.length === 0,
+        conflicts: conflicts
+    };
+}
+
+/**
+ * Constrains a zone move/resize to respect neighbor boundaries
+ * @param {number} targetKey - Desired key position
+ * @param {Object} neighbors - { left, right } neighbor assets
+ * @param {string} direction - 'left', 'right', 'both' (for body drag)
+ * @returns {number} Constrained key position
+ */
+function constrainToNeighbors(targetKey, neighbors, direction) {
+    let constrained = targetKey;
+    
+    if (direction === 'left' && neighbors.left) {
+        const neighborHi = parseInt(neighbors.left.params.keyrangetop);
+        constrained = Math.max(constrained, neighborHi + 1);
+    }
+    
+    if (direction === 'right' && neighbors.right) {
+        const neighborLo = parseInt(neighbors.right.params.keyrangebottom);
+        constrained = Math.min(constrained, neighborLo - 1);
+    }
+    
+    if (direction === 'both') {
+        if (neighbors.left) {
+            const neighborHi = parseInt(neighbors.left.params.keyrangetop);
+            constrained = Math.max(constrained, neighborHi + 1);
+        }
+        if (neighbors.right) {
+            const neighborLo = parseInt(neighbors.right.params.keyrangebottom);
+            constrained = Math.min(constrained, neighborLo - 1);
+        }
+    }
+    
+    return Math.max(0, Math.min(127, constrained));
+}
+
+/**
+ * Calculates valid bounds for a zone on a velocity layer
+ * @param {Array} assets - All assets
+ * @param {number} velocityLo - Velocity layer bottom
+ * @param {number} velocityHi - Velocity layer top
+ * @param {Object} excludeAsset - Asset to exclude from calculation
+ * @returns {Array} Array of { start, end } occupied ranges
+ */
+function calculateZoneBounds(assets, velocityLo, velocityHi, excludeAsset = null) {
+    const occupiedRanges = [];
+    
+    for (const asset of assets) {
+        if (asset === excludeAsset) continue;
+        
+        const assetLoVel = parseInt(asset.params.velrangebottom);
+        const assetHiVel = parseInt(asset.params.velrangetop);
+        const assetLoKey = parseInt(asset.params.keyrangebottom);
+        const assetHiKey = parseInt(asset.params.keyrangetop);
+        
+        // Check if on same velocity layer
+        const velOverlap = !(velocityHi < assetLoVel || velocityLo > assetHiVel);
+        if (velOverlap) {
+            occupiedRanges.push({
+                start: assetLoKey,
+                end: assetHiKey,
+                asset: asset
+            });
+        }
+    }
+    
+    return occupiedRanges.sort((a, b) => a.start - b.start);
+}
+
+/**
+ * Converts MIDI number to note name (already exists, but ensure it's exported)
+ */
+function midiToNoteName(midi) {
+    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const octave = Math.floor((midi - 12) / 12);
+    const note = notes[midi % 12];
+    return `${note}${octave}`;
+}
+
+
 // ============================================
 // EXPORT UTILITIES
 // ============================================
@@ -428,5 +549,11 @@ window.BitboxerUtils = {
     
     // String utilities
     truncateString,
-    capitalize
+    capitalize,
+
+    // Zones
+    validateZoneOverlap,
+    constrainToNeighbors,
+    calculateZoneBounds,
+    midiToNoteName
 };

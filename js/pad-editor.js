@@ -7,9 +7,10 @@
  * - Parameter event listeners
  * - Modulation slot management
  * - Envelope visualization
- * 
- * Part 1: Modal & Parameters
  */
+
+
+
 
 // ============================================
 // PAD EDIT MODAL
@@ -569,82 +570,6 @@ function renderMultisampleList() {
         window._multiKeyboardViz.setAssets(assets);
     });
 }
-
-// /**
-//  * Parses WAV metadata for all assets using EXISTING WAVParser
-//  * FIXED: Uses window.BitboxerFileHandler.WAVParser (already works!)
-//  */
-// async function parseAssetsWAVMetadata(assets) {
-//     for (const asset of assets) {
-//         const wavName = asset.filename.split(/[/\\]/).pop();
-        
-//         // Find WAV file in cache
-//         if (window._lastImportedFiles && window._lastImportedFiles.has(wavName)) {
-//             const wavFile = window._lastImportedFiles.get(wavName);
-            
-//             // *** ADD THIS DEBUG ***
-//             console.log('FIRST parseAssetsWAVMetadata() at line 586');
-//             console.log('=== DEBUG: Looking for WAV ===');
-//             console.log('wavName:', wavName);
-//             console.log('window._lastImportedFiles exists?', !!window._lastImportedFiles);
-//             console.log('Cache size:', window._lastImportedFiles?.size);
-//             console.log('Cache has this file?', window._lastImportedFiles?.has(wavName));
-//             console.log('Cache keys:', Array.from(window._lastImportedFiles?.keys() || []));
-//             // *** END DEBUG ***
-
-//             try {
-//                 const arrayBuffer = await wavFile.arrayBuffer();
-                
-//                 // FIXED: Use EXISTING WAVParser (not broken new one)
-//                 const metadata = window.BitboxerFileHandler.WAVParser.parseMetadata(arrayBuffer);
-                
-//                 // Store metadata in asset
-//                 asset.wavMetadata = {
-//                     sampleRate: metadata.sampleRate || 44100,
-//                     numChannels: metadata.numChannels || 1,
-//                     bitsPerSample: metadata.bitsPerSample || 16,
-//                     duration: metadata.duration || 0,
-//                     samlen: metadata.duration && metadata.sampleRate 
-//                         ? Math.floor(metadata.sampleRate * metadata.duration) 
-//                         : 0,
-//                     loopStart: metadata.loopPoints?.start || 0,
-//                     loopEnd: metadata.loopPoints?.end || 0,
-//                     hasLoop: !!metadata.loopPoints,
-//                     rootKey: parseInt(asset.params.rootnote) || 60
-//                 };
-                
-//                 // Update rootnote from WAV if available
-//                 if (metadata.rootNote >= 0 && metadata.rootNote <= 127) {
-//                     asset.params.rootnote = metadata.rootNote.toString();
-//                     asset.wavMetadata.rootKey = metadata.rootNote;
-//                 }
-                
-//                 console.log(`✓ Parsed WAV: ${wavName} (${asset.wavMetadata.samlen} samples, Loop: ${asset.wavMetadata.hasLoop})`);
-//             } catch (error) {
-//                 console.error(`✗ Failed to parse WAV: ${wavName}`, error);
-//                 // Initialize with defaults
-//                 asset.wavMetadata = {
-//                     sampleRate: 44100,
-//                     samlen: 0,
-//                     loopStart: 0,
-//                     loopEnd: 0,
-//                     hasLoop: false,
-//                     rootKey: parseInt(asset.params.rootnote) || 60
-//                 };
-//             }
-//         } else {
-//             console.warn(`✗ WAV file not found in cache: ${wavName}`);
-//             asset.wavMetadata = {
-//                 sampleRate: 44100,
-//                 samlen: 0,
-//                 loopStart: 0,
-//                 loopEnd: 0,
-//                 hasLoop: false,
-//                 rootKey: parseInt(asset.params.rootnote) || 60
-//             };
-//         }
-//     }
-// }
 
 // ============================================
 // MODULATION SLOT RENDERING
@@ -1500,11 +1425,27 @@ async function parseAssetsWAVMetadata(assets) {
  * FIXED: Clears previous data, sets correct samlen, green markers
  */
 async function loadMultisampleAssetToEditor(asset) {
+
+    console.log('=== loadMultisampleAssetToEditor START ===');
+    console.log('Asset:', asset.filename);
+    console.log('Current asset:', window._currentMultiAsset?.filename);
+
     const editPanel = document.getElementById('multiEditPanel');
     const sampleNameSpan = document.getElementById('multiSampleName');
     
     if (!asset || !editPanel) return;
     
+    // PREVENT RELOAD if this is already the current asset
+    if (window._currentMultiAsset === asset) {
+        console.log('❌ Asset already loaded, skipping reload');
+        return;
+    }
+    
+    console.log('✅ Loading new asset');
+
+    // Mark this as the current asset
+    window._currentMultiAsset = asset;
+
     // Show edit panel
     editPanel.style.display = 'block';
     
@@ -1595,12 +1536,19 @@ async function loadMultisampleAssetToEditor(asset) {
  * FIXED: Correct samlen from audioBuffer, two-way binding
  */
 function populateMultisampleEditPanel(asset) {
+    console.log('=== populateMultisampleEditPanel START ===');
+    console.log('Asset filename:', asset.filename);
+    console.log('Asset.params.rootnote:', asset.params.rootnote);
+    console.log('Asset.params.keyrangebottom:', asset.params.keyrangebottom);
+    console.log('Asset.params.keyrangetop:', asset.params.keyrangetop);
+    
     // Populate note dropdowns (0-127)
     const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     
     ['multiRootNote', 'multiKeyLo', 'multiKeyHi'].forEach(id => {
         const select = document.getElementById(id);
         if (select && select.options.length === 0) {
+            console.log(`Populating dropdown: ${id}`);
             for (let i = 0; i <= 127; i++) {
                 const octave = Math.floor((i - 12) / 12);
                 const note = noteNames[i % 12];
@@ -1612,13 +1560,35 @@ function populateMultisampleEditPanel(asset) {
         }
     });
     
-    // Set values
-    document.getElementById('multiRootNote').value = asset.params.rootnote;
-    document.getElementById('multiKeyLo').value = asset.params.keyrangebottom;
-    document.getElementById('multiKeyHi').value = asset.params.keyrangetop;
+    // Set values WITH LOGGING
+    const rootSelect = document.getElementById('multiRootNote');
+    const loSelect = document.getElementById('multiKeyLo');
+    const hiSelect = document.getElementById('multiKeyHi');
+
+    console.log('Setting dropdown values...');
+    if (rootSelect) {
+        console.log(`  Setting multiRootNote to: "${asset.params.rootnote}"`);
+        rootSelect.value = asset.params.rootnote;
+        console.log(`  After set, multiRootNote.value is: "${rootSelect.value}"`);
+    }
+
+    if (loSelect) {
+        console.log(`  Setting multiKeyLo to: "${asset.params.keyrangebottom}"`);
+        loSelect.value = asset.params.keyrangebottom;
+        console.log(`  After set, multiKeyLo.value is: "${loSelect.value}"`);
+    }
+
+    if (hiSelect) {
+        console.log(`  Setting multiKeyHi to: "${asset.params.keyrangetop}"`);
+        hiSelect.value = asset.params.keyrangetop;
+        console.log(`  After set, multiKeyHi.value is: "${hiSelect.value}"`);
+    }
+
     document.getElementById('multiVelLo').value = asset.params.velrangebottom;
     document.getElementById('multiVelHi').value = asset.params.velrangetop;
     
+    console.log('=== populateMultisampleEditPanel END ===');
+
     // Set loop points and slider max from audioBuffer
     if (window._multiSampleEditor && window._multiSampleEditor.audioEngine && window._multiSampleEditor.audioEngine.audioBuffer) {
         const audioBuffer = window._multiSampleEditor.audioEngine.audioBuffer;
@@ -1758,6 +1728,33 @@ function setupMultisampleEditListeners(asset) {
     
     // NEW: Two-way binding - marker drag updates sliders
     setupMarkerToSliderSync(asset);
+
+    // NEW: Key/velocity range dropdowns → Update keyboard zones
+    ['multiRootNote', 'multiKeyLo', 'multiKeyHi', 'multiVelLo', 'multiVelHi'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            // SAVE THE CURRENT VALUE
+            const currentValue = element.value;
+            
+            // Remove old listener
+            const newElement = element.cloneNode(true);
+            
+            // RESTORE THE VALUE
+            newElement.value = currentValue;
+            
+            element.parentNode.replaceChild(newElement, element);
+            
+            // Add new listener
+            document.getElementById(id).addEventListener('change', () => {
+                updateAssetFromEditPanel(asset);
+                
+                // Force keyboard re-render to show new position
+                if (window._multiKeyboardViz) {
+                    window._multiKeyboardViz.render();
+                }
+            });
+        }
+    });
 }
 
 // ============================================
@@ -1819,10 +1816,9 @@ function setupMarkerToSliderSync(asset) {
     };
 }
 
-// ============================================
-// updateAssetFromEditPanel (unchanged)
-// ============================================
-
+/**
+ * Enhanced updateAssetFromEditPanel to include keyboard refresh
+ */
 function updateAssetFromEditPanel(asset) {
     asset.params.rootnote = document.getElementById('multiRootNote').value;
     asset.params.keyrangebottom = document.getElementById('multiKeyLo').value;
@@ -1832,6 +1828,16 @@ function updateAssetFromEditPanel(asset) {
     
     // Refresh keyboard visualizer
     if (window._multiKeyboardViz) {
+        window._multiKeyboardViz.render();
+    }
+}
+
+/**
+ * Forces keyboard refresh after any asset modification
+ */
+function refreshKeyboardVisualization() {
+    if (window._multiKeyboardViz) {
+        // Re-render with current asset data
         window._multiKeyboardViz.render();
     }
 }
@@ -1855,6 +1861,6 @@ window.BitboxerPadEditor = {
     loadMultisampleAssetToEditor,
     populateMultisampleEditPanel,
     parseAssetsWAVMetadata,
-    setupMarkerToSliderSync
- 
+    setupMarkerToSliderSync,
+    refreshKeyboardVisualization
 };

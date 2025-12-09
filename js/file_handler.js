@@ -546,11 +546,17 @@ class NoteNameParser {
 
         // Parse octave
         const octave = parseInt(noteName.substring(i));
-        if (isNaN(octave)) return null;
-
+        if (isNaN(octave)) {
+            console.log('  → null (invalid octave)');
+            return null;
+        }
+    
         // Find note index
         const noteIndex = this.noteNames.indexOf(note);
-        if (noteIndex === -1) return null;
+        if (noteIndex === -1) {
+            console.log('  → null (note not found), using 0');
+            return 0;
+        }
 
         // Calculate MIDI number: 
         const midiNum = (octave + 2) * 12 + noteIndex;
