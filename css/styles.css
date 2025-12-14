@@ -1032,3 +1032,36 @@ input[type="file"] {
 }
 
 
+/* Multi-tab specific 4-column grid layout */
+.multi-param-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+/* Wide parameters that span 1.5 columns */
+.multi-param-wide {
+    grid-column: span 2;
+}
+
+/* Ensure proper sizing on smaller screens */
+/* @media (max-width: 900px) {
+    .multi-param-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .multi-param-wide {
+        grid-column: span 1;
+    }
+} */
+
+@media (max-width: 600px) {
+    .multi-param-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .multi-param-wide {
+        grid-column: span 1;
+    }
+}

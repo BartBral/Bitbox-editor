@@ -9,7 +9,51 @@
  * - Envelope visualization
  */
 
+/**
+ * BITBOXER - Unified Multisample State Manager
+ * Tracks current asset, audio buffer, and loop points in one place
+ */
+class MultisampleEditorState {
+    constructor() {
+        this.reset();
+    }
 
+    reset() {
+        this.currentAsset = null;
+        this.audioBuffer = null;
+        this.hasLoadedAudio = false;
+        this.loopStart = 0;
+        this.loopEnd = 0;
+        this.loopEnabled = false;
+    }
+
+    setAsset(asset) {
+        this.currentAsset = asset;
+        this.hasLoadedAudio = false;
+    }
+
+    setAudioData(audioBuffer, loopStart, loopEnd, loopEnabled) {
+        this.audioBuffer = audioBuffer;
+        this.loopStart = loopStart;
+        this.loopEnd = loopEnd;
+        this.loopEnabled = loopEnabled;
+        this.hasLoadedAudio = true;
+    }
+
+    clearAudioOnly() {
+        this.audioBuffer = null;
+        this.hasLoadedAudio = false;
+    }
+
+    needsReload(asset) {
+        return !this.hasLoadedAudio || 
+               this.currentAsset !== asset ||
+               !this.audioBuffer;
+    }
+}
+
+// Initialize global state
+window._multiEditorState = new MultisampleEditorState();
 
 
 // ============================================
@@ -475,16 +519,8 @@ function drawEnvelope() {
  * Uses existing WAVParser, proper canvas timing, clearAudioData
  */
 function renderMultisampleList() {
-    
     const { currentEditingPad, presetData, assetCells } = window.BitboxerData;
     if (!currentEditingPad) return;
-
-    if (window._multiKeyboardViz) {
-        window._multiKeyboardViz.selectedAsset = null;
-    }
-    
-    const editPanel = document.getElementById('multiEditPanel');
-    if (editPanel) editPanel.style.display = 'none';
 
     const row = parseInt(currentEditingPad.dataset.row);
     const col = parseInt(currentEditingPad.dataset.col);
@@ -494,52 +530,28 @@ function renderMultisampleList() {
     if (!multiTab) return;
     
     const paramSections = multiTab.querySelectorAll('.param-section');
+    const editPanel = document.getElementById('multiEditPanel');
 
-    // *** DEBUG LOGGING - START ***
     console.log('=== renderMultisampleList DEBUG ===');
     console.log('Pad:', row, col);
     console.log('padData.params.multisammode:', padData.params.multisammode);
-    console.log('padData.params.cellmode:', padData.params.cellmode);
-    console.log('padData.filename:', padData.filename);
-    console.log('paramSections count:', paramSections.length);
-    
-    paramSections.forEach((section, i) => {
-        const computed = window.getComputedStyle(section);
-        console.log(`Section ${i}:`, 
-                    'inline display:', section.style.display, 
-                    'computed display:', computed.display,
-                    'offsetWidth:', section.offsetWidth,
-                    'offsetHeight:', section.offsetHeight);
-    });
-    
-    const keyboardCanvas = document.getElementById('keyboardCanvas');
-    const multiWaveformCanvas = document.getElementById('multiWaveformCanvas');
-    
-    if (keyboardCanvas) {
-        console.log('keyboardCanvas:', 
-                    'offsetWidth:', keyboardCanvas.offsetWidth, 
-                    'offsetHeight:', keyboardCanvas.offsetHeight,
-                    'parent width:', keyboardCanvas.parentElement?.offsetWidth);
-    }
-    
-    if (multiWaveformCanvas) {
-        console.log('multiWaveformCanvas:', 
-                    'offsetWidth:', multiWaveformCanvas.offsetWidth, 
-                    'offsetHeight:', multiWaveformCanvas.offsetHeight,
-                    'parent width:', multiWaveformCanvas.parentElement?.offsetWidth);
-    }
-    // *** DEBUG LOGGING - END ***
 
-    // Not multisample - hide everything cleanly
+    // CHECK MODE FIRST, THEN DECIDE WHAT TO SHOW/HIDE
     if (padData.params.multisammode !== '1') {
         console.log('>>> NOT multisample, hiding sections');
         paramSections.forEach(section => {
             section.style.display = 'none';
         });
+        if (editPanel) editPanel.style.display = 'none';
+        
+        // Clear keyboard visualizer selection (but keep asset data)
+        if (window._multiKeyboardViz) {
+            window._multiKeyboardViz.selectedAsset = null;
+        }
         return;
     }
 
-    // IS multisample - show everything and render
+    // IS multisample - show everything
     console.log('>>> IS multisample, showing sections');
     paramSections.forEach(section => {
         section.style.display = 'block';
@@ -555,7 +567,6 @@ function renderMultisampleList() {
     parseAssetsWAVMetadata(assets).then(() => {
         console.log('>>> After parseAssetsWAVMetadata, creating/updating visualizer');
         
-        // Only create if doesn't exist
         if (!window._multiKeyboardViz) {
             console.log('>>> Creating new KeyboardVisualizer');
             window._multiKeyboardViz = new KeyboardVisualizer('keyboardCanvas', 'keyboardScrollCanvas');
@@ -1425,27 +1436,51 @@ async function parseAssetsWAVMetadata(assets) {
  * FIXED: Clears previous data, sets correct samlen, green markers
  */
 async function loadMultisampleAssetToEditor(asset) {
-
-    console.log('=== loadMultisampleAssetToEditor START ===');
-    console.log('Asset:', asset.filename);
-    console.log('Current asset:', window._currentMultiAsset?.filename);
+        console.log('==========================================');
+        console.log('=== loadMultisampleAssetToEditor CALLED ===');
+        console.log('Asset filename:', asset.filename);
+        console.log('Asset rootnote:', asset.params.rootnote);
+        console.log('Asset keyrangebottom:', asset.params.keyrangebottom);
+        console.log('Asset keyrangetop:', asset.params.keyrangetop);
+        console.log('Current state.currentAsset:', window._multiEditorState.currentAsset?.filename);
+        console.log('Current state.hasLoadedAudio:', window._multiEditorState.hasLoadedAudio);
+        console.log('Current state.audioBuffer exists:', !!window._multiEditorState.audioBuffer);
+        console.log('==========================================');
 
     const editPanel = document.getElementById('multiEditPanel');
     const sampleNameSpan = document.getElementById('multiSampleName');
     
-    if (!asset || !editPanel) return;
-    
-    // PREVENT RELOAD if this is already the current asset
-    if (window._currentMultiAsset === asset) {
-        console.log('❌ Asset already loaded, skipping reload');
+    if (!asset || !editPanel) {
+        console.log('❌ EXIT: No asset or editPanel');
         return;
     }
     
-    console.log('✅ Loading new asset');
+    const isDifferentAsset = (window._multiEditorState.currentAsset !== asset);
 
-    // Mark this as the current asset
-    window._currentMultiAsset = asset;
+    // If clicking same asset that's already loaded, do nothing
+    if (!isDifferentAsset && window._multiEditorState.hasLoadedAudio) {
+        console.log('✅ Same asset already loaded, skipping');
+        return;
+    }
 
+    // If different asset, always do full reload (load new WAV)
+    if (isDifferentAsset) {
+        console.log('🔄 Different asset detected, doing full reload');
+        window._multiEditorState.setAsset(asset);
+        // Continue to full reload below...
+    }
+
+    // If same asset but audio lost, also do full reload
+    if (!isDifferentAsset && !window._multiEditorState.hasLoadedAudio) {
+        console.log('🔄 Same asset but audio lost, reloading');
+        // Continue to full reload below...
+    }
+    
+    console.log('🔄 Loading asset (audio buffer missing or stale)');
+
+    // Update state
+    window._multiEditorState.setAsset(asset);
+    
     // Show edit panel
     editPanel.style.display = 'block';
     
@@ -1458,7 +1493,6 @@ async function loadMultisampleAssetToEditor(asset) {
         window._multiSampleEditor = new SampleEditor();
         await window._multiSampleEditor.init('multiWaveformCanvas');
 
-        // Initialize scroll-zoom bar for multisample editor
         window._multiSampleEditor.scrollZoomBar = new ScrollZoomBar(
             window._multiSampleEditor.renderer,
             () => {
@@ -1483,19 +1517,24 @@ async function loadMultisampleAssetToEditor(asset) {
         document.getElementById('multiStopBtn').onclick = () => 
             window._multiSampleEditor.stop();
     } else {
-        // CRITICAL FIX: Clear previous audio data when switching assets
+        // Clear previous audio data when switching assets
         window._multiSampleEditor.clearAudioData();
     }
     
     // Load WAV file
     if (window._lastImportedFiles && window._lastImportedFiles.has(wavName)) {
         const wavFile = window._lastImportedFiles.get(wavName);
-        await window._multiSampleEditor.loadSample(wavFile);
+        const audioBuffer = await window._multiSampleEditor.loadSample(wavFile);
+        
+        if (!audioBuffer) {
+            console.error('❌ Failed to load audio buffer');
+            return;
+        }
         
         // Set mode to sample mode
         window._multiSampleEditor.setMode('0');
         
-        // Set loop markers to GREEN and configure from WAV metadata
+        // Configure loop markers from WAV metadata
         if (asset.wavMetadata) {
             const { loopStart, loopEnd, hasLoop, samlen } = asset.wavMetadata;
 
@@ -1515,15 +1554,23 @@ async function loadMultisampleAssetToEditor(asset) {
             markers.end.label = '';
 
             // Set loop points from WAV
-            const finalLoopEnd = loopEnd || samlen || window._multiSampleEditor.audioEngine.audioBuffer.length;
+            const finalLoopEnd = loopEnd || samlen || audioBuffer.length;
             window._multiSampleEditor.markerController.setMarker('loopStart', loopStart);
             window._multiSampleEditor.markerController.setMarker('loopEnd', finalLoopEnd);
+
+            // Store in unified state
+            window._multiEditorState.setAudioData(
+                audioBuffer,
+                loopStart,
+                finalLoopEnd,
+                hasLoop
+            );
         }
         
         window._multiSampleEditor.render();
     }
     
-    // Populate edit panel
+    // Populate edit panel with current values
     populateMultisampleEditPanel(asset);
 }
 
@@ -1536,14 +1583,15 @@ async function loadMultisampleAssetToEditor(asset) {
  * FIXED: Correct samlen from audioBuffer, two-way binding
  */
 function populateMultisampleEditPanel(asset) {
-    console.log('=== populateMultisampleEditPanel START ===');
-    console.log('Asset filename:', asset.filename);
-    console.log('Asset.params.rootnote:', asset.params.rootnote);
-    console.log('Asset.params.keyrangebottom:', asset.params.keyrangebottom);
-    console.log('Asset.params.keyrangetop:', asset.params.keyrangetop);
+    console.log('>>> populateMultisampleEditPanel CALLED');
+    console.log('>>> Asset:', asset.filename);
+    console.log('>>> Asset.params.rootnote:', asset.params.rootnote);
+    console.log('>>> Asset.params.keyrangebottom:', asset.params.keyrangebottom);
+    console.log('>>> Asset.params.keyrangetop:', asset.params.keyrangetop);
     
     // Populate note dropdowns (0-127)
     const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    
     
     ['multiRootNote', 'multiKeyLo', 'multiKeyHi'].forEach(id => {
         const select = document.getElementById(id);
@@ -1735,22 +1783,38 @@ function setupMultisampleEditListeners(asset) {
         if (element) {
             // SAVE THE CURRENT VALUE
             const currentValue = element.value;
-            
+
             // Remove old listener
             const newElement = element.cloneNode(true);
-            
+
             // RESTORE THE VALUE
             newElement.value = currentValue;
-            
+
             element.parentNode.replaceChild(newElement, element);
-            
+
             // Add new listener
             document.getElementById(id).addEventListener('change', () => {
                 updateAssetFromEditPanel(asset);
-                
-                // Force keyboard re-render to show new position
+
+                // Force keyboard re-render with updated asset data
                 if (window._multiKeyboardViz) {
-                    window._multiKeyboardViz.render();
+                    // Get fresh asset list from BitboxerData
+                    const { currentEditingPad, presetData, assetCells } = window.BitboxerData;
+                    if (currentEditingPad) {
+                        const row = parseInt(currentEditingPad.dataset.row);
+                        const col = parseInt(currentEditingPad.dataset.col);
+
+                        // Filter assets for this pad
+                        const assets = assetCells.filter(a =>
+                            parseInt(a.params.asssrcrow) === row &&
+                            parseInt(a.params.asssrccol) === col
+                        );
+
+                        // Update visualizer with fresh data
+                        window._multiKeyboardViz.assetCells = assets;
+                        window._multiKeyboardViz.resize();
+                        window._multiKeyboardViz.render();
+                    }
                 }
             });
         }

@@ -53,16 +53,21 @@ function closeEditModal() {
         window.BitboxerSampleEditor.clearAudioData();
     }
     
-    // CRITICAL: Also clear multisample editor
     if (window._multiSampleEditor) {
         window._multiSampleEditor.clearAudioData();
     }
-    
-    // Clear multisample state
-    if (window._multiKeyboardViz) {
-        window._multiKeyboardViz.selectedAsset = null;
-        window._multiKeyboardViz.assetCells = [];
+
+    // Clear audio in unified state (but KEEP asset reference)
+    if (window._multiEditorState) {
+        window._multiEditorState.clearAudioOnly();
     }
+    
+    // REMOVED: Don't clear keyboard visualizer's asset references
+    // Keep this commented out:
+    // if (window._multiKeyboardViz) {
+    //     window._multiKeyboardViz.selectedAsset = null;
+    //     window._multiKeyboardViz.assetCells = [];
+    // }
     
     // Hide multisample panels
     const editPanel = document.getElementById('multiEditPanel');

@@ -1296,19 +1296,15 @@
                  MULTISAMPLE TAB 
                  ============================================ -->
             <div class="tab-content" id="tab-multi">
+                <!-- Waveform Section -->
                 <div class="param-section">
-                    <h3>Sample Editor - <span id="multiSampleName">Select a key</span></h3>
+                    <h3>Waveform - <span id="multiSampleName">Select a key</span></h3>
+
                     <canvas id="multiWaveformCanvas"
                         style="width: 100%; height: 200px; background: #1a1614; border-radius: 6px; cursor: crosshair; display: block;"></canvas>
 
-                    <!-- Scroll-Zoom Bar -->
-                    <canvas id="multiScrollZoomCanvas" style="width: 100%; 
-               height: 30px; 
-               display: block; 
-               border-radius: 6px; 
-               cursor: default; 
-               background: #2a2420;
-               margin-top: 5px;"></canvas>
+                    <canvas id="multiScrollZoomCanvas"
+                        style="width: 100%; height: 30px; display: block; border-radius: 6px; cursor: default; background: #2a2420; margin-top: 5px;"></canvas>
 
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
                         <button class="btn" id="multiPlayBtn">▶ Play</button>
@@ -1316,88 +1312,119 @@
                     </div>
                 </div>
 
+                <!-- Keyboard Section -->
+                <div class="param-section">
+                    <!-- <h3>Keyboard Mapping</h3> -->
+                    <canvas id="keyboardCanvas"
+                        style="width: 100%; height: 240px; background: #1a1614; border-radius: 6px; display: block;"></canvas>
+                    <canvas id="keyboardScrollCanvas"
+                        style="width: 100%; height: 30px; background: #2a2420; border-radius: 6px; margin-top: 5px; display: block; cursor: grab;"></canvas>
+                </div>
+
+                <!-- Parameters Section -->
                 <div class="param-section" id="multiEditPanel">
-                    <h3>Key Mapping Parameters</h3>
+                    <!-- <h3>Zone Parameters</h3> -->
                     <div class="param-grid">
-                        <!-- Root Key -->
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Root Key</label>
-                            </div>
-                            <select class="select" id="multiRootNote">
-                                <!-- Options 0-127 populated by JS -->
-                            </select>
-                        </div>
 
-                        <!-- Key Range -->
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Key Range</label>
-                            </div>
-                            <div style="display: flex; gap: 5px;">
-                                <select class="select" id="multiKeyLo" style="flex: 1;">
-                                    <!-- Options 0-127 -->
-                                </select>
-                                <span style="color: var(--color-text-secondary); line-height: 1.8;">to</span>
-                                <select class="select" id="multiKeyHi" style="flex: 1;">
-                                    <!-- Options 0-127 -->
+                        <div class="multi-param-grid">
+                            <!-- Root -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Root note</label>
+                                </div>
+                                <select class="select" id="multiRootNote">
+                                    <!-- Options 0-127 populated by JS -->
                                 </select>
                             </div>
-                        </div>
+                            <div>
+                                <!-- empty container -->
+                            </div>
 
-                        <!-- Velocity Range -->
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Velocity Range</label>
+                            <!-- Lo-Key -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Lo-Key</label>
+                                </div>
+                                <select class="select" id="multiKeyLo">
+                                    <!-- Options 0-127 -->
+                                </select>
                             </div>
-                            <div style="display: flex; gap: 5px;">
-                                <input type="number" class="select" id="multiVelLo" min="0" max="127"
-                                    style="flex: 1; padding: 4px;">
-                                <span style="color: var(--color-text-secondary); line-height: 1.8;">to</span>
-                                <input type="number" class="select" id="multiVelHi" min="0" max="127"
-                                    style="flex: 1; padding: 4px;">
-                            </div>
-                        </div>
 
-                        <!-- Loop Points -->
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Loop Start</label>
-                                <span class="param-value" id="multiLoopStart-val">0</span>
-                            </div>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="multiLoopStart" min="0" max="4294967295"
-                                    value="0">
+                            <!-- Hi-Key -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Hi-Key</label>
+                                </div>
+                                <select class="select" id="multiKeyHi">
+                                    <!-- Options 0-127 -->
+                                </select>
                             </div>
                         </div>
 
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Loop End</label>
-                                <span class="param-value" id="multiLoopEnd-val">0</span>
+                        <div class="multi-param-grid">
+                            <!-- Loop On/Off -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Loop On/Off</label>
+                                </div>
+                                <select class="select" id="multiLoopEnabled">
+                                    <option value="0">Off</option>
+                                    <option value="1">On</option>
+                                </select>
                             </div>
-                            <div class="param-control">
-                                <input type="range" class="slider" id="multiLoopEnd" min="0" max="4294967295" value="0">
+
+                            <div>
+                                <!-- empty container -->
                             </div>
+
+                            
+                                <!-- Lo-Vel -->
+                                <div class="param">
+                                    <div class="label-value-container">
+                                        <label class="param-label">Lo-Vel</label>
+                                    </div>
+                                    <input type="number" class="select" id="multiVelLo" min="0" max="127">
+                                </div>
+
+                                <!-- Hi-Vel -->
+                                <div class="param">
+                                    <div class="label-value-container">
+                                        <label class="param-label">Hi-Vel</label>
+                                    </div>
+                                    <input type="number" class="select" id="multiVelHi" min="0" max="127">
+                                </div>
                         </div>
 
-                        <div class="param">
-                            <div class="label-value-container">
-                                <label class="param-label">Loop Enabled</label>
+                        <div class="dropdown-container-dual">
+                            <!-- Loop Start (half width) -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Loop Start</label>
+                                    <span class="param-value" id="multiLoopStart-val">0</span>
+                                </div>
+                                <div class="param-control">
+                                    <input type="range" class="slider" id="multiLoopStart" min="0" max="4294967295"
+                                        value="0">
+                                </div>
                             </div>
-                            <select class="select" id="multiLoopEnabled">
-                                <option value="0">Off</option>
-                                <option value="1">On</option>
-                            </select>
+
+                            <!-- Loop End (half width) -->
+                            <div class="param">
+                                <div class="label-value-container">
+                                    <label class="param-label">Loop End</label>
+                                    <span class="param-value" id="multiLoopEnd-val">0</span>
+                                </div>
+                                <div class="param-control">
+                                    <input type="range" class="slider" id="multiLoopEnd" min="0" max="4294967295"
+                                        value="0">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="param-section">
-                    <h3>Keyboard Mapping</h3>
-                    <canvas id="keyboardCanvas"
-                        style="width: 100%; height: 240px; background: #1a1614; border-radius: 6px; display: block;"></canvas>
-                    <canvas id="keyboardScrollCanvas" style="width: 100%; height: 30px; background: #2a2420; border-radius: 6px; margin-top: 5px; display: block; cursor: grab;"></canvas>
+                <div class="line-container">
+                    <!-- line separator -->
                 </div>
             </div>
             <!-- Status Bar + Close Button -->

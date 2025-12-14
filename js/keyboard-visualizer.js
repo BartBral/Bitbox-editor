@@ -42,6 +42,7 @@ class KeyboardVisualizer {
         this.scrollPos = 0;
         this.maxScroll = 0;
         this.hoveredKey = null;
+        this._pendingDrag = null;
 
         // Drag state
         this.dragState = {
@@ -593,7 +594,7 @@ class KeyboardVisualizer {
         } else if (type === 'body') {
             const zoneWidth = startKeyHi - startKeyLo;
             newKeyLo = Math.max(0, Math.min(127 - zoneWidth, startKeyLo + deltaMidi));
-            newKeyHi = newKeyLo + zoneWidth;
+            newKeyHi = Math.min(127, newKeyLo + zoneWidth); // CLAMP to 127
 
             if (neighborLeft) {
                 const neighborRootNote = parseInt(neighborLeft.params.rootnote);
@@ -620,17 +621,21 @@ class KeyboardVisualizer {
             }
         }
 
+        // CLAMP all values to 0-127 before storing
+        newKeyLo = Math.max(0, Math.min(127, newKeyLo));
+        newKeyHi = Math.max(0, Math.min(127, newKeyHi));
+        
         this.dragState.currentKeyLo = newKeyLo;
         this.dragState.currentKeyHi = newKeyHi;
         this.dragState.previewKeyLo = newKeyLo;
         this.dragState.previewKeyHi = newKeyHi;
         this.dragState.snapGuideKey = snapGuideKey;
-
+        
         asset.params.keyrangebottom = newKeyLo.toString();
         asset.params.keyrangetop = newKeyHi.toString();
-
+        
         this.syncDropdownsFromAsset(asset);
-
+        
         this.render();
     }
 
@@ -642,14 +647,21 @@ class KeyboardVisualizer {
 
         // SAVE REFERENCES BEFORE CLEARING STATE
         const draggedAsset = this.dragState.asset;
-        const finalKeyLo = this.dragState.currentKeyLo;
-        const finalKeyHi = this.dragState.currentKeyHi;
+
+        // CLAMP to valid MIDI range before saving
+        let finalKeyLo = Math.max(0, Math.min(127, this.dragState.currentKeyLo));
+        let finalKeyHi = Math.max(0, Math.min(127, this.dragState.currentKeyHi));
+    
+        // Ensure keyHi >= keyLo
+        if (finalKeyHi < finalKeyLo) {
+            finalKeyHi = finalKeyLo;
+        }
 
         console.log(`Ended drag: ${this.dragState.type}`, {
             finalKeys: `${finalKeyLo}-${finalKeyHi}`
         });
 
-        // Final update to ensure consistency
+        // Final update with CLAMPED values
         if (draggedAsset) {
             draggedAsset.params.keyrangebottom = finalKeyLo.toString();
             draggedAsset.params.keyrangetop = finalKeyHi.toString();
@@ -672,26 +684,8 @@ class KeyboardVisualizer {
             snapGuideKey: null
         };
 
-        // Sync dropdowns AFTER clearing state (with saved reference)
-        if (draggedAsset) {
-            this.syncDropdownsFromAsset(draggedAsset);
-        }
-
-       this.render();
+        this.render();
     }
-
-    // syncDropdownsFromAsset(asset) {
-    //     if (window._multiKeyboardViz && window._multiKeyboardViz.selectedAsset === asset) {
-    //         const loKey = parseInt(asset.params.keyrangebottom);
-    //         const hiKey = parseInt(asset.params.keyrangetop);
-
-    //         const keyLoDropdown = document.getElementById('multiKeyLo');
-    //         const keyHiDropdown = document.getElementById('multiKeyHi');
-
-    //         if (keyLoDropdown) keyLoDropdown.value = loKey.toString();
-    //         if (keyHiDropdown) keyHiDropdown.value = hiKey.toString();
-    //     }
-    // }
 
     syncDropdownsFromAsset(asset) {
         if (window._multiKeyboardViz && window._multiKeyboardViz.selectedAsset === asset) {
@@ -706,7 +700,7 @@ class KeyboardVisualizer {
         if (rootNoteDropdown) rootNoteDropdown.value = rootNote.toString();
         if (keyLoDropdown) keyLoDropdown.value = loKey.toString();
         if (keyHiDropdown) keyHiDropdown.value = hiKey.toString();
-    } else {
+        } else {
             console.log('❌ Condition failed - dropdowns NOT updated');
         }
     }
@@ -718,10 +712,16 @@ class KeyboardVisualizer {
             const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-
+                
             const target = this.detectHoverTarget(x, y);
             if (target) {
-                this.startDrag(x, y, target);
+                // Store potential drag target, but don't start drag yet
+                this._pendingDrag = {
+                    target: target,
+                    startX: x,
+                    startY: y,
+                    mouseDownTime: Date.now()
+                };
                 e.preventDefault();
             }
         });
@@ -732,6 +732,19 @@ class KeyboardVisualizer {
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
+            // Check if we should start a drag from pending mousedown
+            if (this._pendingDrag && !this.dragState.active) {
+                const dx = x - this._pendingDrag.startX;
+                const dy = y - this._pendingDrag.startY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                // Only start drag if mouse moved more than 3 pixels
+                if (distance > 3) {
+                    this.startDrag(this._pendingDrag.startX, this._pendingDrag.startY, this._pendingDrag.target);
+                    this._pendingDrag = null;
+                }
+            }
+        
             if (this.dragState.active) {
                 this.updateDrag(x);
             } else {
@@ -745,18 +758,32 @@ class KeyboardVisualizer {
                 } else {
                     this.canvas.style.cursor = 'default';
                 }
-
-                // Hover effect
+            
+                // Hover effect - DEBOUNCED to prevent flicker
                 if (y < this.keyHeight) {
                     const midi = this.xToMidi(x);
                     if (midi !== this.hoveredKey) {
                         this.hoveredKey = midi;
-                        this.render();
+                        // Don't render immediately - schedule for next frame
+                        if (!this.renderScheduled) {
+                            this.renderScheduled = true;
+                            requestAnimationFrame(() => {
+                                this.render();
+                                this.renderScheduled = false;
+                            });
+                        }
                     }
                 } else {
                     if (this.hoveredKey !== null) {
                         this.hoveredKey = null;
-                        this.render();
+                        // Don't render immediately - schedule for next frame
+                        if (!this.renderScheduled) {
+                            this.renderScheduled = true;
+                            requestAnimationFrame(() => {
+                                this.render();
+                                this.renderScheduled = false;
+                            });
+                        }
                     }
                 }
             }
@@ -767,6 +794,8 @@ class KeyboardVisualizer {
             if (this.dragState.active) {
                 this.endDrag();
             }
+            // Clear pending drag if it never started
+            this._pendingDrag = null;
         });
 
         // Mouse leave - cancel drag
@@ -780,16 +809,27 @@ class KeyboardVisualizer {
         // Mouse click - select asset
         this.canvas.addEventListener('click', (e) => {
             if (this.dragState.active) return;
-
-            // ADD THIS FLAG CHECK:
+        
+            // Don't process click after drag
             if (this._justFinishedDrag) {
                 this._justFinishedDrag = false;
-                return;  // Don't process click after drag
+                return;
             }
-
+        
             const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
+            
+            // Check if clicking on velocity layer zones first (below keyboard)
+            if (y >= this.keyHeight) {
+                const target = this.detectHoverTarget(x, y);
+                if (target && target.asset) {
+                    this.selectAsset(target.asset);
+                    return; // Exit early - we found the zone
+                }
+            }
+            
+            // If not clicking zone, check keyboard keys
             if (y < this.keyHeight) {
                 const midi = this.xToMidi(x);
                 if (midi >= this.minKey && midi <= this.maxKey) {
@@ -798,13 +838,12 @@ class KeyboardVisualizer {
                         this.selectAsset(assets[0]);
                     }
                 }
-            } else {
-                const target = this.detectHoverTarget(x, y);
-                if (target && target.asset) {
-                    this.selectAsset(target.asset);
-                }
             }
         });
+
+
+        // Flag to prevent render flicker
+        this.renderScheduled = false;
 
         // Scroll handling
         this.canvas.addEventListener('wheel', (e) => {
@@ -920,10 +959,20 @@ class KeyboardVisualizer {
     }
 
     selectAsset(asset) {
+        console.log('*** KeyboardVisualizer.selectAsset() CALLED ***');
+        console.log('*** Asset filename:', asset.filename);
+        console.log('*** Asset keyrangebottom:', asset.params.keyrangebottom);
+        console.log('*** Asset keyrangetop:', asset.params.keyrangetop);
+    
         this.selectedAsset = asset;
+        
+        // Sync dropdowns immediately when selecting new asset
+        this.syncDropdownsFromAsset(asset);
+        
         this.render();
 
         if (this.onAssetSelected) {
+            console.log('*** Calling onAssetSelected callback ***');
             this.onAssetSelected(asset);
         }
     }
