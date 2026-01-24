@@ -75,7 +75,7 @@ function createEmptyPadData() {
             panpos: '0',              // Pan: -100% (left) to +100% (right)
             samtrigtype: '0',         // Launch Mode: 0=Gate, 1=Trigger, 2=Toggle
             loopmode: '0',            // Loop Mode: 0=Off, 1=On
-            loopmodes: '1',           // Loop Modes: 0=Off, 1=Forward, 2=Bidirectional
+            loopmodes: '0',           // Loop Modes: 0=Off, 1=Forward, 2=Bidirectional
             midimode: '0',            // MIDI Channel: 0=None, 1-16=Ch 1-16
             reverse: '0',             // Reverse: 0=Off, 1=On
             cellmode: '0',            // Cell Mode: 0=Sample, 1=Clip, 2=Slicer, 3=Granular

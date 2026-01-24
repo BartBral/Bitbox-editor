@@ -1037,7 +1037,7 @@ input[type="file"] {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 15px;
-    margin-bottom: 15px;
+    /* margin-bottom: 15px; */
 }
 
 /* Wide parameters that span 1.5 columns */
