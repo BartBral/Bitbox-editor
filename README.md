@@ -61,6 +61,7 @@ Be aware that this app will **never** be able to destroy your current preset.xml
 2. Click **[ Import Pad ]**
 3. Choose `.wav` file
 4. Sample loads with metadata (loop points, slices, tempo)
+5. Or just drag and drop a `.wav` file from your harddrive to a pad.
 
 **SFZ Multisample**
 1. Select a pad
@@ -69,12 +70,14 @@ Be aware that this app will **never** be able to destroy your current preset.xml
 4. BITBOXER analyzes the SFZ:
    - **Single layer** → Loads directly to pad
    - **Multiple layers** → Shows layer mapping modal
+5. Or just drag and drop a `.sfz` file from your harddrive to a pad.
 
 **Zipped (SFZ + Samples)**
 1. Select a pad
 2. Click **[ Import Pad ]**
 3. Choose `.zip` file containing SFZ + WAV files
 4. Everything imports automatically
+5. Or just drag and drop a `.zip` file from your harddrive to a pad.
 
 **Zipped (JSON + Samples)**
 You can save just one pad with this app, for later reuse.
@@ -382,4 +385,4 @@ ProjectName/
 
 **Made with ❤️ for the Bitbox community**
 
-*Version: 1.0 | Last updated: 2025*
+*Version: x.x? | Last updated: 2026*
