@@ -648,6 +648,20 @@ function generatePresetXML(data) {
                     xml += ` ${key}="${value}"`;
                 }
                 xml += '/>\n';
+
+                // NEW: write modulation even for samtempl pads
+                if (pad.modsources?.length > 0) {
+                    const activeModSlots = pad.modsources.filter(mod =>
+                        mod.src && mod.dest && mod.src !== 'none' && mod.dest !== 'none'
+                    );
+                    activeModSlots.forEach(mod => {
+                        xml += `            <modsource dest="${mod.dest}" src="${mod.src}"`;
+                        if (mod.mchan !== undefined) xml += ` mchan="${mod.mchan}"`;
+                        if (mod.ccnum !== undefined) xml += ` ccnum="${mod.ccnum}"`;
+                        xml += ` slot="${mod.slot}" amount="${mod.amount}"/>\n`;
+                    });
+                }    
+
                 xml += '            <slices/>\n';
                 xml += '        </cell>\n';
             } else {
