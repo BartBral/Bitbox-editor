@@ -14,7 +14,7 @@
 ### 1. Set Your Working Folder (IMPORTANT!)
 
 Overall; in the top-right corner is a switch to set type of Bitbox you have.
-The greyed out pads are **only** visual, as a reminder "these pads or parameters are not avaiable to you on your Bitbox". But all of these pads and parameters that are greyed out are still 100% editable and usable. Also the saved files are always the same and it doesn't matter if you have chosen the Bk2 or Micro option.
+The greyed out pads are **only** visual, as a reminder "these pads or parameters are not available to you on your Bitbox". But all of these pads and parameters that are greyed out are still 100% editable and usable. Also the saved files are always the same and it doesn't matter if you have chosen the Mk2 or Micro option.
 
 Also when editing parameters, all greyed out settings are still completely usable, as some users might find it usefull to have certain parameters set, so they can change between two options in a live situation. (for example: set up a manual LFO speed on a certain rate, then switching to synced LFO-speed on the Bitbox, both speeds can already be set to known states)
 
@@ -27,7 +27,7 @@ Be aware that this app will **never** be able to destroy your current preset.xml
 2. Select the folder where you keep your samples
 3. Button turns less obnoxious
 
-**Why?** BITBOXER automatically searches this folder for samples when importing SFZ files or presets. Because it is a web-app, it does not have full access to all of your precious files, thank god! I would recommend to just select a subfolder in your sample folder, or something broad like that, and then be sure that all the samples and sfz files and preset.xml files etc are located there. When you choose not to set a folder (or you have a browser that won't alowe you to) then it is best to always use the zip-files this app creates. Or just zip preset-folders + sample folders. As when all is in a zipfile it can be drag and drop from any folder, as all sample-assets are inside that zip. By the way: no presets, samples, sfz-file (any files) leave your computer, and nothing goes online. So don't worry, all is done on your computer, you can even use it offline if you would like.
+**Why?** BITBOXER automatically searches this folder for samples when importing SFZ files or presets. Because it is a web-app, it does not have full access to all of your precious files, thank god! I would recommend to just select a subfolder in your sample folder, or something broad like that, and then be sure that all the samples and sfz files and preset.xml files etc are located there. When you choose not to set a folder (or you have a browser that won't alowe you to) then it is best to always use the zip-files this app creates. Or just zip preset-folders + sample folders. As when all is in a zipfile it can be drag and dropped from any folder, as all sample-assets are inside that zip. By the way: no presets, samples, sfz-file (any files) will ever leave your computer, nothing goes online. So don't worry, all is done on your computer, you can even use it offline if you would like to.
 
 ---
 
@@ -85,7 +85,7 @@ Here is how to again import one of those:
 1. Select a pad
 2. Click **[ Import Pad ]**
 3. Choose `.zip` file containing JSON + WAV files
-
+4. Or just drag and drop a `.zip` file from your harddrive to a pad.
 
 ## ⚠️ Experimental ⚠️ SFZ Layer Detection
 
@@ -97,10 +97,9 @@ BITBOXER **tries to** analyzes SFZ files, but is not yet very able:
 - **Result:** Loads to 1 pad as multisample
 
 ### ⚠️ Multiple Layers (Stacked)
-- Regions have **overlapping key ranges**
+- If regions have **overlapping key ranges**
 - Example: Two groups both covering C2-C5
 - **Result:** Shows modal to map each layer to different pads
-- ⚠️ At the moment I recommend to set a <group> before every layer. As it is not yet able to otherwise split sfz-file in to more than one layer to play multitibral patches, using samples stacked on each other.
 
 ### ⚠️ Velocity Layers
 - Multiple regions with **same key range** but different velocity ranges
@@ -163,8 +162,8 @@ When editing parameters, all greyed out settings are still completely usable, as
 - Only for Granular mode
 
 **Multi** - Multisample Layers 
-- View all velocity/key layers (not yet editable)
-- Shows root notes and ranges (not yet editable)
+- View all velocity/key layers (editable)
+- Shows root notes and ranges (editable)
 
 **Config** - Advanced Settings
 - Launch mode, polyphony, MIDI channel
@@ -254,8 +253,8 @@ ProjectName/
 **Bitbox Micro** (8 pads)
 - Toggle: Click "Bitbox Micro" button
 - Pads 9-16 greyed out
-- EQ tab disabled
-
+- EQ tab greyed out
+  
 **Bitbox mk2** (16 pads)
 - Toggle: Click "Bitbox mk2" button
 - All 16 pads active
@@ -272,10 +271,10 @@ ProjectName/
 4. **Use ZIP for portability** - includes all samples
 
 ### Keyboard Shortcuts
-- **Click** - Select single pad
-- **Ctrl+Click** - Add to selection
-- **Double-click** - Edit pad
-- **Right-click** - Context menu
+- **Click** on a pad - Selects a pad
+- **Ctrl+Click** - Let's you select more then one pad at the time
+- **Double-click** - Edit the pad. A window will open with parameters.
+- **Right-click** - Context menu appears with some options.
 - **Drag** - Swap pads
 
 ### Working with Multisamples
@@ -287,7 +286,7 @@ ProjectName/
 - **None** - Pad triggers only from Bitbox pads
 - **Ch 1 (omni)** - Responds to all MIDI channels
 - **Ch 2-16** - Responds to specific channel only
-- **Stacked layers** - Set same channel so they trigger together
+- **Stacked layers** - Are Set to the same channel so they trigger together
 
 ---
 
@@ -295,12 +294,11 @@ ProjectName/
 
 **"Samples not found" when loading preset**
 - ✅ Set working folder first
-- ✅ Ensure samples are in working folder or subfolders
+- ✅ Ensure samples are in the working folder or subfolders thereof
 - ✅ Check sample names match exactly (case-sensitive)
 
 **SFZ import creates too many pads**
-- ✅ Check if SFZ has multiple `<group>` tags (= stacked layers)
-- ✅ Key ranges must NOT overlap for single-pad import
+- ✅ Key ranges SHOULD **NOT** overlap for single-pad import
 - ✅ Use modal to map layers to fewer pads
 
 **EQ tab is greyed out**
